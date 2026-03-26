@@ -1,1 +1,4 @@
 *.csv
+*.sqlite
+.cache
+test.py
