@@ -128,30 +128,36 @@
                         </div>
                     </div>
                 </div>
-                <!-- Water Sensor Grid -->
+                <!-- Connector Status -->
                 <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20">
-                    <h4 class="font-headline font-bold text-primary mb-4">Water Sensor Grid</h4>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="font-headline font-bold text-primary">Connector Status</h4>
+                        <a href="/connectors" class="text-[10px] font-bold text-sky-600 hover:underline">MANAGE</a>
+                    </div>
                     <ul class="space-y-3">
-                        <li class="flex justify-between items-center bg-white p-3 rounded-lg">
-                            <div>
-                                <span class="text-xs font-medium">Station ECHO-01</span>
-                                <p class="text-[10px] text-on-surface-variant">Nancy — Primary</p>
+                        <li class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-sky-500 text-sm">database</span>
+                                <div>
+                                    <span class="text-xs font-bold">ECHO Station</span>
+                                    <p class="text-[9px] text-on-surface-variant">Internal (data.csv)</p>
+                                </div>
                             </div>
-                            <span class="text-[10px] font-bold text-emerald-600">CONNECTED</span>
+                            <span class="text-[9px] font-bold text-emerald-600 flex items-center gap-1">
+                                <span class="w-1 h-1 rounded-full bg-emerald-500"></span> ONLINE
+                            </span>
                         </li>
-                        <li class="flex justify-between items-center bg-white p-3 rounded-lg">
-                            <div>
-                                <span class="text-xs font-medium">Station ECHO-02</span>
-                                <p class="text-[10px] text-on-surface-variant">Meurthe River</p>
+                        <li class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-emerald-500 text-sm">cloud_sync</span>
+                                <div>
+                                    <span class="text-xs font-bold">Weather Archive</span>
+                                    <p class="text-[9px] text-on-surface-variant">External API</p>
+                                </div>
                             </div>
-                            <span class="text-[10px] font-bold text-error">MAINTENANCE</span>
-                        </li>
-                        <li class="flex justify-between items-center bg-white p-3 rounded-lg">
-                            <div>
-                                <span class="text-xs font-medium">Station ECHO-03</span>
-                                <p class="text-[10px] text-on-surface-variant">Canal de la Marne</p>
-                            </div>
-                            <span class="text-[10px] font-bold text-emerald-600">CONNECTED</span>
+                            <span class="text-[9px] font-bold text-emerald-600 flex items-center gap-1">
+                                <span class="w-1 h-1 rounded-full bg-emerald-500"></span> ACTIVE
+                            </span>
                         </li>
                     </ul>
                 </div>
