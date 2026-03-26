@@ -19,18 +19,18 @@ def plot_water_quality(y_column='NO3', precipitation_threshold=None):
 
     # Événements agricoles par mois (susceptibles de réduire la qualité de l'eau)
     events = {
-        1: 'Épandage lisier',
-        2: 'Engrais / Épandage',
-        3: 'Engrais / Labour',
-        4: 'Pesticides / Engrais',
-        5: 'Pesticides / Désherbage',
+        1: 'Slurry spreading',
+        2: 'Fertilizer / Slurry spreading',
+        3: 'Fertilizer / Plowing',
+        4: 'Pesticides / Fertilizer',
+        5: 'Pesticides / Weeding',
         6: 'Pesticides',
-        7: 'Sols nus',
-        8: 'Déchaumage / Travail sol',
-        9: 'Récolte / Travail sol',
-        10: 'Semis + engrais / Labour',
-        11: 'Sols labourés',
-        12: 'Épandage lisier'
+        7: 'Bare soils',
+        8: 'Stubble tillage / Soil work',
+        9: 'Harvest / Soil work',
+        10: 'Sowing + Fertilizer / Plowing',
+        11: 'Plowed soils',
+        12: 'Slurry spreading'
     }
 
     # Couleurs pour les zones (dégradé rouge = impact élevé)
@@ -93,7 +93,7 @@ def plot_water_quality(y_column='NO3', precipitation_threshold=None):
             color='royalblue',
             marker='v',
             s=55,
-            label='Fortes précipitations',
+            label='Heavy precipitation',
             zorder=12
         )
 
@@ -126,7 +126,7 @@ def plot_water_quality(y_column='NO3', precipitation_threshold=None):
 
     ax.set_xlabel('Date', fontsize=12)
     ax.set_ylabel(y_column, fontsize=12)
-    ax.set_title(f"{y_column} en fonction du temps et activités agricoles", fontsize=14, fontweight='bold')
+    ax.set_title(f"{y_column} over time with agricultural activities", fontsize=14, fontweight='bold')
     ax.set_xlim(date_min, date_max)
     ax.grid(True, alpha=0.3, zorder=0)
     plt.xticks(rotation=45)
