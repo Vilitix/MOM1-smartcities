@@ -5,19 +5,14 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.impute import SimpleImputer
-
-# Import the function from your friend's weather.py script
 from weather import get_weather_data
 
 def train_and_predict():
-    # ==========================================
-    # 1. Fetch Weather Data (Using friend's script)
-    # ==========================================
+    # Fetch Weather Data 
     print("Fetching weather data using weather.py...")
-    # Fetch data for the last 365 days (resampled to 8-hour intervals)
+
     df_weather = get_weather_data(days=365)
     
-    # Remove timezone information to avoid conflicts during the merge
     df_weather.index = df_weather.index.tz_localize(None)
     
     # Rename the index to 'Datetime' so it matches the water dataset later
@@ -26,6 +21,7 @@ def train_and_predict():
 
     # Add dummy Event_Scale feature (quantified events)
     # Weekends have a higher chance of large events, weekdays have fewer
+    # We need to add this from real event data
     df_weather['DayOfWeek'] = df_weather['Datetime'].dt.dayofweek
     def determine_event_scale(day_of_week):
         if day_of_week >= 5: # Saturday or Sunday
@@ -36,9 +32,8 @@ def train_and_predict():
     df_weather['Event_Scale'] = df_weather['DayOfWeek'].apply(determine_event_scale)
     df_weather.drop(columns=['DayOfWeek'], inplace=True)
 
-    # ==========================================
-    # 2. Load and Preprocess Water Quality Data
-    # ==========================================
+
+    # Load and Preprocess Water Quality Data
     print("Loading water quality dataset...")
     df_water = pd.read_csv("Consibio Cloud Datalog.csv")
     
@@ -54,14 +49,10 @@ def train_and_predict():
     # Define the target variables we want to predict
     target_cols = ['Chlorophylle-a SCALED', 'Conductivité', 'NO3', 'O2 Saturation', 'pH Test', 'Turbidité']
     
-    # CRITICAL STEP: Resample water data to 8-hour intervals to match weather data
     df_water_aligned = df_water[target_cols].resample('8h').mean()
     df_water_aligned.reset_index(inplace=True)
     
-    # ==========================================
-    # 3. Merge Datasets
-    # ==========================================
-    # Merge water and weather data using the 'Datetime' column
+    # Merge Datasets
     df_merged = pd.merge(df_water_aligned, df_weather, on='Datetime', how='inner')
     
     if df_merged.empty:
@@ -77,9 +68,7 @@ def train_and_predict():
     X = df_merged[['temperature_2m', 'precipitation', 'wind_speed_10m', 'Event_Scale']]
     y = df_merged[target_cols]
     
-    # ==========================================
-    # 4. Model Training
-    # ==========================================
+    # Model Training
     # Split the dataset: 80% for training, 20% for testing
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
@@ -89,9 +78,7 @@ def train_and_predict():
     print("Training the multi-output model...")
     model.fit(X_train, y_train)
     
-    # ==========================================
-    # 5. Evaluation & Future Prediction
-    # ==========================================
+    # Evaluation & Future Prediction
     # Predict on the test set
     y_pred = model.predict(X_test)
     
