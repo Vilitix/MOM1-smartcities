@@ -1,4 +1,4 @@
-*.csv
+Consibio Cloud Datalog.csv
 *.sqlite
 .cache
 test.py
