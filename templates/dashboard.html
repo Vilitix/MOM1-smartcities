@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<!-- Loading State -->
+<div id="loading" class="flex items-center justify-center py-20">
+    <div class="text-center">
+        <div class="loading-spinner mx-auto mb-4"></div>
+        <p class="text-on-surface-variant text-sm">Loading weather data...</p>
+    </div>
+</div>
+
+<!-- Dashboard Content (hidden until data loads) -->
+<div id="dashboard-content" class="hidden">
+    <!-- Hero Metric Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Temperature -->
+        <div
+            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-sky-500">
+            <div class="flex justify-between items-start mb-4">
+                <span
+                    class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Temperature
+                    (2m)</span>
+                <span id="temp-badge" class="text-sky-600 bg-sky-50 px-2 py-1 rounded text-[10px] font-bold">--</span>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <h3 class="font-headline text-4xl font-extrabold text-primary" id="temp-value">--</h3>
+                <span class="text-on-surface-variant text-sm font-medium">°C</span>
+            </div>
+            <div class="flex gap-4 mt-3 text-[10px] text-on-surface-variant">
+                <span>Min: <strong id="temp-min">--</strong>°C</span>
+                <span>Max: <strong id="temp-max">--</strong>°C</span>
+                <span>Avg: <strong id="temp-mean">--</strong>°C</span>
+            </div>
+            <div class="mt-3 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+                <div id="temp-bar" class="h-full bg-sky-500 transition-all duration-700" style="width:0%"></div>
+            </div>
+        </div>
+        <!-- Precipitation -->
+        <div
+            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-emerald-500">
+            <div class="flex justify-between items-start mb-4">
+                <span
+                    class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Precipitation</span>
+                <span id="precip-badge"
+                    class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-[10px] font-bold">--</span>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <h3 class="font-headline text-4xl font-extrabold text-primary" id="precip-value">--</h3>
+                <span class="text-on-surface-variant text-sm font-medium">mm</span>
+            </div>
+            <div class="flex gap-4 mt-3 text-[10px] text-on-surface-variant">
+                <span>30d Total: <strong id="precip-total">--</strong> mm</span>
+                <span>Avg/8h: <strong id="precip-mean">--</strong> mm</span>
+            </div>
+            <div class="mt-3 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+                <div id="precip-bar" class="h-full bg-emerald-500 transition-all duration-700" style="width:0%"></div>
+            </div>
+        </div>
+        <!-- Wind Speed -->
+        <div
+            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-tertiary-fixed-dim">
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Wind
+                    Speed (10m)</span>
+                <span id="wind-badge" class="text-teal-600 bg-teal-50 px-2 py-1 rounded text-[10px] font-bold">--</span>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <h3 class="font-headline text-4xl font-extrabold text-primary" id="wind-value">--</h3>
+                <span class="text-on-surface-variant text-sm font-medium">km/h</span>
+            </div>
+            <div class="flex gap-4 mt-3 text-[10px] text-on-surface-variant">
+                <span>Avg: <strong id="wind-mean">--</strong> km/h</span>
+                <span>Max: <strong id="wind-max">--</strong> km/h</span>
+            </div>
+            <div class="mt-3 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+                <div id="wind-bar" class="h-full bg-teal-500 transition-all duration-700" style="width:0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Left Column -->
+        <div class="lg:col-span-8 space-y-8">
+            <!-- Interactive Chart -->
+            <section class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="font-headline text-xl font-bold text-primary">Weather Trends</h2>
+                        <p class="text-on-surface-variant text-xs">Temperature, Precipitation & Wind — Nancy, FR</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="setRange('weekly')" id="btn-weekly"
+                            class="range-btn px-3 py-1 rounded-lg text-[10px] font-bold transition-all bg-surface-container text-on-surface-variant hover:bg-primary/10">7D</button>
+                        <button onclick="setRange('monthly')" id="btn-monthly"
+                            class="range-btn px-3 py-1 rounded-lg text-[10px] font-bold transition-all bg-surface-container text-on-surface-variant hover:bg-primary/10">30D</button>
+                        <button onclick="setRange('daily')" id="btn-daily"
+                            class="range-btn px-3 py-1 rounded-lg text-[10px] font-bold transition-all bg-primary text-on-primary">365D</button>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Connectors Panel -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Weather Connector -->
+                <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                            <span class="material-symbols-outlined text-sky-500">cloud_sync</span>
+                        </div>
+                        <div>
+                            <h4 class="font-headline font-bold text-primary">Weather Connector</h4>
+                            <p class="text-xs text-on-surface-variant">Open-Meteo Archive API</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-[10px] font-bold text-emerald-600">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
+                        CONNECTION STABLE
+                    </div>
+                    <div class="mt-3 space-y-1 text-[10px] text-on-surface-variant">
+                        <div class="flex justify-between"><span>Variables</span><span class="font-bold">temperature_2m,
+                                precipitation, wind_speed_10m</span></div>
+                        <div class="flex justify-between"><span>Resolution</span><span class="font-bold">8h intervals
+                                (3×/day)</span></div>
+                        <div class="flex justify-between"><span>Range</span><span class="font-bold">365 days</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Water Sensor Grid -->
+                <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20">
+                    <h4 class="font-headline font-bold text-primary mb-4">Water Sensor Grid</h4>
+                    <ul class="space-y-3">
+                        <li class="flex justify-between items-center bg-white p-3 rounded-lg">
+                            <div>
+                                <span class="text-xs font-medium">Station ECHO-01</span>
+                                <p class="text-[10px] text-on-surface-variant">Nancy — Primary</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-emerald-600">CONNECTED</span>
+                        </li>
+                        <li class="flex justify-between items-center bg-white p-3 rounded-lg">
+                            <div>
+                                <span class="text-xs font-medium">Station ECHO-02</span>
+                                <p class="text-[10px] text-on-surface-variant">Meurthe River</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-error">MAINTENANCE</span>
+                        </li>
+                        <li class="flex justify-between items-center bg-white p-3 rounded-lg">
+                            <div>
+                                <span class="text-xs font-medium">Station ECHO-03</span>
+                                <p class="text-[10px] text-on-surface-variant">Canal de la Marne</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-emerald-600">CONNECTED</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column -->
+        <div class="lg:col-span-4 space-y-8">
+            <!-- Predictive Forecast -->
+            <section
+                class="bg-gradient-to-br from-amber-50 to-white p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-amber-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-amber-600"
+                        style="font-variation-settings: 'FILL' 1;">warning</span>
+                    <h2 class="font-headline font-bold text-amber-900">Upcoming Event</h2>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-amber-100/50 p-4 rounded-lg">
+                        <p class="text-sm font-bold text-amber-900" id="forecast-title">Analyzing precipitation
+                            trends...</p>
+                        <p class="text-xs text-amber-800 mt-1" id="forecast-detail">Based on recent weather data</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-[10px] font-bold text-amber-700">
+                            <span>RUNOFF RISK</span>
+                            <span id="runoff-pct">--</span>
+                        </div>
+                        <div class="h-1 w-full bg-amber-200 rounded-full">
+                            <div id="runoff-bar" class="h-full bg-amber-500 transition-all duration-700"
+                                style="width:0%"></div>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-amber-700 leading-relaxed italic">
+                        "High precipitation increases runoff risk, carrying pollutants into water bodies. Monitor
+                        turbidity levels closely after heavy rain events."
+                    </p>
+                </div>
+            </section>
+
+            <!-- Calendar Widget -->
+            <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-headline font-bold text-primary">Schedule</h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeMonth(-1)"
+                            class="material-symbols-outlined text-on-surface-variant text-sm hover:text-primary transition-colors">chevron_left</button>
+                        <span id="calendar-month" class="text-xs font-bold text-on-surface-variant"></span>
+                        <button onclick="changeMonth(1)"
+                            class="material-symbols-outlined text-on-surface-variant text-sm hover:text-primary transition-colors">chevron_right</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 mb-4">
+                    <span class="text-[9px] text-center font-bold text-slate-400">M</span>
+                    <span class="text-[9px] text-center font-bold text-slate-400">T</span>
+                    <span class="text-[9px] text-center font-bold text-slate-400">W</span>
+                    <span class="text-[9px] text-center font-bold text-slate-400">T</span>
+                    <span class="text-[9px] text-center font-bold text-slate-400">F</span>
+                    <span class="text-[9px] text-center font-bold text-slate-400">S</span>
+                    <span class="text-[9px] text-center font-bold text-slate-400">S</span>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 mb-6"></div>
+                <div class="space-y-4">
+                    <div class="flex gap-4 items-start">
+                        <div class="w-1 h-8 bg-tertiary rounded-full flex-shrink-0"></div>
+                        <div>
+                            <p class="text-xs font-bold">Sensor Calibration</p>
+                            <p class="text-[10px] text-on-surface-variant">Weekly • Every Monday 09:00</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start">
+                        <div class="w-1 h-8 bg-error rounded-full flex-shrink-0"></div>
+                        <div>
+                            <p class="text-xs font-bold">ECHO-02 Maintenance</p>
+                            <p class="text-[10px] text-on-surface-variant">Scheduled • Pending date</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start">
+                        <div class="w-1 h-8 bg-primary rounded-full flex-shrink-0"></div>
+                        <div>
+                            <p class="text-xs font-bold">Monthly Data Export</p>
+                            <p class="text-[10px] text-on-surface-variant">1st of each month • 00:00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Health -->
+            <div
+                class="h-36 bg-gradient-to-br from-primary to-primary-container rounded-xl overflow-hidden relative group">
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-primary to-transparent p-5 flex flex-col justify-end">
+                    <span class="text-white/60 text-[10px] font-bold uppercase tracking-widest">System Health</span>
+                    <p class="text-white font-headline font-bold text-lg">Optimal Performance</p>
+                    <p class="text-white/70 text-[10px] mt-1">All systems operational • 99.8% uptime</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let weatherData = null;
+    let mainChart = null;
+    let currentRange = 'daily';
+    let calendarDate = new Date();
+
+    // Fetch data and initialize
+    fetch('/api/weather')
+        .then(r => r.json())
+        .then(data => {
+            weatherData = data;
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            document.getElementById('sync-status').innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> Last Sync: Just now';
+            populateMetrics(data.stats);
+            createMainChart(data.daily);
+            updateForecast(data.stats);
+            renderCalendar();
+        })
+        .catch(err => {
+            document.getElementById('loading').innerHTML = '<p class="text-error text-sm">Error loading data. Is the server running?</p>';
+        });
+
+    function populateMetrics(stats) {
+        // Temperature
+        document.getElementById('temp-value').textContent = stats.temperature.current;
+        document.getElementById('temp-min').textContent = stats.temperature.min;
+        document.getElementById('temp-max').textContent = stats.temperature.max;
+        document.getElementById('temp-mean').textContent = stats.temperature.mean;
+        const tempPct = Math.min(100, Math.max(0, ((stats.temperature.current - stats.temperature.min) / (stats.temperature.max - stats.temperature.min)) * 100));
+        document.getElementById('temp-bar').style.width = tempPct + '%';
+        document.getElementById('temp-badge').textContent = Math.abs(stats.temperature.current - stats.temperature.mean) < stats.temperature.std ? 'NORMAL' : 'ALERT';
+
+        // Precipitation
+        document.getElementById('precip-value').textContent = stats.precipitation.current;
+        document.getElementById('precip-total').textContent = stats.precipitation.total_30d;
+        document.getElementById('precip-mean').textContent = stats.precipitation.mean;
+        const precipPct = Math.min(100, (stats.precipitation.current / Math.max(0.01, stats.precipitation.max)) * 100);
+        document.getElementById('precip-bar').style.width = precipPct + '%';
+        document.getElementById('precip-badge').textContent = stats.precipitation.current < 1 ? 'DRY' : stats.precipitation.current < 5 ? 'LIGHT' : 'HEAVY';
+
+        // Wind
+        document.getElementById('wind-value').textContent = stats.wind_speed.current;
+        document.getElementById('wind-mean').textContent = stats.wind_speed.mean;
+        document.getElementById('wind-max').textContent = stats.wind_speed.max;
+        const windPct = Math.min(100, (stats.wind_speed.current / stats.wind_speed.max) * 100);
+        document.getElementById('wind-bar').style.width = windPct + '%';
+        document.getElementById('wind-badge').textContent = stats.wind_speed.current < 15 ? 'CALM' : stats.wind_speed.current < 30 ? 'MODERATE' : 'STRONG';
+    }
+
+    function createMainChart(dataset) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if (mainChart) mainChart.destroy();
+        mainChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dataset.labels,
+                datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        data: dataset.temperature,
+                        borderColor: '#004370',
+                        backgroundColor: 'rgba(0, 67, 112, 0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        borderWidth: 2,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Precipitation (mm)',
+                        data: dataset.precipitation,
+                        borderColor: '#006a6a',
+                        backgroundColor: 'rgba(0, 106, 106, 0.15)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        borderWidth: 1.5,
+                        yAxisID: 'y1',
+                        type: 'bar',
+                    },
+                    {
+                        label: 'Wind Speed (km/h)',
+                        data: dataset.wind_speed,
+                        borderColor: '#55d7ed',
+                        backgroundColor: 'rgba(85, 215, 237, 0.05)',
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        borderWidth: 1.5,
+                        yAxisID: 'y',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { family: 'Inter', size: 10 } } },
+                    tooltip: { backgroundColor: '#004370', titleFont: { family: 'Manrope', weight: 'bold' }, bodyFont: { family: 'Inter' }, cornerRadius: 8, padding: 12 }
+                },
+                scales: {
+                    x: { display: true, grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, maxTicksLimit: 12, color: '#717781' } },
+                    y: { display: true, position: 'left', grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'Inter', size: 9 }, color: '#717781' }, title: { display: true, text: '°C / km/h', font: { family: 'Inter', size: 9 }, color: '#717781' } },
+                    y1: { display: true, position: 'right', grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, color: '#006a6a' }, title: { display: true, text: 'mm', font: { family: 'Inter', size: 9 }, color: '#006a6a' } }
+                }
+            }
+        });
+    }
+
+    function setRange(range) {
+        currentRange = range;
+        document.querySelectorAll('.range-btn').forEach(btn => {
+            btn.classList.remove('bg-primary', 'text-on-primary');
+            btn.classList.add('bg-surface-container', 'text-on-surface-variant');
+        });
+        document.getElementById('btn-' + range).classList.remove('bg-surface-container', 'text-on-surface-variant');
+        document.getElementById('btn-' + range).classList.add('bg-primary', 'text-on-primary');
+        createMainChart(weatherData[range]);
+    }
+
+    function updateForecast(stats) {
+        const precip30d = stats.precipitation.total_30d;
+        const riskPct = Math.min(100, Math.round(precip30d / 3));
+        document.getElementById('runoff-pct').textContent = riskPct + '%';
+        document.getElementById('runoff-bar').style.width = riskPct + '%';
+        if (precip30d > 100) {
+            document.getElementById('forecast-title').textContent = 'High Precipitation Period';
+            document.getElementById('forecast-detail').textContent = precip30d + 'mm total in last 30 days';
+        } else {
+            document.getElementById('forecast-title').textContent = 'Normal Precipitation Levels';
+            document.getElementById('forecast-detail').textContent = precip30d + 'mm total in last 30 days';
+        }
+    }
+
+    // Calendar
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        const year = calendarDate.getFullYear();
+        const month = calendarDate.getMonth();
+        const today = new Date();
+
+        document.getElementById('calendar-month').textContent = calendarDate.toLocaleDateString('en', { month: 'long', year: 'numeric' });
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        let startDay = (firstDay.getDay() + 6) % 7; // Monday = 0
+
+        let html = '';
+        // Previous month padding
+        const prevLast = new Date(year, month, 0).getDate();
+        for (let i = startDay - 1; i >= 0; i--) {
+            html += `<div class="h-8 flex items-center justify-center text-xs text-slate-300">${prevLast - i}</div>`;
+        }
+        // Current month
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+            const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            const isMonday = new Date(year, month, d).getDay() === 1;
+            const isFirst = d === 1;
+            let cls = 'h-8 flex items-center justify-center text-xs rounded-lg cursor-pointer hover:bg-primary/5 transition-colors relative';
+            if (isToday) cls += ' bg-primary/10 font-bold text-primary ring-1 ring-primary/30';
+            let dot = '';
+            if (isMonday) dot = '<span class="absolute bottom-0.5 w-1 h-1 bg-tertiary rounded-full"></span>';
+            if (isFirst) dot = '<span class="absolute bottom-0.5 w-1 h-1 bg-primary rounded-full"></span>';
+            html += `<div class="${cls}">${d}${dot}</div>`;
+        }
+        // Next month padding
+        const totalCells = startDay + lastDay.getDate();
+        const remaining = (7 - (totalCells % 7)) % 7;
+        for (let i = 1; i <= remaining; i++) {
+            html += `<div class="h-8 flex items-center justify-center text-xs text-slate-300">${i}</div>`;
+        }
+        grid.innerHTML = html;
+    }
+
+    function changeMonth(delta) {
+        calendarDate.setMonth(calendarDate.getMonth() + delta);
+        renderCalendar();
+    }
+</script>
+{% endblock %}
