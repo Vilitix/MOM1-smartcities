@@ -1,259 +1,214 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<!-- Loading State -->
 <div id="loading" class="flex items-center justify-center py-20">
     <div class="text-center">
         <div class="loading-spinner mx-auto mb-4"></div>
-        <p class="text-on-surface-variant text-sm">Loading weather data...</p>
+        <p class="text-on-surface-variant text-sm">Synchronizing telemetry streams...</p>
     </div>
 </div>
 
-<!-- Dashboard Content (hidden until data loads) -->
 <div id="dashboard-content" class="hidden">
-    <!-- Hero Metric Grid -->
+    <!-- Hero Metric Grid: Water Quality Focused -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Temperature -->
+        <!-- Sensor PH -->
         <div
-            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-sky-500">
+            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-sky-600">
             <div class="flex justify-between items-start mb-4">
-                <span
-                    class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Temperature
-                    (2m)</span>
-                <span id="temp-badge" class="text-sky-600 bg-sky-50 px-2 py-1 rounded text-[10px] font-bold">--</span>
+                <span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">pH
+                    Level (ECHO)</span>
+                <span id="ph-badge" class="text-sky-600 bg-sky-50 px-2 py-1 rounded text-[10px] font-bold">STABLE</span>
             </div>
             <div class="flex items-baseline gap-2">
-                <h3 class="font-headline text-4xl font-extrabold text-primary" id="temp-value">--</h3>
-                <span class="text-on-surface-variant text-sm font-medium">°C</span>
+                <h3 class="font-headline text-4xl font-extrabold text-primary" id="ph-value">--</h3>
+                <span class="text-on-surface-variant text-sm font-medium">pH</span>
             </div>
-            <div class="flex gap-4 mt-3 text-[10px] text-on-surface-variant">
-                <span>Min: <strong id="temp-min">--</strong>°C</span>
-                <span>Max: <strong id="temp-max">--</strong>°C</span>
-                <span>Avg: <strong id="temp-mean">--</strong>°C</span>
+            <div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+                <div id="ph-bar" class="h-full bg-sky-600 transition-all duration-700" style="width:0%"></div>
             </div>
-            <div class="mt-3 h-1 w-full bg-surface-container rounded-full overflow-hidden">
-                <div id="temp-bar" class="h-full bg-sky-500 transition-all duration-700" style="width:0%"></div>
-            </div>
+            <p id="ph-last" class="text-[9px] text-on-surface-variant mt-2 uppercase font-bold tracking-tight">Last
+                updated: --</p>
         </div>
-        <!-- Precipitation -->
+
+        <!-- Sensor Turbidity -->
         <div
             class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-emerald-500">
             <div class="flex justify-between items-start mb-4">
                 <span
-                    class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Precipitation</span>
-                <span id="precip-badge"
-                    class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-[10px] font-bold">--</span>
+                    class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Turbidity</span>
+                <span id="turb-badge"
+                    class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-[10px] font-bold">OPTIMAL</span>
             </div>
             <div class="flex items-baseline gap-2">
-                <h3 class="font-headline text-4xl font-extrabold text-primary" id="precip-value">--</h3>
-                <span class="text-on-surface-variant text-sm font-medium">mm</span>
+                <h3 class="font-headline text-4xl font-extrabold text-primary" id="turb-value">--</h3>
+                <span class="text-on-surface-variant text-sm font-medium">NTU</span>
             </div>
-            <div class="flex gap-4 mt-3 text-[10px] text-on-surface-variant">
-                <span>30d Total: <strong id="precip-total">--</strong> mm</span>
-                <span>Avg/8h: <strong id="precip-mean">--</strong> mm</span>
+            <div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+                <div id="turb-bar" class="h-full bg-emerald-500 transition-all duration-700" style="width:0%"></div>
             </div>
-            <div class="mt-3 h-1 w-full bg-surface-container rounded-full overflow-hidden">
-                <div id="precip-bar" class="h-full bg-emerald-500 transition-all duration-700" style="width:0%"></div>
-            </div>
+            <p id="turb-last" class="text-[9px] text-on-surface-variant mt-2 uppercase font-bold tracking-tight">Last
+                updated: --</p>
         </div>
-        <!-- Wind Speed -->
+
+        <!-- H2O Temperature -->
         <div
             class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-tertiary-fixed-dim">
             <div class="flex justify-between items-start mb-4">
-                <span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Wind
-                    Speed (10m)</span>
-                <span id="wind-badge" class="text-teal-600 bg-teal-50 px-2 py-1 rounded text-[10px] font-bold">--</span>
+                <span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">H2O
+                    Temperature</span>
+                <span id="htemp-badge"
+                    class="text-teal-600 bg-teal-50 px-2 py-1 rounded text-[10px] font-bold">ACTIVE</span>
             </div>
             <div class="flex items-baseline gap-2">
-                <h3 class="font-headline text-4xl font-extrabold text-primary" id="wind-value">--</h3>
-                <span class="text-on-surface-variant text-sm font-medium">km/h</span>
+                <h3 class="font-headline text-4xl font-extrabold text-primary" id="htemp-value">--</h3>
+                <span class="text-on-surface-variant text-sm font-medium">°C</span>
             </div>
-            <div class="flex gap-4 mt-3 text-[10px] text-on-surface-variant">
-                <span>Avg: <strong id="wind-mean">--</strong> km/h</span>
-                <span>Max: <strong id="wind-max">--</strong> km/h</span>
+            <div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+                <div id="htemp-bar" class="h-full bg-teal-500 transition-all duration-700" style="width:0%"></div>
             </div>
-            <div class="mt-3 h-1 w-full bg-surface-container rounded-full overflow-hidden">
-                <div id="wind-bar" class="h-full bg-teal-500 transition-all duration-700" style="width:0%"></div>
-            </div>
+            <p id="htemp-last" class="text-[9px] text-on-surface-variant mt-2 uppercase font-bold tracking-tight">Last
+                updated: --</p>
         </div>
     </div>
 
+    <!-- Main Section: Trends & Intelligence -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Left Column -->
+        <!-- Dashboard Left: Trends -->
         <div class="lg:col-span-8 space-y-8">
-            <!-- Interactive Chart -->
-            <section class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
+            <!-- Combined Trend Chart -->
+            <section
+                class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] relative overflow-hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="font-headline text-xl font-bold text-primary">Weather Trends</h2>
-                        <p class="text-on-surface-variant text-xs">Temperature, Precipitation & Wind — Nancy, FR</p>
+                        <h2 class="font-headline text-xl font-bold text-primary">Hydrological Correlation</h2>
+                        <p class="text-on-surface-variant text-xs">Recent 30-day cross-analysis between sensor data and
+                            climate archive</p>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="setRange('weekly')" id="btn-weekly"
-                            class="range-btn px-3 py-1 rounded-lg text-[10px] font-bold transition-all bg-surface-container text-on-surface-variant hover:bg-primary/10">7D</button>
-                        <button onclick="setRange('monthly')" id="btn-monthly"
-                            class="range-btn px-3 py-1 rounded-lg text-[10px] font-bold transition-all bg-surface-container text-on-surface-variant hover:bg-primary/10">30D</button>
-                        <button onclick="setRange('daily')" id="btn-daily"
-                            class="range-btn px-3 py-1 rounded-lg text-[10px] font-bold transition-all bg-primary text-on-primary">365D</button>
+                    <div
+                        class="bg-surface-container-low px-3 py-1.5 rounded-lg flex items-center gap-4 text-[10px] font-bold text-on-surface-variant">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-600"></span>
+                            Sensor</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Climate</span>
                     </div>
                 </div>
-                <div class="chart-container" style="height: 300px;">
-                    <canvas id="mainChart"></canvas>
-                </div>
+                <div class="chart-container" style="height: 320px;"><canvas id="hydrolensChart"></canvas></div>
             </section>
 
-            <!-- Connectors Panel -->
+            <!-- Connector Network Status -->
             <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Weather Connector -->
-                <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20">
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                            <span class="material-symbols-outlined text-sky-500">cloud_sync</span>
-                        </div>
-                        <div>
-                            <h4 class="font-headline font-bold text-primary">Weather Connector</h4>
-                            <p class="text-xs text-on-surface-variant">Open-Meteo Archive API</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 text-[10px] font-bold text-emerald-600">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
-                        CONNECTION STABLE
-                    </div>
-                    <div class="mt-3 space-y-1 text-[10px] text-on-surface-variant">
-                        <div class="flex justify-between"><span>Variables</span><span class="font-bold">temperature_2m,
-                                precipitation, wind_speed_10m</span></div>
-                        <div class="flex justify-between"><span>Resolution</span><span class="font-bold">8h intervals
-                                (3×/day)</span></div>
-                        <div class="flex justify-between"><span>Range</span><span class="font-bold">365 days</span>
-                        </div>
-                    </div>
-                </div>
-                <!-- Connector Status -->
-                <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20">
+                <div
+                    class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20 group hover:border-sky-500 transition-all">
                     <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-headline font-bold text-primary">Connector Status</h4>
-                        <a href="/connectors" class="text-[10px] font-bold text-sky-600 hover:underline">MANAGE</a>
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-sky-500">database</span>
+                            <h4 class="font-headline font-bold text-primary">ECHO Connector</h4>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">SYNC
+                            OK</span>
                     </div>
-                    <ul class="space-y-3">
-                        <li class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100">
-                            <div class="flex items-center gap-3">
-                                <span class="material-symbols-outlined text-sky-500 text-sm">database</span>
-                                <div>
-                                    <span class="text-xs font-bold">ECHO Station</span>
-                                    <p class="text-[9px] text-on-surface-variant">Internal (data.csv)</p>
-                                </div>
-                            </div>
-                            <span class="text-[9px] font-bold text-emerald-600 flex items-center gap-1">
-                                <span class="w-1 h-1 rounded-full bg-emerald-500"></span> ONLINE
-                            </span>
-                        </li>
-                        <li class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100">
-                            <div class="flex items-center gap-3">
-                                <span class="material-symbols-outlined text-emerald-500 text-sm">cloud_sync</span>
-                                <div>
-                                    <span class="text-xs font-bold">Weather Archive</span>
-                                    <p class="text-[9px] text-on-surface-variant">External API</p>
-                                </div>
-                            </div>
-                            <span class="text-[9px] font-bold text-emerald-600 flex items-center gap-1">
-                                <span class="w-1 h-1 rounded-full bg-emerald-500"></span> ACTIVE
-                            </span>
-                        </li>
-                    </ul>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Active
+                                Channels</span><span class="font-bold">18 Parameters</span></div>
+                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Battery
+                                Level</span><span id="echo-batt" class="font-bold text-emerald-600">--</span></div>
+                    </div>
+                    <a href="/connectors"
+                        class="w-full bg-white border border-slate-200 py-2 rounded-lg text-[11px] font-bold text-sky-900 block text-center hover:bg-sky-50 transition-colors no-underline">VIEW
+                        REFINERY</a>
+                </div>
+                <div
+                    class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20 group hover:border-emerald-500 transition-all">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-emerald-500">cloud_sync</span>
+                            <h4 class="font-headline font-bold text-primary">Climate Archive</h4>
+                        </div>
+                        <span
+                            class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">POLLING</span>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Sync
+                                Latency</span><span class="font-bold">140ms</span></div>
+                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Archive
+                                Depth</span><span class="font-bold">365 Days</span></div>
+                    </div>
+                    <a href="/analysis"
+                        class="w-full bg-white border border-slate-200 py-2 rounded-lg text-[11px] font-bold text-sky-900 block text-center hover:bg-emerald-50 transition-colors no-underline">CROSS
+                        ANALYSIS</a>
                 </div>
             </section>
         </div>
 
-        <!-- Right Column -->
+        <!-- Dashboard Right: Context & Schedule -->
         <div class="lg:col-span-4 space-y-8">
-            <!-- Predictive Forecast -->
+            <!-- Predictive Forecast UI -->
             <section
-                class="bg-gradient-to-br from-amber-50 to-white p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-amber-200">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="material-symbols-outlined text-amber-600"
-                        style="font-variation-settings: 'FILL' 1;">warning</span>
-                    <h2 class="font-headline font-bold text-amber-900">Upcoming Event</h2>
+                class="bg-gradient-to-br from-amber-50 to-white p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-amber-200 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-20 h-20 bg-amber-200/20 rounded-full blur-2xl"></div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-8 h-8 bg-amber-200 rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined text-amber-700 text-sm"
+                            style="font-variation-settings: 'FILL' 1;">warning</span>
+                    </div>
+                    <h2 class="font-headline font-bold text-amber-900">Intelligence Alert</h2>
                 </div>
-                <div class="space-y-4">
-                    <div class="bg-amber-100/50 p-4 rounded-lg">
-                        <p class="text-sm font-bold text-amber-900" id="forecast-title">Analyzing precipitation
-                            trends...</p>
-                        <p class="text-xs text-amber-800 mt-1" id="forecast-detail">Based on recent weather data</p>
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-[11px] font-bold text-amber-800 uppercase tracking-widest mb-1" id="alert-cause">
+                            Analyzing Precipitation</p>
+                        <p class="text-sm font-bold text-primary leading-tight" id="alert-title">Turbidity risk analysis
+                            in progress...</p>
                     </div>
                     <div class="space-y-2">
                         <div class="flex justify-between text-[10px] font-bold text-amber-700">
                             <span>RUNOFF RISK</span>
-                            <span id="runoff-pct">--</span>
+                            <span id="risk-pct">--</span>
                         </div>
-                        <div class="h-1 w-full bg-amber-200 rounded-full">
-                            <div id="runoff-bar" class="h-full bg-amber-500 transition-all duration-700"
-                                style="width:0%"></div>
+                        <div class="h-1.5 w-full bg-amber-200 rounded-full overflow-hidden">
+                            <div id="risk-bar" class="h-full bg-amber-500 transition-all duration-700" style="width:0%">
+                            </div>
                         </div>
                     </div>
-                    <p class="text-[11px] text-amber-700 leading-relaxed italic">
-                        "High precipitation increases runoff risk, carrying pollutants into water bodies. Monitor
-                        turbidity levels closely after heavy rain events."
-                    </p>
                 </div>
             </section>
 
-            <!-- Calendar Widget -->
-            <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-                <div class="flex justify-between items-center mb-4">
+            <!-- Calendar Side Widget -->
+            <section
+                class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] divide-y divide-slate-100">
+                <div class="flex justify-between items-center pb-4">
                     <h2 class="font-headline font-bold text-primary">Schedule</h2>
-                    <div class="flex items-center gap-2">
-                        <button onclick="changeMonth(-1)"
-                            class="material-symbols-outlined text-on-surface-variant text-sm hover:text-primary transition-colors">chevron_left</button>
-                        <span id="calendar-month" class="text-xs font-bold text-on-surface-variant"></span>
-                        <button onclick="changeMonth(1)"
-                            class="material-symbols-outlined text-on-surface-variant text-sm hover:text-primary transition-colors">chevron_right</button>
-                    </div>
+                    <span id="cal-date-label" class="text-[10px] font-bold text-on-surface-variant uppercase"></span>
                 </div>
-                <div class="grid grid-cols-7 gap-1 mb-4">
-                    <span class="text-[9px] text-center font-bold text-slate-400">M</span>
-                    <span class="text-[9px] text-center font-bold text-slate-400">T</span>
-                    <span class="text-[9px] text-center font-bold text-slate-400">W</span>
-                    <span class="text-[9px] text-center font-bold text-slate-400">T</span>
-                    <span class="text-[9px] text-center font-bold text-slate-400">F</span>
-                    <span class="text-[9px] text-center font-bold text-slate-400">S</span>
-                    <span class="text-[9px] text-center font-bold text-slate-400">S</span>
-                </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1 mb-6"></div>
-                <div class="space-y-4">
-                    <div class="flex gap-4 items-start">
-                        <div class="w-1 h-8 bg-tertiary rounded-full flex-shrink-0"></div>
+                <div class="pt-4 space-y-6">
+                    <div class="flex gap-4 items-center group cursor-pointer">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
+                            <span
+                                class="text-[8px] font-bold text-slate-400 group-hover:text-white/70 uppercase">MON</span>
+                            <span class="text-sm font-bold text-primary group-hover:text-white leading-none">15</span>
+                        </div>
                         <div>
-                            <p class="text-xs font-bold">Sensor Calibration</p>
-                            <p class="text-[10px] text-on-surface-variant">Weekly • Every Monday 09:00</p>
+                            <p class="text-xs font-bold text-slate-900 leading-tight">Sensor Calibration</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">ECHO Station ECHO-01</p>
                         </div>
                     </div>
-                    <div class="flex gap-4 items-start">
-                        <div class="w-1 h-8 bg-error rounded-full flex-shrink-0"></div>
-                        <div>
-                            <p class="text-xs font-bold">ECHO-02 Maintenance</p>
-                            <p class="text-[10px] text-on-surface-variant">Scheduled • Pending date</p>
+                    <div class="flex gap-4 items-center group cursor-pointer opacity-60">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center">
+                            <span class="text-[8px] font-bold text-slate-400 uppercase">WED</span>
+                            <span class="text-sm font-bold text-primary leading-none">17</span>
                         </div>
-                    </div>
-                    <div class="flex gap-4 items-start">
-                        <div class="w-1 h-8 bg-primary rounded-full flex-shrink-0"></div>
                         <div>
-                            <p class="text-xs font-bold">Monthly Data Export</p>
-                            <p class="text-[10px] text-on-surface-variant">1st of each month • 00:00</p>
+                            <p class="text-xs font-bold text-slate-900 leading-tight">Database Archive</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">365-day rollover sync</p>
                         </div>
                     </div>
                 </div>
+                <a href="/calendar"
+                    class="w-full block pt-4 text-center text-[10px] font-bold text-sky-600 hover:text-sky-800 transition-colors no-underline">VIEW
+                    FULL CALENDAR</a>
             </section>
-
-            <!-- System Health -->
-            <div
-                class="h-36 bg-gradient-to-br from-primary to-primary-container rounded-xl overflow-hidden relative group">
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-primary to-transparent p-5 flex flex-col justify-end">
-                    <span class="text-white/60 text-[10px] font-bold uppercase tracking-widest">System Health</span>
-                    <p class="text-white font-headline font-bold text-lg">Optimal Performance</p>
-                    <p class="text-white/70 text-[10px] mt-1">All systems operational • 99.8% uptime</p>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -261,187 +216,103 @@
 
 {% block scripts %}
 <script>
-    let weatherData = null;
-    let mainChart = null;
-    let currentRange = 'daily';
-    let calendarDate = new Date();
+    let state = { weather: null, sensors: null };
 
-    // Fetch data and initialize
-    fetch('/api/weather')
-        .then(r => r.json())
-        .then(data => {
-            weatherData = data;
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('dashboard-content').classList.remove('hidden');
-            document.getElementById('sync-status').innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> Last Sync: Just now';
-            populateMetrics(data.stats);
-            createMainChart(data.daily);
-            updateForecast(data.stats);
-            renderCalendar();
-        })
-        .catch(err => {
-            document.getElementById('loading').innerHTML = '<p class="text-error text-sm">Error loading data. Is the server running?</p>';
-        });
+    Promise.all([
+        fetch('/api/weather').then(r => r.json()),
+        fetch('/api/sensor-data').then(r => r.json())
+    ]).then(([weather, sensors]) => {
+        state.weather = weather;
+        state.sensors = sensors;
 
-    function populateMetrics(stats) {
-        // Temperature
-        document.getElementById('temp-value').textContent = stats.temperature.current;
-        document.getElementById('temp-min').textContent = stats.temperature.min;
-        document.getElementById('temp-max').textContent = stats.temperature.max;
-        document.getElementById('temp-mean').textContent = stats.temperature.mean;
-        const tempPct = Math.min(100, Math.max(0, ((stats.temperature.current - stats.temperature.min) / (stats.temperature.max - stats.temperature.min)) * 100));
-        document.getElementById('temp-bar').style.width = tempPct + '%';
-        document.getElementById('temp-badge').textContent = Math.abs(stats.temperature.current - stats.temperature.mean) < stats.temperature.std ? 'NORMAL' : 'ALERT';
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('dashboard-content').classList.remove('hidden');
+        document.getElementById('sync-status').innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> Last Sync: Just' + ' Now';
+        document.getElementById('cal-date-label').textContent = new Date().toLocaleDateString('en', { month: 'short', year: 'numeric' });
 
-        // Precipitation
-        document.getElementById('precip-value').textContent = stats.precipitation.current;
-        document.getElementById('precip-total').textContent = stats.precipitation.total_30d;
-        document.getElementById('precip-mean').textContent = stats.precipitation.mean;
-        const precipPct = Math.min(100, (stats.precipitation.current / Math.max(0.01, stats.precipitation.max)) * 100);
-        document.getElementById('precip-bar').style.width = precipPct + '%';
-        document.getElementById('precip-badge').textContent = stats.precipitation.current < 1 ? 'DRY' : stats.precipitation.current < 5 ? 'LIGHT' : 'HEAVY';
+        populateDashboard(sensors, weather);
+    }).catch(err => {
+        document.getElementById('loading').innerHTML = `<p class="text-error text-sm font-bold">CRITICAL SYSTEM ERROR: ${err.message}</p>`;
+    });
 
-        // Wind
-        document.getElementById('wind-value').textContent = stats.wind_speed.current;
-        document.getElementById('wind-mean').textContent = stats.wind_speed.mean;
-        document.getElementById('wind-max').textContent = stats.wind_speed.max;
-        const windPct = Math.min(100, (stats.wind_speed.current / stats.wind_speed.max) * 100);
-        document.getElementById('wind-bar').style.width = windPct + '%';
-        document.getElementById('wind-badge').textContent = stats.wind_speed.current < 15 ? 'CALM' : stats.wind_speed.current < 30 ? 'MODERATE' : 'STRONG';
-    }
+    function populateDashboard(sensors, weather) {
+        const s = sensors.metrics;
+        const w = weather.stats;
 
-    function createMainChart(dataset) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        if (mainChart) mainChart.destroy();
-        mainChart = new Chart(ctx, {
+        // Water Quality Metrics
+        document.getElementById('ph-value').textContent = s.ph.toFixed(2);
+        document.getElementById('ph-bar').style.width = (s.ph / 14 * 100) + '%';
+        document.getElementById('ph-last').textContent = 'Last Reading: ' + s.timestamp;
+
+        document.getElementById('turb-value').textContent = s.turbidity.toFixed(2);
+        document.getElementById('turb-bar').style.width = Math.min(100, (s.turbidity / 1 * 100)) + '%';
+        document.getElementById('turb-last').textContent = 'Station: ECHO-01';
+
+        document.getElementById('htemp-value').textContent = s.temp.toFixed(1);
+        document.getElementById('htemp-bar').style.width = Math.min(100, (s.temp / 30 * 100)) + '%';
+        document.getElementById('htemp-last').textContent = 'Submerged Probe';
+
+        document.getElementById('echo-batt').textContent = s.battery + '%';
+
+        // Trend Chart
+        const ctx = document.getElementById('hydrolensChart').getContext('2d');
+        new Chart(ctx, {
             type: 'line',
             data: {
-                labels: dataset.labels,
+                labels: sensors.trends.labels,
                 datasets: [
                     {
-                        label: 'Temperature (°C)',
-                        data: dataset.temperature,
+                        label: 'Turbidity (NTU)',
+                        data: sensors.trends.turbidity,
                         borderColor: '#004370',
                         backgroundColor: 'rgba(0, 67, 112, 0.08)',
                         fill: true,
                         tension: 0.4,
                         pointRadius: 0,
-                        pointHoverRadius: 4,
                         borderWidth: 2,
-                        yAxisID: 'y',
+                        yAxisID: 'y'
                     },
                     {
-                        label: 'Precipitation (mm)',
-                        data: dataset.precipitation,
+                        label: 'pH Level',
+                        data: sensors.trends.ph,
                         borderColor: '#006a6a',
-                        backgroundColor: 'rgba(0, 106, 106, 0.15)',
-                        fill: true,
-                        tension: 0.1,
-                        pointRadius: 0,
-                        pointHoverRadius: 4,
-                        borderWidth: 1.5,
-                        yAxisID: 'y1',
-                        type: 'bar',
-                    },
-                    {
-                        label: 'Wind Speed (km/h)',
-                        data: dataset.wind_speed,
-                        borderColor: '#55d7ed',
-                        backgroundColor: 'rgba(85, 215, 237, 0.05)',
+                        borderDash: [5, 5],
                         fill: false,
                         tension: 0.4,
                         pointRadius: 0,
-                        pointHoverRadius: 4,
                         borderWidth: 1.5,
-                        yAxisID: 'y',
+                        yAxisID: 'y1'
                     }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { family: 'Inter', size: 10 } } },
-                    tooltip: { backgroundColor: '#004370', titleFont: { family: 'Manrope', weight: 'bold' }, bodyFont: { family: 'Inter' }, cornerRadius: 8, padding: 12 }
+                    legend: { display: true, position: 'top', labels: { boxWidth: 6, usePointStyle: true, font: { size: 9, family: 'Inter' } } },
+                    tooltip: { backgroundColor: '#004370', titleFont: { family: 'Manrope' } }
                 },
                 scales: {
-                    x: { display: true, grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, maxTicksLimit: 12, color: '#717781' } },
-                    y: { display: true, position: 'left', grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'Inter', size: 9 }, color: '#717781' }, title: { display: true, text: '°C / km/h', font: { family: 'Inter', size: 9 }, color: '#717781' } },
-                    y1: { display: true, position: 'right', grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, color: '#006a6a' }, title: { display: true, text: 'mm', font: { family: 'Inter', size: 9 }, color: '#006a6a' } }
+                    x: { grid: { display: false }, ticks: { font: { size: 8 }, maxTicksLimit: 10 } },
+                    y: { title: { display: true, text: 'Turbidity', font: { size: 9 } } },
+                    y1: { position: 'right', grid: { display: false }, title: { display: true, text: 'pH', font: { size: 9 } } }
                 }
             }
         });
-    }
 
-    function setRange(range) {
-        currentRange = range;
-        document.querySelectorAll('.range-btn').forEach(btn => {
-            btn.classList.remove('bg-primary', 'text-on-primary');
-            btn.classList.add('bg-surface-container', 'text-on-surface-variant');
-        });
-        document.getElementById('btn-' + range).classList.remove('bg-surface-container', 'text-on-surface-variant');
-        document.getElementById('btn-' + range).classList.add('bg-primary', 'text-on-primary');
-        createMainChart(weatherData[range]);
-    }
+        // Intelligence Alert Logic
+        const prec = w.precipitation.total_30d;
+        const rpct = Math.min(100, Math.round(prec / 1.5));
+        document.getElementById('risk-pct').textContent = rpct + '%';
+        document.getElementById('risk-bar').style.width = rpct + '%';
 
-    function updateForecast(stats) {
-        const precip30d = stats.precipitation.total_30d;
-        const riskPct = Math.min(100, Math.round(precip30d / 3));
-        document.getElementById('runoff-pct').textContent = riskPct + '%';
-        document.getElementById('runoff-bar').style.width = riskPct + '%';
-        if (precip30d > 100) {
-            document.getElementById('forecast-title').textContent = 'High Precipitation Period';
-            document.getElementById('forecast-detail').textContent = precip30d + 'mm total in last 30 days';
+        if (rpct > 50) {
+            document.getElementById('alert-title').innerHTML = `High Runoff Risk <span class='text-xs font-normal block mt-1'>${prec.toFixed(1)}mm rain in last 30d</span>`;
+            document.getElementById('alert-cause').textContent = 'STORM EVENT DETECTED';
         } else {
-            document.getElementById('forecast-title').textContent = 'Normal Precipitation Levels';
-            document.getElementById('forecast-detail').textContent = precip30d + 'mm total in last 30 days';
+            document.getElementById('alert-title').textContent = 'Optimal Condition — Base flow stable';
+            document.getElementById('alert-cause').textContent = 'CLIMATE CONTEXT';
         }
-    }
-
-    // Calendar
-    function renderCalendar() {
-        const grid = document.getElementById('calendar-grid');
-        const year = calendarDate.getFullYear();
-        const month = calendarDate.getMonth();
-        const today = new Date();
-
-        document.getElementById('calendar-month').textContent = calendarDate.toLocaleDateString('en', { month: 'long', year: 'numeric' });
-
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        let startDay = (firstDay.getDay() + 6) % 7; // Monday = 0
-
-        let html = '';
-        // Previous month padding
-        const prevLast = new Date(year, month, 0).getDate();
-        for (let i = startDay - 1; i >= 0; i--) {
-            html += `<div class="h-8 flex items-center justify-center text-xs text-slate-300">${prevLast - i}</div>`;
-        }
-        // Current month
-        for (let d = 1; d <= lastDay.getDate(); d++) {
-            const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-            const isMonday = new Date(year, month, d).getDay() === 1;
-            const isFirst = d === 1;
-            let cls = 'h-8 flex items-center justify-center text-xs rounded-lg cursor-pointer hover:bg-primary/5 transition-colors relative';
-            if (isToday) cls += ' bg-primary/10 font-bold text-primary ring-1 ring-primary/30';
-            let dot = '';
-            if (isMonday) dot = '<span class="absolute bottom-0.5 w-1 h-1 bg-tertiary rounded-full"></span>';
-            if (isFirst) dot = '<span class="absolute bottom-0.5 w-1 h-1 bg-primary rounded-full"></span>';
-            html += `<div class="${cls}">${d}${dot}</div>`;
-        }
-        // Next month padding
-        const totalCells = startDay + lastDay.getDate();
-        const remaining = (7 - (totalCells % 7)) % 7;
-        for (let i = 1; i <= remaining; i++) {
-            html += `<div class="h-8 flex items-center justify-center text-xs text-slate-300">${i}</div>`;
-        }
-        grid.innerHTML = html;
-    }
-
-    function changeMonth(delta) {
-        calendarDate.setMonth(calendarDate.getMonth() + delta);
-        renderCalendar();
     }
 </script>
 {% endblock %}

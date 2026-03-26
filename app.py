@@ -1,7 +1,9 @@
 from flask import Flask, render_template, jsonify, Response
 from weather import get_weather_data
+from data_handler import load_and_clean_data, get_latest_sensor_metrics, get_resampled_sensor_data
 from datetime import datetime, date
 import pandas as pd
+import numpy as np
 import json
 import io
 
@@ -11,21 +13,20 @@ app = Flask(__name__)
 LAT = 48.693033
 LON = 6.204775
 
+# Global cache for sensor data
+_df_sensor = None
+_numeric_cols = []
+
+def get_processed_sensor_data():
+    """Load and return processed sensor data from data_handler."""
+    global _df_sensor, _numeric_cols
+    # Re-loading every time for now as requested or until we add a proper trigger
+    _df_sensor, _numeric_cols = load_and_clean_data("data.csv")
+    return _df_sensor, _numeric_cols
+
 def get_cached_weather():
     """Fetch weather data (cached by requests_cache in weather.py)."""
     return get_weather_data(lat=LAT, lon=LON, days=365)
-
-def get_sensor_data():
-    """Read sensor data from data.csv."""
-    try:
-        # Load CSV, assuming it's in the same directory
-        df = pd.read_csv("data.csv")
-        # Rename columns for easier access if necessary, but we'll use them as is for now
-        # Most recent data at the end
-        return df
-    except Exception as e:
-        print(f"Error reading data.csv: {e}")
-        return pd.DataFrame()
 
 # --- Pages ---
 
@@ -142,22 +143,41 @@ def api_export():
 
 @app.route("/api/sensor-data")
 def api_sensor_data():
-    """Return the most recent sensor data from data.csv."""
-    df = get_sensor_data()
+    """Return processed sensor data from data.csv."""
+    df, _ = get_processed_sensor_data()
     if df.empty:
         return jsonify({"error": "No data found"}), 404
     
-    # Take the last 50 points for display
-    tail_df = df.tail(50).copy()
+    # Latest readings
+    metrics = get_latest_sensor_metrics(df)
     
-    # Convert To JSON-friendly format
-    data_list = []
-    for _, row in tail_df.iterrows():
-        data_list.append(row.to_dict())
-        
+    # Resampled data for trends (last 365 days)
+    res_df = get_resampled_sensor_data(df, interval='24h') # Daily average for better speed/overview
+    res_tail = res_df.tail(365).copy()
+    
+    def safe_get_col(col_name, ndigits=2):
+        if col_name in res_tail:
+            return [round(float(v), ndigits) if pd.notna(v) else None for v in res_tail[col_name]]
+        return [None] * len(res_tail)
+
+    res_data = {
+        "labels": res_tail.index.strftime("%Y-%m-%d").tolist(),
+        "ph": safe_get_col("pH Test", 2),
+        "turbidity": safe_get_col("Turbidité", 3),
+        "conductivity": safe_get_col("Conductivité", 1),
+        "temp": safe_get_col("O2 Temperature", 1),
+        "all_params": {}
+    }
+    
+    # Store all numeric columns for potential plotting
+    _, numeric_cols = load_and_clean_data("data.csv")
+    for col in numeric_cols:
+        res_data["all_params"][col] = safe_get_col(col, 3)
+    
     return jsonify({
-        "recent": data_list,
-        "columns": df.columns.tolist(),
+        "metrics": metrics,
+        "trends": res_data,
+        "numeric_columns": numeric_cols.tolist(),
         "total_records": len(df)
     })
 

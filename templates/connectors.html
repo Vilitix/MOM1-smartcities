@@ -27,7 +27,7 @@
                     </div>
                     <div>
                         <h3 class="font-headline font-bold text-primary text-lg">ECHO Station</h3>
-                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Internal
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Processed
                             Dataset (data.csv)</p>
                     </div>
                 </div>
@@ -36,17 +36,17 @@
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Records</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Total Records</p>
                     <p id="echo-count" class="text-xl font-bold text-primary">--</p>
                 </div>
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Last Update</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Last Reading</p>
                     <p id="echo-last-time" class="text-[10px] font-bold text-primary">--</p>
                 </div>
             </div>
 
             <div class="space-y-3">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Active Channels</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Stream Metadata</p>
                 <div class="flex flex-wrap gap-2" id="echo-columns">
                     <!-- Dynamic -->
                 </div>
@@ -76,92 +76,78 @@
                     <p class="text-xl font-bold text-primary">8 hours</p>
                 </div>
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Latency</p>
-                    <p class="text-xl font-bold text-primary">140ms</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Correlation Status</p>
+                    <p class="text-xl font-bold text-primary text-emerald-600">Sync'd</p>
                 </div>
             </div>
 
             <div class="space-y-3">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Stream Mapping</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Mapped Variables</p>
                 <div class="space-y-2">
                     <div class="flex justify-between items-center text-[11px]">
                         <span class="text-on-surface-variant">temperature_2m</span>
-                        <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
+                        <span class="bg-sky-50 text-sky-700 px-2 py-0.5 rounded">Active</span>
                     </div>
                     <div class="flex justify-between items-center text-[11px]">
                         <span class="text-on-surface-variant">precipitation</span>
-                        <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
-                    </div>
-                    <div class="flex justify-between items-center text-[11px]">
-                        <span class="text-on-surface-variant">wind_speed_10m</span>
-                        <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
+                        <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">Active</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Sensor Payload (ECHO) -->
-    <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="font-headline font-bold text-primary text-lg">Recent Sensor Payload (ECHO)</h2>
-            <button onclick="fetchSensorData()"
-                class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">refresh</button>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-[11px]">
-                <thead>
-                    <tr class="bg-surface-container-low border-b border-outline-variant/30">
-                        <th class="text-left p-3 font-bold uppercase tracking-wider text-on-surface-variant">Timestamp
-                        </th>
-                        <th class="text-right p-3 font-bold uppercase tracking-wider text-on-surface-variant">PH Test
-                        </th>
-                        <th class="text-right p-3 font-bold uppercase tracking-wider text-on-surface-variant">
-                            Conductivity</th>
-                        <th class="text-right p-3 font-bold uppercase tracking-wider text-on-surface-variant">Turbidity
-                        </th>
-                        <th class="text-right p-3 font-bold uppercase tracking-wider text-on-surface-variant">MES</th>
-                        <th class="text-right p-3 font-bold uppercase tracking-wider text-on-surface-variant">Battery
-                        </th>
-                    </tr>
-                </thead>
-                <tbody id="connector-table">
-                    <!-- Dynamic -->
-                </tbody>
-            </table>
+    <!-- Sensor Reliability / Overview -->
+    <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] text-center">
+        <h2 class="font-headline font-bold text-primary text-lg mb-6">Sensor Reliability</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Availability</p>
+                <p class="text-2xl font-extrabold text-emerald-600">99.8%</p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Integrity</p>
+                <p class="text-2xl font-extrabold text-emerald-600">100%</p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Calibration</p>
+                <p class="text-2xl font-extrabold text-amber-500">Due 5d</p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Battery</p>
+                <p id="echo-battery" class="text-2xl font-extrabold text-emerald-600">--</p>
+            </div>
         </div>
     </section>
 
-    <!-- Data Lineage Map -->
-    <section
-        class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] relative overflow-hidden">
+    <!-- Integration Architecture -->
+    <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
         <h2 class="font-headline font-bold text-primary text-lg mb-6">Integration Architecture</h2>
         <div class="flex flex-col md:flex-row items-center justify-between gap-8 py-8 relative">
-            <!-- Line connectors simplified -->
             <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 z-0"></div>
 
             <div class="z-10 bg-white border border-slate-200 p-4 rounded-xl w-48 text-center shadow-sm">
                 <p class="text-[10px] font-bold text-sky-600 mb-1">SOURCE A</p>
                 <p class="text-xs font-bold">Local Storage (CSV)</p>
-                <p class="text-[9px] text-slate-400">data.csv</p>
+                <p class="text-[9px] text-slate-400">data_handler.py</p>
             </div>
 
             <div class="z-10 bg-white border border-slate-200 p-4 rounded-xl w-48 text-center shadow-sm">
                 <p class="text-[10px] font-bold text-emerald-600 mb-1">SOURCE B</p>
                 <p class="text-xs font-bold">Open-Meteo REST API</p>
-                <p class="text-[9px] text-slate-400">Direct HTTPS</p>
+                <p class="text-[9px] text-slate-400">Direct HTTPS (8h)</p>
             </div>
 
             <div class="z-10 bg-primary p-4 rounded-xl w-56 text-center shadow-lg border-2 border-primary-container">
-                <p class="text-[10px] font-bold text-sky-200 mb-1">PROCESSOR</p>
-                <p class="text-xs font-bold text-white uppercase">HydroLens Engine</p>
-                <p class="text-[9px] text-sky-200/70">Pandas + Flask Unified API</p>
+                <p class="text-[10px] font-bold text-sky-200 mb-1">REFINERY</p>
+                <p class="text-xs font-bold text-white uppercase">Data Refinery</p>
+                <p class="text-[9px] text-sky-200/70">Cleaning & Resampling</p>
             </div>
 
             <div class="z-10 bg-white border border-slate-200 p-4 rounded-xl w-48 text-center shadow-sm">
-                <p class="text-[10px] font-bold text-slate-500 mb-1">OUTPUT</p>
+                <p class="text-[10px] font-bold text-slate-500 mb-1">CONSUMER</p>
                 <p class="text-xs font-bold text-primary">Web Dashboard</p>
-                <p class="text-[9px] text-slate-400">Jinja2 + Chart.js</p>
+                <p class="text-[9px] text-slate-400">Jinja2 Reactive UI</p>
             </div>
         </div>
     </section>
@@ -177,49 +163,21 @@
                 if (data.error) throw new Error(data.error);
 
                 document.getElementById('echo-count').textContent = data.total_records.toLocaleString();
+                document.getElementById('echo-last-time').textContent = data.metrics.timestamp || '--';
+                document.getElementById('echo-battery').textContent = data.metrics.battery + '%';
 
-                const lastRow = data.recent[data.recent.length - 1];
-                document.getElementById('echo-last-time').textContent = lastRow['Date'] || lastRow['Timestamp'] || '--';
-
-                // Columns list
+                // Metadata tags
                 const colContainer = document.getElementById('echo-columns');
                 colContainer.innerHTML = '';
-                // Display first 8 columns as tags
-                data.columns.slice(0, 10).forEach(col => {
-                    if (col === 'Timestamp' || col === 'Date') return;
+                data.columns.slice(0, 12).forEach(col => {
+                    if (['Timestamp', 'Date', 'datetime'].includes(col)) return;
                     const span = document.createElement('span');
-                    span.className = 'text-[9px] bg-slate-100 px-2 py-1 rounded font-medium text-slate-600';
+                    span.className = 'text-[9px] bg-sky-50 text-sky-700 px-2 py-1 rounded font-bold uppercase';
                     span.textContent = col;
                     colContainer.appendChild(span);
                 });
-                if (data.columns.length > 10) {
-                    const span = document.createElement('span');
-                    span.className = 'text-[9px] bg-slate-50 px-2 py-1 rounded font-medium text-slate-400';
-                    span.textContent = `+ ${data.columns.length - 10} more`;
-                    colContainer.appendChild(span);
-                }
-
-                // Table rows
-                const tableBody = document.getElementById('connector-table');
-                tableBody.innerHTML = '';
-                data.recent.reverse().slice(0, 15).forEach((row, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.className = idx % 2 === 0 ? 'hover:bg-primary/5 transition-colors' : 'bg-surface-container-low/30 hover:bg-primary/5 transition-colors';
-
-                    tr.innerHTML = `
-                    <td class="p-3 font-medium">${row['Date'] || '-'}</td>
-                    <td class="p-3 text-right font-bold text-primary">${row['pH Test'] || '0.00'}</td>
-                    <td class="p-3 text-right text-on-surface-variant">${Math.round(row['Conductivité'] || 0)}</td>
-                    <td class="p-3 text-right text-on-surface-variant">${(row['Turbidité'] || 0).toFixed(3)}</td>
-                    <td class="p-3 text-right text-on-surface-variant">${(row['MES'] || 0).toFixed(3)}</td>
-                    <td class="p-3 text-right font-bold text-emerald-600">${Math.round(row['Total battery charge #6f0d'] || 0)}%</td>
-                `;
-                    tableBody.appendChild(tr);
-                });
             })
-            .catch(err => {
-                console.error(err);
-            });
+            .catch(err => console.error(err));
     }
 
     fetchSensorData();

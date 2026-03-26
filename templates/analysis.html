@@ -4,112 +4,79 @@
 <div id="loading" class="flex items-center justify-center py-20">
     <div class="text-center">
         <div class="loading-spinner mx-auto mb-4"></div>
-        <p class="text-on-surface-variant text-sm">Loading analysis data...</p>
+        <p class="text-on-surface-variant text-sm">Synchronizing telemetry streams...</p>
     </div>
 </div>
 
-<div id="analysis-content" class="hidden space-y-8">
+<div id="analysis-content" class="hidden space-y-12">
     <div class="flex justify-between items-center">
         <div>
-            <h1 class="font-headline text-2xl font-bold text-primary">Detailed Analysis</h1>
-            <p class="text-on-surface-variant text-xs mt-1">365 days of weather data — 8h intervals — Nancy, FR</p>
+            <h1 class="font-headline text-2xl font-bold text-primary">Hydrometric Analysis</h1>
+            <p class="text-on-surface-variant text-xs mt-1">Cross-correlating weather patterns with water quality
+                metrics</p>
         </div>
-        <a href="/api/export"
-            class="bg-primary text-on-primary px-4 py-2 rounded-xl font-bold text-xs shadow-lg no-underline flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <span class="material-symbols-outlined text-sm">download</span> Export CSV
-        </a>
-    </div>
-
-    <!-- Stats Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h3 class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-3">Temperature
-                Statistics</h3>
-            <div class="space-y-2 text-xs">
-                <div class="flex justify-between"><span class="text-on-surface-variant">Current</span><span
-                        id="a-temp-cur" class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Mean</span><span
-                        id="a-temp-mean" class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Min</span><span id="a-temp-min"
-                        class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Max</span><span id="a-temp-max"
-                        class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Std Dev</span><span
-                        id="a-temp-std" class="font-bold">--</span></div>
-            </div>
-        </div>
-        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h3 class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-3">Precipitation
-                Statistics</h3>
-            <div class="space-y-2 text-xs">
-                <div class="flex justify-between"><span class="text-on-surface-variant">Current</span><span
-                        id="a-prec-cur" class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">30d Total</span><span
-                        id="a-prec-total" class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Mean / 8h</span><span
-                        id="a-prec-mean" class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Max / 8h</span><span
-                        id="a-prec-max" class="font-bold">--</span></div>
-            </div>
-        </div>
-        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h3 class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-3">Wind Speed
-                Statistics</h3>
-            <div class="space-y-2 text-xs">
-                <div class="flex justify-between"><span class="text-on-surface-variant">Current</span><span
-                        id="a-wind-cur" class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Mean</span><span
-                        id="a-wind-mean" class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Max</span><span id="a-wind-max"
-                        class="font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-on-surface-variant">Std Dev</span><span
-                        id="a-wind-std" class="font-bold">--</span></div>
-            </div>
+        <div class="flex gap-2">
+            <a href="/api/export"
+                class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-xl font-bold text-xs no-underline flex items-center gap-2 hover:bg-surface-container-highest transition-colors">
+                <span class="material-symbols-outlined text-sm">download</span> Weather CSV
+            </a>
         </div>
     </div>
 
-    <!-- Individual Charts -->
-    <div class="grid grid-cols-1 gap-8">
-        <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h2 class="font-headline font-bold text-primary mb-2">Temperature (2m)</h2>
-            <p class="text-on-surface-variant text-[10px] mb-4">Daily average over 365 days</p>
-            <div class="chart-container" style="height:220px;"><canvas id="tempChart"></canvas></div>
-        </section>
-        <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h2 class="font-headline font-bold text-primary mb-2">Precipitation</h2>
-            <p class="text-on-surface-variant text-[10px] mb-4">Daily total over 365 days</p>
-            <div class="chart-container" style="height:220px;"><canvas id="precipChart"></canvas></div>
-        </section>
-        <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h2 class="font-headline font-bold text-primary mb-2">Wind Speed (10m)</h2>
-            <p class="text-on-surface-variant text-[10px] mb-4">Daily average over 365 days</p>
-            <div class="chart-container" style="height:220px;"><canvas id="windChart"></canvas></div>
-        </section>
-    </div>
+    <!-- GLOBAL EXPLORATORY CHART -->
+    <section
+        class="bg-surface-container-lowest p-8 rounded-2xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-slate-100">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h2 class="font-headline font-bold text-primary text-xl">Parameter Explorer</h2>
+                <p class="text-on-surface-variant text-xs mt-1">Select any metric from the ECHO sensor array to view its
+                    365-day trajectory</p>
+            </div>
+            <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                <span class="text-[10px] font-bold text-primary uppercase ml-2">Parameter:</span>
+                <select id="paramSelect" onchange="updateGlobalChart()"
+                    class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                    <!-- Dynamic -->
+                </select>
+            </div>
+        </div>
+        <div class="chart-container" style="height: 350px;">
+            <canvas id="globalTrendChart"></canvas>
+        </div>
+    </section>
 
-    <!-- Data Table -->
+    <!-- Detailed Correlations -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
+            <h3 class="font-headline font-bold text-primary mb-1">Standard Correlations</h3>
+            <p class="text-[10px] text-on-surface-variant mb-6 uppercase tracking-wider font-bold">pH vs. Turbidity
+                Index</p>
+            <div class="chart-container" style="height:250px;"><canvas id="phTurbidityChart"></canvas></div>
+        </div>
+        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
+            <h3 class="font-headline font-bold text-primary mb-1">Thermal & Conductivity</h3>
+            <p class="text-[10px] text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Ambient Water Temp
+                vs. Conductance</p>
+            <div class="chart-container" style="height:250px;"><canvas id="condTempChart"></canvas></div>
+        </div>
+    </section>
+
+    <!-- Climate Context -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-        <h2 class="font-headline font-bold text-primary mb-4">Recent Data Points</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs">
-                <thead>
-                    <tr class="bg-surface-container-low">
-                        <th
-                            class="text-left p-3 font-bold text-[10px] uppercase tracking-widest text-on-surface-variant">
-                            Date</th>
-                        <th
-                            class="text-right p-3 font-bold text-[10px] uppercase tracking-widest text-on-surface-variant">
-                            Temp (°C)</th>
-                        <th
-                            class="text-right p-3 font-bold text-[10px] uppercase tracking-widest text-on-surface-variant">
-                            Precip (mm)</th>
-                        <th
-                            class="text-right p-3 font-bold text-[10px] uppercase tracking-widest text-on-surface-variant">
-                            Wind (km/h)</th>
-                    </tr>
-                </thead>
-                <tbody id="data-table"></tbody>
-            </table>
+        <h2 class="font-headline font-bold text-primary text-lg mb-6">Meteorological Sync (Open-Meteo)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="space-y-2">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Air Temperature (2m)</p>
+                <div class="chart-container" style="height:120px;"><canvas id="weatherTempChart"></canvas></div>
+            </div>
+            <div class="space-y-2">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Precipitation Events</p>
+                <div class="chart-container" style="height:120px;"><canvas id="weatherPrecipChart"></canvas></div>
+            </div>
+            <div class="space-y-2">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Wind Speed Velocity</p>
+                <div class="chart-container" style="height:120px;"><canvas id="weatherWindChart"></canvas></div>
+            </div>
         </div>
     </section>
 </div>
@@ -117,50 +84,115 @@
 
 {% block scripts %}
 <script>
-    const chartOpts = (color, label, fill = false) => ({
-        type: 'line', options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { backgroundColor: '#004370', cornerRadius: 8, padding: 10, titleFont: { family: 'Manrope', weight: 'bold' }, bodyFont: { family: 'Inter' } } },
-            scales: { x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, maxTicksLimit: 12, color: '#717781' } }, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'Inter', size: 9 }, color: '#717781' } } }
-        }
-    });
+    let state = { weather: null, sensors: null };
+    let globalChart = null;
 
-    fetch('/api/weather').then(r => r.json()).then(data => {
+    const commonOpts = {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 8, usePointStyle: true, font: { size: 9, family: 'Inter' } } }, tooltip: { backgroundColor: '#004370', cornerRadius: 8, padding: 10 } },
+        scales: { x: { grid: { display: false }, ticks: { font: { size: 9 }, maxTicksLimit: 8, color: '#717781' } }, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 9 }, color: '#717781' } } }
+    };
+
+    Promise.all([
+        fetch('/api/weather').then(r => r.json()),
+        fetch('/api/sensor-data').then(r => r.json())
+    ]).then(([weather, sensors]) => {
+        state.weather = weather;
+        state.sensors = sensors;
+
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('analysis-content').classList.remove('hidden');
 
-        const s = data.stats;
-        document.getElementById('a-temp-cur').textContent = s.temperature.current + ' °C';
-        document.getElementById('a-temp-mean').textContent = s.temperature.mean + ' °C';
-        document.getElementById('a-temp-min').textContent = s.temperature.min + ' °C';
-        document.getElementById('a-temp-max').textContent = s.temperature.max + ' °C';
-        document.getElementById('a-temp-std').textContent = s.temperature.std + ' °C';
-        document.getElementById('a-prec-cur').textContent = s.precipitation.current + ' mm';
-        document.getElementById('a-prec-total').textContent = s.precipitation.total_30d + ' mm';
-        document.getElementById('a-prec-mean').textContent = s.precipitation.mean + ' mm';
-        document.getElementById('a-prec-max').textContent = s.precipitation.max + ' mm';
-        document.getElementById('a-wind-cur').textContent = s.wind_speed.current + ' km/h';
-        document.getElementById('a-wind-mean').textContent = s.wind_speed.mean + ' km/h';
-        document.getElementById('a-wind-max').textContent = s.wind_speed.max + ' km/h';
-        document.getElementById('a-wind-std').textContent = s.wind_speed.std + ' km/h';
-
-        const d = data.daily;
-        new Chart(document.getElementById('tempChart'), { ...chartOpts('#004370', 'Temperature'), data: { labels: d.labels, datasets: [{ data: d.temperature, borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.08)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 }] } });
-        new Chart(document.getElementById('precipChart'), { type: 'bar', data: { labels: d.labels, datasets: [{ data: d.precipitation, backgroundColor: 'rgba(0,106,106,0.4)', borderColor: '#006a6a', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#004370', cornerRadius: 8 } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 9 }, maxTicksLimit: 12, color: '#717781' } }, y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 9 }, color: '#717781' } } } } });
-        new Chart(document.getElementById('windChart'), { ...chartOpts('#55d7ed', 'Wind'), data: { labels: d.labels, datasets: [{ data: d.wind_speed, borderColor: '#004851', backgroundColor: 'rgba(0,72,81,0.08)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 }] } });
-
-        // Table
-        let tableHtml = '';
-        data.table.reverse().forEach((row, i) => {
-            const bg = i % 2 === 0 ? '' : 'bg-surface-container-low/50';
-            tableHtml += `<tr class="${bg} hover:bg-primary/5 transition-colors">
-            <td class="p-3 text-on-surface-variant">${row.date}</td>
-            <td class="p-3 text-right font-medium">${row.temperature}</td>
-            <td class="p-3 text-right font-medium">${row.precipitation}</td>
-            <td class="p-3 text-right font-medium">${row.wind_speed}</td>
-        </tr>`;
+        // Populate Select
+        const select = document.getElementById('paramSelect');
+        sensors.numeric_columns.forEach(col => {
+            const opt = document.createElement('option');
+            opt.value = col;
+            opt.textContent = col;
+            if (col === 'Chlorophylle-a SCALED') opt.selected = true;
+            select.appendChild(opt);
         });
-        document.getElementById('data-table').innerHTML = tableHtml;
+
+        initCharts();
+        updateGlobalChart();
     });
+
+    function initCharts() {
+        const s = state.sensors;
+        const w = state.weather;
+
+        // 1. pH & Turbidity Chart
+        new Chart(document.getElementById('phTurbidityChart'), {
+            type: 'line',
+            data: {
+                labels: s.trends.labels,
+                datasets: [
+                    { label: 'pH Test', data: s.trends.ph, borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'Turbidit\u00e9', data: s.trends.turbidity, borderColor: '#55d7ed', backgroundColor: 'rgba(85,215,237,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
+                ]
+            },
+            options: { ...commonOpts, scales: { ...commonOpts.scales, y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } } } } }
+        });
+
+        // 2. Conductivity & Temperature Chart
+        new Chart(document.getElementById('condTempChart'), {
+            type: 'line',
+            data: {
+                labels: s.trends.labels,
+                datasets: [
+                    { label: 'Conductivit\u00e9', data: s.trends.conductivity, borderColor: '#006a6a', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'H2O Temp', data: s.trends.temp, borderColor: '#ba1a1a', borderWidth: 1.5, borderDash: [5, 5], tension: 0.3, pointRadius: 0 }
+                ]
+            },
+            options: commonOpts
+        });
+
+        // 3. Weather Charts
+        const wd = w.daily;
+        new Chart(document.getElementById('weatherTempChart'), {
+            type: 'line',
+            data: { labels: wd.labels, datasets: [{ label: 'Air Temp', data: wd.temperature, borderColor: '#004370', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } } }
+        });
+        new Chart(document.getElementById('weatherPrecipChart'), {
+            type: 'bar',
+            data: { labels: wd.labels, datasets: [{ label: 'Precip', data: wd.precipitation, backgroundColor: 'rgba(0,106,106,0.5)', borderWidth: 0 }] },
+            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } } }
+        });
+    }
+
+    function updateGlobalChart() {
+        const colName = document.getElementById('paramSelect').value;
+        const data = state.sensors.trends.all_params[colName];
+        const labels = state.sensors.trends.labels;
+        const ctx = document.getElementById('globalTrendChart').getContext('2d');
+
+        if (globalChart) globalChart.destroy();
+
+        globalChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: colName,
+                    data: data,
+                    borderColor: '#004370',
+                    backgroundColor: 'rgba(0, 67, 112, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                ...commonOpts,
+                plugins: {
+                    ...commonOpts.plugins,
+                    title: { display: true, text: colName + ' — Annual Overview', font: { size: 12, family: 'Manrope', weight: 'bold' } }
+                }
+            }
+        });
+    }
 </script>
 {% endblock %}
