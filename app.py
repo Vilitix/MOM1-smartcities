@@ -11,9 +11,21 @@ app = Flask(__name__)
 LAT = 48.693033
 LON = 6.204775
 
-def get_cached_data():
+def get_cached_weather():
     """Fetch weather data (cached by requests_cache in weather.py)."""
     return get_weather_data(lat=LAT, lon=LON, days=365)
+
+def get_sensor_data():
+    """Read sensor data from data.csv."""
+    try:
+        # Load CSV, assuming it's in the same directory
+        df = pd.read_csv("data.csv")
+        # Rename columns for easier access if necessary, but we'll use them as is for now
+        # Most recent data at the end
+        return df
+    except Exception as e:
+        print(f"Error reading data.csv: {e}")
+        return pd.DataFrame()
 
 # --- Pages ---
 
@@ -25,9 +37,9 @@ def dashboard():
 def analysis():
     return render_template("analysis.html", active_page="analysis")
 
-@app.route("/sensors")
-def sensors():
-    return render_template("sensors.html", active_page="sensors")
+@app.route("/connectors")
+def connectors():
+    return render_template("connectors.html", active_page="connectors")
 
 @app.route("/calendar")
 def calendar():
@@ -38,7 +50,7 @@ def calendar():
 @app.route("/api/weather")
 def api_weather():
     """Return weather data as JSON for Chart.js."""
-    df = get_cached_data()
+    df = get_cached_weather()
     
     # Latest values
     latest = df.iloc[-1]
@@ -119,7 +131,7 @@ def api_weather():
 @app.route("/api/export")
 def api_export():
     """Export all weather data as CSV."""
-    df = get_cached_data()
+    df = get_cached_weather()
     buf = io.StringIO()
     df.to_csv(buf)
     return Response(
@@ -127,6 +139,27 @@ def api_export():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=hydrolens_weather_data.csv"}
     )
+
+@app.route("/api/sensor-data")
+def api_sensor_data():
+    """Return the most recent sensor data from data.csv."""
+    df = get_sensor_data()
+    if df.empty:
+        return jsonify({"error": "No data found"}), 404
+    
+    # Take the last 50 points for display
+    tail_df = df.tail(50).copy()
+    
+    # Convert To JSON-friendly format
+    data_list = []
+    for _, row in tail_df.iterrows():
+        data_list.append(row.to_dict())
+        
+    return jsonify({
+        "recent": data_list,
+        "columns": df.columns.tolist(),
+        "total_records": len(df)
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

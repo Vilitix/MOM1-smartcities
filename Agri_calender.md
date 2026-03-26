@@ -1,0 +1,4 @@
+| Jan             | Fév             | Mar     | Avr        | Mai        | Juin       | Juil                   | Août                  | Sep            | Oct             | Nov           | Déc             |
+| --------------- | --------------- | ------- | ---------- | ---------- | ---------- | ---------------------- | --------------------- | -------------- | --------------- | ------------- | --------------- |
+| Épandage lisier | Engrais         | Engrais | Pesticides | Pesticides | Pesticides | Sols nus après moisson | Sols nus / déchaumage | Récolte maïs   | Semis + engrais | Sols labourés | Épandage lisier |
+|                 | Épandage lisier | Labour  | Engrais    | Désherbage |            |                        | Travail du sol        | Travail du sol | Labour          |               |                 |

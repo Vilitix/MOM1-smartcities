@@ -3,5 +3,5 @@
 .cache
 test.py
 .png
-venv/
-__pycache__/
+venv
+__pycache__
