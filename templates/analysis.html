@@ -124,22 +124,6 @@
         </div>
     </section>
 
-    <!-- Detailed Correlations -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h3 class="font-headline font-bold text-primary mb-1">Standard Correlations</h3>
-            <p class="text-[10px] text-on-surface-variant mb-6 uppercase tracking-wider font-bold">pH vs. Turbidity
-                Index</p>
-            <div class="chart-container" style="height:250px;"><canvas id="phTurbidityChart"></canvas></div>
-        </div>
-        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h3 class="font-headline font-bold text-primary mb-1">Thermal & Conductivity</h3>
-            <p class="text-[10px] text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Ambient Water Temp
-                vs. Conductance</p>
-            <div class="chart-container" style="height:250px;"><canvas id="condTempChart"></canvas></div>
-        </div>
-    </section>
-
     <!-- Climate Context -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -412,49 +396,6 @@
     function initCharts() {
         const s = state.sensors;
         const w = state.weather;
-
-        const phTurbCrop = cropMultiSeriesToFirstNonNull(s.trends.labels, [s.trends.ph, s.trends.turbidity]);
-        const condTempCrop = cropMultiSeriesToFirstNonNull(s.trends.labels, [s.trends.conductivity, s.trends.temp]);
-
-        // 1. pH & Turbidity Chart
-        new Chart(document.getElementById('phTurbidityChart'), {
-            type: 'line',
-            data: {
-                labels: phTurbCrop.labels,
-                datasets: [
-                    { label: 'pH Test (pH)', data: phTurbCrop.seriesList[0], borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'Turbidité (NTU)', data: phTurbCrop.seriesList[1], borderColor: '#55d7ed', backgroundColor: 'rgba(85,215,237,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
-                ]
-            },
-            options: {
-                ...commonOpts,
-                scales: {
-                    ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: 'pH', font: { size: 9 } } },
-                    y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } }, title: { display: true, text: 'NTU', font: { size: 9 } } }
-                }
-            }
-        });
-
-        // 2. Conductivity & Temperature Chart
-        new Chart(document.getElementById('condTempChart'), {
-            type: 'line',
-            data: {
-                labels: condTempCrop.labels,
-                datasets: [
-                    { label: 'Conductivité (µS/cm)', data: condTempCrop.seriesList[0], borderColor: '#006a6a', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'H2O Temp (°C)', data: condTempCrop.seriesList[1], borderColor: '#ba1a1a', borderWidth: 1.5, borderDash: [5, 5], tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
-                ]
-            },
-            options: {
-                ...commonOpts,
-                scales: {
-                    ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: 'µS/cm', font: { size: 9 } } },
-                    y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } }, title: { display: true, text: '°C', font: { size: 9 } } }
-                }
-            }
-        });
 
         // 3. Weather Charts
         const wd = w.daily;
