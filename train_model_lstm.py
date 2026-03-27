@@ -96,8 +96,8 @@ def train_and_predict():
     y_scaled = scaler_y.fit_transform(y)
     
     # Define sequence length
-    # 9 steps = 3 days of data (8h * 9 = 72h)
-    SEQ_LENGTH = 9 
+    # 90 steps = 30 days of data (8h * 3 * 30 = 720h)
+    SEQ_LENGTH = 90 
     X_seq, y_seq = create_sequences(X_scaled, y_scaled, SEQ_LENGTH)
     
     # Split into train and test sets
