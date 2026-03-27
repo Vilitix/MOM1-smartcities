@@ -48,7 +48,8 @@ def get_latest_sensor_metrics(df):
         except:
             return None
 
-    latest = df.iloc[-1]
+    # Forward fill to ensure we get the latest non-null readings if the very last row has missing metrics
+    latest = df.ffill().iloc[-1]
     return {
         "ph": safe_val(latest.get("pH Test")),
         "turbidity": safe_val(latest.get("Turbidité"), 3),
