@@ -127,7 +127,7 @@ def get_weather_forecast(lat=48.693033, lon=6.204775, forecast_days=15):
     df_resampled = df_hourly.resample('8h').agg(resampling_rules)
     return df_resampled
 
-def plot_weather_data(df, title="Weather Variables (8h Intervals)"):
+def plot_weather_data(df, title="Weather Variables (8h Intervals)", output_plot="weather_plot.png"):
     """Plots the weather variables from the given DataFrame."""
     variables = df.columns
     fig, axes = plt.subplots(nrows=len(variables), ncols=1, figsize=(12, 10), sharex=True)
@@ -145,10 +145,9 @@ def plot_weather_data(df, title="Weather Variables (8h Intervals)"):
     plt.xlabel("Date")
     plt.tight_layout(rect=[0, 0, 1, 0.98])
     
-    output_plot = "water_quality_weather_plot.png"
     plt.savefig(output_plot)
     print(f"Plot saved to {output_plot}")
-    plt.show()
+    plt.close(fig)
 
 if __name__ == "__main__":
     # Nancy coordinates
@@ -161,12 +160,16 @@ if __name__ == "__main__":
     print("\n--- Usable Historical Data Prepared (3 times per day) ---")
     print(df_hist.head())
     
-    #plot_weather_data(df_hist, title="Weather Variables (Last 365 Days, 8h Intervals)")
+    plot_weather_data(df_hist, 
+                      title="Weather Variables (Last 365 Days, 8h Intervals)",
+                      output_plot="historical_weather.png")
 
     print("\nFetching and processing 15-day forecast...")
     df_forecast = get_weather_forecast(lat=LAT, lon=LON)
     
-    print("\n--- forecast Data Prepared (3 times per day) ---")
+    print("\n--- Forecast Data Prepared (3 times per day) ---")
     print(df_forecast.head())
     
-    #plot_weather_data(df_forecast, title="Weather Forecast (Next 15 Days, 8h Intervals)")
+    plot_weather_data(df_forecast, 
+                      title="Weather Forecast (Next 15 Days, 8h Intervals)",
+                      output_plot="forecast_weather.png")
