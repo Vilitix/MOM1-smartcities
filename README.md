@@ -3,6 +3,7 @@
 Analysis and simulation of water quality in the Nancy region, focusing on industrial chloride discharges and environmental stressors.
 
 ### Chloride Discharge Data [1][2][3]
+
 **The Crucial Role of Agricultural Crowdsourcing:**
 This application enables farmers and local residents to report exceptional events (e.g., fertilizer spreading, untreated water leaks). **Inputting this data is vital:** fertilizers and chemicals that run off into rivers eventually infiltrate adjacent groundwater aquifers. Pumping this contaminated water for irrigation directly impacts local crop quality, agricultural yields, and ultimately, the agricultural economy. Reporting these events early allows for the anticipation of contamination waves before they reach critical thresholds that would harm the farming community itself.
 
@@ -22,14 +23,18 @@ This application enables farmers and local residents to report exceptional event
 - **Planting Period**: Fertilizer application followed by rain causes nitrogen runoff, significantly increasing nitrates and eutrophication risk.
 
 ### Correlations and Remarks
+
 - **Photosynthesis**: High salt concentration and turbidity reduce light penetration, decreasing photosynthesis and dissolved oxygen.
 - **Dilution**: Water levels are inversely proportional to pollutant concentration for a constant industrial discharge.
 - **Ecosystem Stress**: Hypoxia (O2 < 50%) is lethal for sensitive species like salmonids present in the Grand Est.
 
 ### Stakeholder Indicators (France & Grand Est Context)
+
 Numerical thresholds derived from DRIEAT Grand Est, Agence de l'Eau Rhin-Meuse, and French Public Health Code [1][5][6].
+Indicators for farmers are relevant here because they irriguate using Meurthe river water and phreatic water that is directly impacted by the river water quality[7].
 
 #### Indicators for Farmers (Irrigation) [4]
+
 - **Salinity (Conductivity)**:
   - `< 0.7 mS/cm`: Safe for all regional crops.
   - `0.7 – 3.0 mS/cm`: Moderate stress; yield reduction risk for sensitive crops.
@@ -44,6 +49,7 @@ Numerical thresholds derived from DRIEAT Grand Est, Agence de l'Eau Rhin-Meuse, 
   - `> 50 NTU`: High clogging risk; specialized filtration required.
 
 #### Indicators for Local Ecosystems (DCE Standards) [5]
+
 - **Oxygen Saturation (O2 %)**:
   - `> 80 %`: Excellent status for Meurthe river biodiversity.
   - `50 – 70 %`: Moderate stress for salmonids and macro-invertebrates.
@@ -57,6 +63,7 @@ Numerical thresholds derived from DRIEAT Grand Est, Agence de l'Eau Rhin-Meuse, 
   - `< 25 mg/L`: Clear water favoring healthy fish gill function and spawning grounds.
 
 #### Indicators for Leisure and Drinking Water [1][3][6]
+
 - **Swimming (Recreational)**:
   - **Turbidity**: `< 50 NTU` (transparency limit for safety and visibility).
   - **pH**: `7.0 – 8.0` (optimal to prevent skin and eye irritation).
@@ -74,4 +81,5 @@ Numerical thresholds derived from DRIEAT Grand Est, Agence de l'Eau Rhin-Meuse, 
 - [3] [Région Grand Est - Diagnostic Eau](https://www.grandest.fr/wp-content/uploads/2019/07/piece-n07-annexe-6-diagnostic-eau.pdf)
 - [4] [FAO - Water Quality for Agriculture](https://www.fao.org/3/t0566e/t0566e05.htm)
 - [5] [Three Main Types of Water Quality Parameters: A Comprehensive Guide](https://e.yosemitech.com/industry/Three-Main-Types-of-Water-Quality-Parameters.html)
-- [6] [WHO & French Public Health Code - Guidelines for Drinking-Water Quality](https://iris.who.int/server/api/core/bitstreams/b437749a-43f7-472f-a6d9-42596e8ac0ae/content)
+- [6] [WHO &amp; French Public Health Code - Guidelines for Drinking-Water Quality](https://iris.who.int/server/api/core/bitstreams/b437749a-43f7-472f-a6d9-42596e8ac0ae/content)
+- [7] [Study on the Relationship between River Water and Groundwater under Different Aquifer Mediums](https://www.mdpi.com/2073-4441/14/7/1134)

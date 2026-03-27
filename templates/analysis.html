@@ -32,22 +32,49 @@
                 <p class="text-on-surface-variant text-xs mt-1">Select any metric from the ECHO sensor array to view its
                     365-day trajectory</p>
             </div>
-            <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
-                <span class="text-[10px] font-bold text-primary uppercase ml-2">Parameter:</span>
-                <select id="paramSelect" onchange="updateGlobalChart()"
-                    class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
-                    <!-- Dynamic -->
-                </select>
+            <div class="flex flex-col md:flex-row items-center gap-6">
+                <!-- Parameter Selector -->
+                <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                    <span class="text-[10px] font-bold text-primary uppercase ml-2">Parameter:</span>
+                    <select id="paramSelect" onchange="updateGlobalChart()"
+                        class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                        <!-- Dynamic -->
+                    </select>
+                </div>
+
+                <!-- Weather Legends / Toggles -->
+                <div class="flex items-center gap-4 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                    <span class="text-[10px] font-bold text-primary uppercase ml-2">Weather Context:</span>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="overlayRain" onchange="updateGlobalChart()"
+                            class="w-3 h-3 rounded-full accent-emerald-500 border-outline-variant">
+                        <span
+                            class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="overlaySnow" onchange="updateGlobalChart()"
+                            class="w-3 h-3 rounded-full accent-cyan-400 border-outline-variant">
+                        <span
+                            class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Snow</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="overlayWind" onchange="updateGlobalChart()"
+                            class="w-3 h-3 rounded-full accent-sky-400 border-outline-variant">
+                        <span
+                            class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Wind</span>
+                    </label>
+                </div>
             </div>
         </div>
-        <div class="chart-container" style="height: 350px;">
+        <div class="chart-container" style="height: 400px;">
             <canvas id="globalTrendChart"></canvas>
         </div>
 
         <div class="mt-6 bg-surface border border-slate-200 border-l-4 border-l-emerald-400 rounded-xl p-4">
             <div class="flex items-center justify-between gap-4 mb-3">
                 <h3 class="font-headline font-bold text-primary text-sm">Agricultural Event Highlights</h3>
-                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Highlight impacted months</span>
+                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Highlight impacted
+                    months</span>
             </div>
             <div id="farming-event-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <!-- Dynamic checkboxes -->
@@ -73,14 +100,30 @@
 
     <!-- Climate Context -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-        <h2 class="font-headline font-bold text-primary text-lg mb-6">Meteorological Sync (Open-Meteo)</h2>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <h2 class="font-headline font-bold text-primary text-lg">Meteorological Sync (Open-Meteo)</h2>
+            <div class="flex items-center gap-4 bg-surface px-4 py-2 rounded-xl border border-outline-variant/30">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/50 border border-emerald-600"></div>
+                    <span class="text-[10px] font-bold text-primary uppercase">Rain (mm)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-cyan-400/50 border border-cyan-500"></div>
+                    <span class="text-[10px] font-bold text-primary uppercase">Snow (cm)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-sky-400/50 border border-sky-500"></div>
+                    <span class="text-[10px] font-bold text-primary uppercase">Wind Speed</span>
+                </div>
+            </div>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-2">
                 <p class="text-[10px] font-bold text-on-surface-variant uppercase">Air Temperature (2m)</p>
                 <div class="chart-container" style="height:200px;"><canvas id="weatherTempChart"></canvas></div>
             </div>
             <div class="space-y-2">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Precipitation Events</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Precipitation Events (Rain)</p>
                 <div class="chart-container" style="height:200px;"><canvas id="weatherPrecipChart"></canvas></div>
             </div>
             <div class="space-y-2">
@@ -88,7 +131,7 @@
                 <div class="chart-container" style="height:200px;"><canvas id="weatherWindChart"></canvas></div>
             </div>
             <div class="space-y-2">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Snowfall</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Snowfall Accumulation</p>
                 <div class="chart-container" style="height:200px;"><canvas id="weatherSnowChart"></canvas></div>
             </div>
         </div>
@@ -241,17 +284,17 @@
         });
         new Chart(document.getElementById('weatherPrecipChart'), {
             type: 'bar',
-            data: { labels: wd.labels, datasets: [{ label: 'Precip (mm)', data: wd.precipitation, backgroundColor: 'rgba(0,106,106,0.5)', borderWidth: 0 }] },
+            data: { labels: wd.labels, datasets: [{ label: 'Precip (mm)', data: wd.precipitation, backgroundColor: 'rgba(16, 185, 129, 0.4)', borderColor: '#10b981', borderWidth: 1 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'mm' } } } }
         });
         new Chart(document.getElementById('weatherWindChart'), {
             type: 'line',
-            data: { labels: wd.labels, datasets: [{ label: 'Wind Speed (km/h)', data: wd.wind_speed, borderColor: '#7ca8ce', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            data: { labels: wd.labels, datasets: [{ label: 'Wind Speed (km/h)', data: wd.wind_speed, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'km/h' } } } }
         });
         new Chart(document.getElementById('weatherSnowChart'), {
             type: 'bar',
-            data: { labels: wd.labels, datasets: [{ label: 'Snowfall (cm)', data: wd.snowfall, backgroundColor: 'rgba(85,215,237,0.5)', borderWidth: 0 }] },
+            data: { labels: wd.labels, datasets: [{ label: 'Snowfall (cm)', data: wd.snowfall, backgroundColor: 'rgba(34, 211, 238, 0.4)', borderColor: '#22d3ee', borderWidth: 1 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'cm' } } } }
         });
     }
@@ -285,8 +328,9 @@
 
     function updateGlobalChart() {
         const colName = document.getElementById('paramSelect').value;
-        const rawData = state.sensors.trends.all_params[colName];
-        const rawLabels = state.sensors.trends.labels;
+        const rawData = (state.sensors && state.sensors.trends && state.sensors.trends.all_params) ? state.sensors.trends.all_params[colName] : [];
+        const rawLabels = (state.sensors && state.sensors.trends) ? state.sensors.trends.labels : [];
+
         const continuous = buildContinuousDailySeries(rawLabels, rawData);
         const data = continuous.values;
         const labels = continuous.labels;
@@ -299,28 +343,70 @@
 
         if (globalChart) globalChart.destroy();
 
+        const datasets = [{
+            label: colName,
+            data: data,
+            borderColor: '#004370',
+            backgroundColor: 'rgba(0, 67, 112, 0.08)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 2.5,
+            yAxisID: 'y'
+        }];
+
+        const weatherOpt = { tension: 0.4, pointRadius: 0, borderWidth: 1.5, fill: true };
+
+        if (document.getElementById('overlayRain').checked && state.weather) {
+            const wc = buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.precipitation);
+            datasets.push({
+                label: 'Rain (mm)',
+                data: wc.values,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                yAxisID: 'yWeather',
+                ...weatherOpt
+            });
+        }
+        if (document.getElementById('overlaySnow').checked && state.weather) {
+            const wc = buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.snowfall);
+            datasets.push({
+                label: 'Snow (cm)',
+                data: wc.values,
+                borderColor: '#22d3ee',
+                backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                yAxisID: 'yWeather',
+                ...weatherOpt
+            });
+        }
+        if (document.getElementById('overlayWind').checked && state.weather) {
+            const wc = buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.wind_speed);
+            datasets.push({
+                label: 'Wind (km/h)',
+                data: wc.values,
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.05)',
+                yAxisID: 'yWind',
+                ...weatherOpt
+            });
+        }
+
         globalChart = new Chart(ctx, {
             type: 'line',
             plugins: [monthHighlightPlugin],
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: colName,
-                    data: data,
-                    borderColor: '#004370',
-                    backgroundColor: 'rgba(0, 67, 112, 0.08)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderWidth: 2,
-                }]
-            },
+            data: { labels: labels, datasets: datasets },
             options: {
                 ...commonOpts,
                 plugins: {
                     ...commonOpts.plugins,
-                    title: { display: true, text: colName + ' — Annual Overview', font: { size: 12, family: 'Manrope', weight: 'bold' } },
+                    title: { display: true, text: colName + ' Analysis with Weather Context', font: { size: 14, weight: 'bold' } },
                     monthHighlightPlugin: { months: highlightMonths }
+                },
+                scales: {
+                    ...commonOpts.scales,
+                    y: { ...commonOpts.scales.y, title: { display: true, text: 'Sensor Value', font: { size: 10, weight: 'bold' } } },
+                    yWeather: { position: 'right', display: datasets.some(d => d.yAxisID === 'yWeather'), grid: { display: false }, title: { display: true, text: 'Precipitation', font: { size: 9 } } },
+                    yWind: { position: 'right', display: datasets.some(d => d.yAxisID === 'yWind'), grid: { display: false }, title: { display: true, text: 'Wind (km/h)', font: { size: 9 } } }
                 }
             }
         });
