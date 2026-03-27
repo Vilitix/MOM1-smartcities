@@ -82,6 +82,10 @@ def calendar():
 def report():
     return render_template("report.html", active_page="report")
 
+@app.route("/prediction")
+def prediction():
+    return render_template("prediction.html", active_page="prediction")
+
 # --- API ---
 
 @app.route('/api/events', methods=['GET', 'POST'])
