@@ -227,10 +227,10 @@
                 <span class="material-symbols-outlined">calendar_month</span>
                 Event Calendar
             </a>
-            <a href="#"
-                class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-slate-600 hover:bg-slate-100 text-sm no-underline">
-                <span class="material-symbols-outlined">assessment</span>
-                Reports
+            <a href="/report"
+                class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'report' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <span class="material-symbols-outlined">report</span>
+                Report Event
             </a>
             <a href="#"
                 class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-slate-600 hover:bg-slate-100 text-sm no-underline">

@@ -43,6 +43,16 @@
         <div class="chart-container" style="height: 350px;">
             <canvas id="globalTrendChart"></canvas>
         </div>
+
+        <div class="mt-6 bg-surface border border-slate-200 border-l-4 border-l-emerald-400 rounded-xl p-4">
+            <div class="flex items-center justify-between gap-4 mb-3">
+                <h3 class="font-headline font-bold text-primary text-sm">Agricultural Event Highlights</h3>
+                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Highlight impacted months</span>
+            </div>
+            <div id="farming-event-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                <!-- Dynamic checkboxes -->
+            </div>
+        </div>
     </section>
 
     <!-- Detailed Correlations -->
@@ -88,8 +98,45 @@
 
 {% block scripts %}
 <script>
-    let state = { weather: null, sensors: null };
+    let state = { weather: null, sensors: null, farming: null, selectedFarmingEvents: [] };
     let globalChart = null;
+
+    const monthHighlightPlugin = {
+        id: 'monthHighlightPlugin',
+        beforeDatasetsDraw(chart, args, pluginOptions) {
+            const months = (pluginOptions && pluginOptions.months) || [];
+            if (!months.length) return;
+
+            const labels = (chart.data && chart.data.labels) || [];
+            const xScale = chart.scales.x;
+            const yScale = chart.scales.y;
+            if (!xScale || !yScale || !labels.length) return;
+
+            const monthSet = new Set(months);
+            const { top, bottom, left, right } = chart.chartArea;
+
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = 'rgba(85, 215, 237, 0.14)';
+
+            for (let i = 0; i < labels.length; i++) {
+                const label = labels[i] || '';
+                const parts = String(label).split('-');
+                const month = parseInt(parts[1], 10);
+                if (!monthSet.has(month)) continue;
+
+                const x = xScale.getPixelForValue(i);
+                const prevX = i > 0 ? xScale.getPixelForValue(i - 1) : left;
+                const nextX = i < labels.length - 1 ? xScale.getPixelForValue(i + 1) : right;
+
+                const zoneLeft = i > 0 ? (prevX + x) / 2 : left;
+                const zoneRight = i < labels.length - 1 ? (x + nextX) / 2 : right;
+                ctx.fillRect(zoneLeft, top, Math.max(0, zoneRight - zoneLeft), bottom - top);
+            }
+
+            ctx.restore();
+        }
+    };
 
     const commonOpts = {
         responsive: true, maintainAspectRatio: false,
@@ -100,10 +147,12 @@
 
     Promise.all([
         fetch('/api/weather').then(r => r.json()),
-        fetch('/api/sensor-data').then(r => r.json())
-    ]).then(([weather, sensors]) => {
+        fetch('/api/sensor-data').then(r => r.json()),
+        fetch('/api/farming-events').then(r => r.json())
+    ]).then(([weather, sensors, farming]) => {
         state.weather = weather;
         state.sensors = sensors;
+        state.farming = farming;
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('analysis-content').classList.remove('hidden');
@@ -118,9 +167,40 @@
             select.appendChild(opt);
         });
 
+        renderFarmingEventFilters();
+
         initCharts();
         updateGlobalChart();
     });
+
+    function renderFarmingEventFilters() {
+        const container = document.getElementById('farming-event-filters');
+        container.innerHTML = '';
+
+        const events = (state.farming && state.farming.events) || [];
+        events.forEach(eventName => {
+            const label = document.createElement('label');
+            label.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-primary cursor-pointer hover:bg-slate-50 transition-colors';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = eventName;
+            checkbox.className = 'accent-emerald-600';
+            checkbox.addEventListener('change', () => {
+                state.selectedFarmingEvents = Array.from(
+                    document.querySelectorAll('#farming-event-filters input[type="checkbox"]:checked')
+                ).map(el => el.value);
+                updateGlobalChart();
+            });
+
+            const text = document.createElement('span');
+            text.textContent = eventName;
+
+            label.appendChild(checkbox);
+            label.appendChild(text);
+            container.appendChild(label);
+        });
+    }
 
     function initCharts() {
         const s = state.sensors;
@@ -176,16 +256,52 @@
         });
     }
 
+    function buildContinuousDailySeries(labels, values) {
+        if (!labels || !labels.length) {
+            return { labels: [], values: [] };
+        }
+
+        const first = new Date(labels[0] + 'T00:00:00');
+        const last = new Date(labels[labels.length - 1] + 'T00:00:00');
+
+        const valueByDate = new Map();
+        labels.forEach((label, i) => {
+            valueByDate.set(label, values[i]);
+        });
+
+        const continuousLabels = [];
+        const continuousValues = [];
+
+        const cursor = new Date(first);
+        while (cursor <= last) {
+            const iso = cursor.toISOString().slice(0, 10);
+            continuousLabels.push(iso);
+            continuousValues.push(valueByDate.has(iso) ? valueByDate.get(iso) : null);
+            cursor.setDate(cursor.getDate() + 1);
+        }
+
+        return { labels: continuousLabels, values: continuousValues };
+    }
+
     function updateGlobalChart() {
         const colName = document.getElementById('paramSelect').value;
-        const data = state.sensors.trends.all_params[colName];
-        const labels = state.sensors.trends.labels;
+        const rawData = state.sensors.trends.all_params[colName];
+        const rawLabels = state.sensors.trends.labels;
+        const continuous = buildContinuousDailySeries(rawLabels, rawData);
+        const data = continuous.values;
+        const labels = continuous.labels;
         const ctx = document.getElementById('globalTrendChart').getContext('2d');
+
+        const eventMonths = (state.farming && state.farming.event_months) || {};
+        const highlightMonths = Array.from(new Set(
+            state.selectedFarmingEvents.flatMap(eventName => eventMonths[eventName] || [])
+        ));
 
         if (globalChart) globalChart.destroy();
 
         globalChart = new Chart(ctx, {
             type: 'line',
+            plugins: [monthHighlightPlugin],
             data: {
                 labels: labels,
                 datasets: [{
@@ -203,7 +319,8 @@
                 ...commonOpts,
                 plugins: {
                     ...commonOpts.plugins,
-                    title: { display: true, text: colName + ' — Annual Overview', font: { size: 12, family: 'Manrope', weight: 'bold' } }
+                    title: { display: true, text: colName + ' — Annual Overview', font: { size: 12, family: 'Manrope', weight: 'bold' } },
+                    monthHighlightPlugin: { months: highlightMonths }
                 }
             }
         });

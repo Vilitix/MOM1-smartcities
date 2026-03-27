@@ -180,29 +180,10 @@
                     <h2 class="font-headline font-bold text-primary">Schedule</h2>
                     <span id="cal-date-label" class="text-[10px] font-bold text-on-surface-variant uppercase"></span>
                 </div>
-                <div class="pt-4 space-y-6">
-                    <div class="flex gap-4 items-center group cursor-pointer">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
-                            <span
-                                class="text-[8px] font-bold text-slate-400 group-hover:text-white/70 uppercase">MON</span>
-                            <span class="text-sm font-bold text-primary group-hover:text-white leading-none">15</span>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-900 leading-tight">Sensor Calibration</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">ECHO Station ECHO-01</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4 items-center group cursor-pointer opacity-60">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center">
-                            <span class="text-[8px] font-bold text-slate-400 uppercase">WED</span>
-                            <span class="text-sm font-bold text-primary leading-none">17</span>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-900 leading-tight">Database Archive</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">365-day rollover sync</p>
-                        </div>
+                <div id="dashboard-schedule" class="pt-4 space-y-6">
+                    <div class="text-center py-4">
+                         <div class="loading-spinner w-4 h-4 border-2 border-primary/30 border-t-primary mx-auto mb-2"></div>
+                         <p class="text-[10px] text-slate-400 italic">Chargement...</p>
                     </div>
                 </div>
                 <a href="/calendar"
@@ -220,8 +201,9 @@
 
     Promise.all([
         fetch('/api/weather').then(r => r.json()),
-        fetch('/api/sensor-data').then(r => r.json())
-    ]).then(([weather, sensors]) => {
+        fetch('/api/sensor-data').then(r => r.json()),
+        fetch('/api/events').then(r => r.json())
+    ]).then(([weather, sensors, events]) => {
         state.weather = weather;
         state.sensors = sensors;
 
@@ -230,12 +212,49 @@
         document.getElementById('sync-status').innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> Last Sync: Just' + ' Now';
         document.getElementById('cal-date-label').textContent = new Date().toLocaleDateString('en', { month: 'short', year: 'numeric' });
 
-        populateDashboard(sensors, weather);
+        populateDashboard(sensors, weather, events);
+        populateEvents(events);
     }).catch(err => {
         document.getElementById('loading').innerHTML = `<p class="text-error text-sm font-bold">CRITICAL SYSTEM ERROR: ${err.message}</p>`;
     });
 
-    function populateDashboard(sensors, weather) {
+    function populateEvents(events) {
+        const scheduleContainer = document.getElementById('dashboard-schedule');
+        const sorted = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const upcoming = sorted.filter(e => e.date >= todayStr);
+
+        if (upcoming.length === 0) {
+            scheduleContainer.innerHTML = '<p class="text-[11px] text-slate-400 text-center italic">Aucun évènement programmé.</p>';
+            return;
+        }
+
+        const nextEvents = upcoming.slice(0, 2);
+        
+        let html = '';
+        nextEvents.forEach(e => {
+            const dateObj = new Date(e.date);
+            const isAlert = e.type === 'alert' || e.source === 'report';
+            const shortDay = dateObj.toLocaleDateString('en', { weekday: 'short' }).toUpperCase();
+            const dayNum = dateObj.getDate();
+            
+            html += `
+            <div class="flex gap-4 items-center group cursor-pointer ${isAlert ? '' : 'opacity-80 hover:opacity-100'}">
+                <div class="w-10 h-10 rounded-xl bg-slate-50 border ${isAlert ? 'border-amber-400 bg-amber-50' : 'border-slate-100'} flex flex-col items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
+                    <span class="text-[8px] font-bold ${isAlert ? 'text-amber-600' : 'text-slate-400'} group-hover:text-white/70 uppercase">${shortDay}</span>
+                    <span class="text-sm font-bold ${isAlert ? 'text-amber-800' : 'text-primary'} group-hover:text-white leading-none">${dayNum}</span>
+                </div>
+                <div class="flex-1 w-0">
+                    <p class="text-xs font-bold ${isAlert ? 'text-amber-900' : 'text-slate-900'} leading-tight truncate" title="${e.title}">${e.title}</p>
+                    <p class="text-[10px] ${isAlert ? 'text-amber-700 font-medium' : 'text-slate-400'} mt-0.5">${isAlert ? '⚠️ Reported Issue' : e.type.toUpperCase()}</p>
+                </div>
+            </div>`;
+        });
+        
+        scheduleContainer.innerHTML = html;
+    }
+
+    function populateDashboard(sensors, weather, events) {
         const s = sensors.metrics;
         const w = weather.stats;
 
@@ -302,17 +321,42 @@
         });
 
         // Intelligence Alert Logic
-        const prec = w.precipitation.total_30d;
-        const rpct = Math.min(100, Math.round(prec / 1.5));
+        const prec_fcst = w.forecast ? w.forecast.upcoming_precip_3d : 0;
+        const wind_fcst = w.forecast ? w.forecast.upcoming_wind_max_3d : 0;
+        
+        // Find upcoming critical events (alerts/reports) within the next 48h
+        const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const upcomingAlerts = (events || []).filter(e => {
+            const isAlert = e.type === 'alert' || e.source === 'report';
+            const evtDate = new Date(e.date);
+            const diffDays = (evtDate - new Date()) / (1000 * 60 * 60 * 24);
+            return isAlert && e.date >= todayStr && diffDays <= 7;
+        });
+
+        // Compute generalized risk score based on upcoming precip, wind, or incidents
+        let rpct = Math.min(100, Math.round(prec_fcst * 5)); // Base it more on future rain
+        if (upcomingAlerts.length > 0) rpct = Math.max(rpct, 85); // Critical issue = high risk
+        if (wind_fcst > 60) rpct = Math.max(rpct, 70); // High wind = moderate/high risk
+
         document.getElementById('risk-pct').textContent = rpct + '%';
         document.getElementById('risk-bar').style.width = rpct + '%';
 
-        if (rpct > 50) {
-            document.getElementById('alert-title').innerHTML = `High Runoff Risk <span class='text-xs font-normal block mt-1'>${prec.toFixed(1)}mm rain in last 30d</span>`;
-            document.getElementById('alert-cause').textContent = 'STORM EVENT DETECTED';
+        let causeEl = document.getElementById('alert-cause');
+        let titleEl = document.getElementById('alert-title');
+
+        if (upcomingAlerts.length > 0) {
+            const ev = upcomingAlerts[0];
+            causeEl.textContent = 'REPORTED INCIDENT / ALERT';
+            titleEl.innerHTML = `${ev.title} <span class='text-xs font-normal block mt-1'>Check exact location and maintain vigilance.</span>`;
+            document.getElementById('risk-bar').className = "h-full bg-rose-500 transition-all duration-700";
+        } else if (rpct > 50 || prec_fcst > 10) {
+            causeEl.textContent = 'UPCOMING STORM / RAIN';
+            titleEl.innerHTML = `High Runoff Risk <span class='text-xs font-normal block mt-1'>${prec_fcst}mm rain & ${wind_fcst}km/h wind exp. next 3 days</span>`;
+            document.getElementById('risk-bar').className = "h-full bg-amber-500 transition-all duration-700";
         } else {
-            document.getElementById('alert-title').textContent = 'Optimal Condition — Base flow stable';
-            document.getElementById('alert-cause').textContent = 'CLIMATE CONTEXT';
+            causeEl.textContent = 'CLIMATE CONTEXT';
+            titleEl.innerHTML = `Optimal Conditions <span class='text-xs font-normal block mt-1'>${prec_fcst}mm rain exp. next 3 days — Base flow stable</span>`;
+            document.getElementById('risk-bar').className = "h-full bg-emerald-500 transition-all duration-700";
         }
     }
 </script>

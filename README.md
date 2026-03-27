@@ -3,6 +3,10 @@
 Analysis and simulation of water quality in the Nancy region, focusing on industrial chloride discharges and environmental stressors.
 
 ### Chloride Discharge Data [1][2][3]
+**The Crucial Role of Agricultural Crowdsourcing:**
+This application enables farmers and local residents to report exceptional events (e.g., fertilizer spreading, untreated water leaks). **Inputting this data is vital:** fertilizers and chemicals that run off into rivers eventually infiltrate adjacent groundwater aquifers. Pumping this contaminated water for irrigation directly impacts local crop quality, agricultural yields, and ultimately, the agricultural economy. Reporting these events early allows for the anticipation of contamination waves before they reach critical thresholds that would harm the farming community itself.
+
+### Chloride Discharge Data
 
 - **Annual total**: ~1,000,000 tonnes discharged into the Meurthe river downstream of local soda plants.
 - **Solvay (Dombasle)**: 16.25 kg/s average annual flux.
