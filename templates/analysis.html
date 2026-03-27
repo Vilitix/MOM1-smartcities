@@ -38,7 +38,7 @@
                     class="bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase hover:bg-surface-container-highest transition-colors flex items-center gap-1">
                     <span class="material-symbols-outlined text-[14px]">zoom_out</span> Reset Zoom
                 </button>
-                    
+
                 <!-- Parameter Selector -->
                 <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
                     <span class="text-[10px] font-bold text-primary uppercase ml-2">Parameter:</span>
@@ -49,7 +49,8 @@
                 </div>
 
                 <!-- Weather Legends / Toggles -->
-                <div class="flex flex-wrap items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                <div
+                    class="flex flex-wrap items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
                     <span class="text-[10px] font-bold text-primary uppercase ml-2">Weather Context:</span>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
@@ -57,7 +58,8 @@
                                 <span class="flex items-center gap-2">
                                     <input type="checkbox" id="overlayTemp" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-sky-600 border-outline-variant">
-                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Temperature</span>
+                                    <span
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Temperature</span>
                                 </span>
                                 <span class="text-[10px] font-bold text-sky-700">°C</span>
                             </label>
@@ -68,7 +70,8 @@
                                 <span class="flex items-center gap-2">
                                     <input type="checkbox" id="overlayRain" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-emerald-500 border-outline-variant">
-                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
+                                    <span
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
                                 </span>
                                 <span id="rainThresholdLabel" class="text-[10px] font-bold text-emerald-700">5 mm</span>
                             </label>
@@ -82,7 +85,8 @@
                                 <span class="flex items-center gap-2">
                                     <input type="checkbox" id="overlaySnow" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-cyan-400 border-outline-variant">
-                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Snow</span>
+                                    <span
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Snow</span>
                                 </span>
                                 <span id="snowThresholdLabel" class="text-[10px] font-bold text-cyan-700">2 cm</span>
                             </label>
@@ -96,13 +100,26 @@
                                 <span class="flex items-center gap-2">
                                     <input type="checkbox" id="overlayWind" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-sky-400 border-outline-variant">
-                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Wind</span>
+                                    <span
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Wind</span>
                                 </span>
                                 <span id="windThresholdLabel" class="text-[10px] font-bold text-sky-700">30 km/h</span>
                             </label>
                             <input type="range" id="windThreshold" min="0" max="120" step="1" value="30"
                                 oninput="updateThresholdLabel('wind'); updateGlobalChart()"
                                 class="w-full mt-0.5 h-1 accent-sky-400">
+                        </div>
+
+                        <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
+                            <label class="flex items-center justify-between gap-2 cursor-pointer group">
+                                <span class="flex items-center gap-2">
+                                    <input type="checkbox" id="overlayThroughput" onchange="updateGlobalChart()"
+                                        class="w-3 h-3 rounded-full accent-amber-500 border-outline-variant">
+                                    <span
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Throughput</span>
+                                </span>
+                                <span class="text-[10px] font-bold text-amber-700">L/s</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -260,11 +277,13 @@
     Promise.all([
         fetch('/api/weather').then(r => r.json()),
         fetch('/api/sensor-data').then(r => r.json()),
-        fetch('/api/farming-events').then(r => r.json())
-    ]).then(([weather, sensors, farming]) => {
+        fetch('/api/farming-events').then(r => r.json()),
+        fetch('/api/hydro-data').then(r => r.json())
+    ]).then(([weather, sensors, farming, hydro]) => {
         state.weather = weather;
         state.sensors = sensors;
         state.farming = farming;
+        state.hydro = hydro;
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('analysis-content').classList.remove('hidden');
@@ -488,6 +507,7 @@
         const snowContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.snowfall) : { labels: [], values: [] };
         const windContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.wind_speed) : { labels: [], values: [] };
         const tempContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.temperature) : { labels: [], values: [] };
+        const hydroContinuous = state.hydro ? buildContinuousDailySeries(state.hydro.labels, state.hydro.throughput) : { labels: [], values: [] };
 
         const mapByDate = (series) => {
             const map = {};
@@ -508,6 +528,22 @@
                 pointRadius: 0,
                 borderWidth: 2,
                 yAxisID: 'yTemp'
+            });
+        }
+
+        if (document.getElementById('overlayThroughput').checked && state.hydro) {
+            const hByDate = mapByDate(hydroContinuous);
+            const hAligned = labels.map(d => (hByDate[d] != null ? hByDate[d] : null));
+            datasets.push({
+                label: 'Throughput (L/s)',
+                data: hAligned,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                fill: false,
+                tension: 0.35,
+                pointRadius: 0,
+                borderWidth: 2.2,
+                yAxisID: 'yHydro'
             });
         }
 
@@ -543,13 +579,14 @@
                 ...commonOpts,
                 plugins: {
                     ...commonOpts.plugins,
-                    title: { display: true, text: colUnit ? `${colName} (${colUnit}) Analysis with Weather Context` : `${colName} Analysis with Weather Context`, font: { size: 14, weight: 'bold' } },
+                    title: { display: true, text: colUnit ? `${colName} (${colUnit}) Analysis with Context` : `${colName} Analysis with Context`, font: { size: 14, weight: 'bold' } },
                     tooltip: {
                         ...commonOpts.plugins.tooltip,
                         callbacks: {
                             label: function (ctx) {
                                 if (ctx.parsed.y == null) return `${ctx.dataset.label}: N/A`;
                                 if (ctx.dataset.yAxisID === 'yTemp') return `${ctx.dataset.label}: ${ctx.parsed.y} °C`;
+                                if (ctx.dataset.yAxisID === 'yHydro') return `${ctx.dataset.label}: ${ctx.parsed.y} L/s`;
                                 if (ctx.dataset.yAxisID !== 'y') return `${ctx.dataset.label}: ${ctx.parsed.y}`;
                                 return colUnit ? `${ctx.dataset.label}: ${ctx.parsed.y} ${colUnit}` : `${ctx.dataset.label}: ${ctx.parsed.y}`;
                             }
@@ -576,6 +613,13 @@
                         grid: { display: false },
                         ticks: { font: { size: 9 }, color: '#717781' },
                         title: { display: true, text: 'Temperature (°C)', font: { size: 9 } }
+                    },
+                    yHydro: {
+                        position: 'right',
+                        display: datasets.some(d => d.yAxisID === 'yHydro'),
+                        grid: { display: false },
+                        ticks: { font: { size: 9 }, color: '#717781' },
+                        title: { display: true, text: 'Throughput (L/s)', font: { size: 9 } }
                     }
                 }
             }

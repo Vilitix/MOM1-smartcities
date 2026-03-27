@@ -468,6 +468,42 @@ def api_sensor_data():
     })
 
 
+@app.route("/api/hydro-data")
+def api_hydro_data():
+    """Return hydrometric throughput (flow) data from export_hydro_series.csv."""
+    file_path = "export_hydro_series.csv"
+    if not os.path.exists(file_path):
+        return jsonify({"error": "Hydro data file not found."}), 404
+        
+    try:
+        # Load CSV with semi-colon separator. Skip first two rows (headers)
+        df_raw = pd.read_csv(file_path, sep=';', skiprows=2, header=None)
+        
+        # Assign meaningful names based on view_file output
+        df_raw.columns = ['CdSiteHydro', 'CdStationHydro', 'CdCapteur', 'GrdSerieObsHydro', 
+                         'DtObsHydro', 'StObsHydro', 'ResObsHydro', 'QualifObsHydro', 
+                         'MethObsHydro', 'ContObsHydro', 'FLG']
+        
+        # Clean quotes and parse dates
+        df_raw['DtObsHydro'] = pd.to_datetime(df_raw['DtObsHydro'].astype(str).str.replace('"', ''), errors='coerce')
+        
+        # Ensure Numeric and Drop NaNs
+        df_raw['ResObsHydro'] = pd.to_numeric(df_raw['ResObsHydro'], errors='coerce')
+        df_clean = df_raw.dropna(subset=['DtObsHydro', 'ResObsHydro'])
+        
+        df_clean.set_index('DtObsHydro', inplace=True)
+        
+        # Resample daily (mean)
+        df_daily = df_clean['ResObsHydro'].resample('D').mean()
+        
+        return jsonify({
+            "labels": df_daily.index.strftime("%Y-%m-%d").tolist(),
+            "throughput": [round(float(v), 2) if pd.notna(v) else None for v in df_daily.values]
+        })
+    except Exception as e:
+        print(f"Hydro Data Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/farming-events")
 def api_farming_events():
     """Return farming events list and active months derived from farming_event DataFrame."""
