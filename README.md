@@ -18,8 +18,11 @@ Analysis and simulation of water quality in the Nancy region, focusing on indust
 - **Planting Period**: Rain events during agricultural planting cycles increase nitrate concentrations.
 
 Correlations and remarks :
-Winter snow melting = higher water level = more dilution = less everything
-more salt into water = less photosynthesis = less oxygen
+**Winter** snow melting = higher water level = more dilution = less everything more salt into water = less photosynthesis = less oxygen
+**Summmer** less rain = lower water level = less dilution = higher pollutant concentration = stronger industrial impact
+**Heavy rain** heavy rain = sewer overflow + mudslides = more turbidity = more nitrates in water = poorer water quality
+**Planting period** fertilizer use = rain = runoff into water = higher nitrates = risk of eutrophication
+
 
 ### Sources
 
