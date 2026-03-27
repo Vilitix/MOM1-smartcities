@@ -39,6 +39,10 @@ def dashboard():
 def analysis():
     return render_template("analysis.html", active_page="analysis")
 
+@app.route("/correlation")
+def correlation():
+    return render_template("correlation.html", active_page="correlation")
+
 @app.route("/connectors")
 def connectors():
     return render_template("connectors.html", active_page="connectors")
@@ -145,6 +149,25 @@ def api_export():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=hydrolens_weather_data.csv"}
     )
+
+@app.route("/api/correlation")
+def api_correlation():
+    """Return correlation matrix of all numeric sensor parameters."""
+    df, numeric_cols = get_processed_sensor_data()
+    if df.empty or len(numeric_cols) == 0:
+        return jsonify({"error": "No data found"}), 404
+        
+    num_df = df[numeric_cols].dropna()
+    # Replace NaN with None in the correlation matrix so it parses to valid JSON (null)
+    corr_matrix = num_df.corr().round(2)
+    # where correlation is undefined (like constant battery level), fill with None
+    corr_matrix = corr_matrix.replace({np.nan: None})
+    corr_matrix = corr_matrix.to_dict()
+    
+    return jsonify({
+        "columns": numeric_cols.tolist(),
+        "matrix": corr_matrix
+    })
 
 @app.route("/api/sensor-data")
 def api_sensor_data():

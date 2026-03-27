@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block title %}Correlation Matrix - Hydrolens{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in pb-12">
+    <header>
+        <h1 class="font-headline text-3xl font-black text-primary tracking-tight">Correlation Matrix</h1>
+        <p class="text-on-surface-variant font-medium mt-2 max-w-3xl">Statistical analysis of relationships between different water quality factors in the dataset.</p>
+    </header>
+
+    <div id="loading" class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+
+    <div id="correlation-content" class="hidden space-y-8">
+        <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] overflow-x-auto">
+            <h2 class="font-headline font-bold text-primary text-lg mb-6">Pearson Correlation Coefficients</h2>
+            <div class="inline-block min-w-full align-middle">
+                <table class="min-w-full border-collapse" id="corr-table">
+                    <thead>
+                        <tr id="corr-header" class="text-[10px] uppercase text-on-surface-variant text-left bg-surface-container-low border-b border-surface">
+                            <th class="p-3 font-bold sticky left-0 bg-surface-container-low z-10 w-48">Parameter</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corr-body" class="text-xs">
+                        <!-- Rows populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-on-surface-variant">
+                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-blue-900"></span> Strong Positive (+1.0)</span>
+                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-blue-200"></span> Weak Positive (+0.3)</span>
+                <span class="flex items-center gap-2 border border-slate-200"><span class="w-4 h-4 block rounded bg-white"></span> Uncorrelated (0.0)</span>
+                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-red-200"></span> Weak Negative (-0.3)</span>
+                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-red-900"></span> Strong Negative (-1.0)</span>
+            </div>
+        </section>
+        
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
+                <h3 class="font-headline font-bold text-primary mb-2">How to interpret</h3>
+                <ul class="list-disc pl-5 text-sm text-slate-600 space-y-2">
+                    <li><b>+1.0</b> : Perfect positive correlation (both values rise together)</li>
+                    <li><b>0.0</b> : No linear relationship between the variables</li>
+                    <li><b>-1.0</b> : Perfect negative correlation (one rises as the other falls)</li>
+                </ul>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
+                <h3 class="font-headline font-bold text-primary mb-2">Key Highlights</h3>
+                <div id="highlights-container" class="space-y-3">
+                    <!-- JS populated -->
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    fetch('/api/correlation')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('correlation-content').classList.remove('hidden');
+            
+            if (data.error) {
+                document.getElementById('correlation-content').innerHTML = `<p class='text-error p-4'>${data.error}</p>`;
+                return;
+            }
+            
+            buildTable(data.columns, data.matrix);
+            findHighlights(data.columns, data.matrix);
+        })
+        .catch(err => {
+            document.getElementById('loading').innerHTML = `<p class="text-error font-bold">Failed to load data: ${err.message}</p>`;
+        });
+
+    function getColorForCorrelation(val) {
+        if (val === null || val === undefined || isNaN(val)) return 'bg-slate-100 text-slate-400';
+        
+        if (val === 1.0) return 'bg-slate-100 font-bold'; // diagonal
+        
+        // Blue scale for positive, Red scale for negative
+        if (val >= 0.8) return 'bg-blue-900 text-white font-bold';
+        if (val >= 0.6) return 'bg-blue-700 text-white font-bold';
+        if (val >= 0.4) return 'bg-blue-500 text-white';
+        if (val >= 0.2) return 'bg-blue-200 text-blue-900';
+        if (val > 0) return 'bg-blue-50 text-blue-800';
+        
+        if (val <= -0.8) return 'bg-red-900 text-white font-bold';
+        if (val <= -0.6) return 'bg-red-700 text-white font-bold';
+        if (val <= -0.4) return 'bg-red-500 text-white';
+        if (val <= -0.2) return 'bg-red-200 text-red-900';
+        if (val < 0) return 'bg-red-50 text-red-800';
+        
+        return 'bg-white';
+    }
+
+    function buildTable(columns, matrix) {
+        const header = document.getElementById('corr-header');
+        columns.forEach(col => {
+            const th = document.createElement('th');
+            th.className = 'p-2 border-l border-surface truncate max-w-[120px]';
+            th.title = col;
+            th.textContent = col.length > 15 ? col.substring(0, 12) + '...' : col;
+            header.appendChild(th);
+        });
+
+        const body = document.getElementById('corr-body');
+        columns.forEach(rowCol => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-surface hover:bg-slate-50 transition-colors';
+            
+            const th = document.createElement('th');
+            th.className = 'p-3 text-left sticky left-0 font-bold bg-white z-10 truncate whitespace-nowrap shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
+            th.textContent = rowCol;
+            th.title = rowCol;
+            tr.appendChild(th);
+            
+            columns.forEach(col => {
+                const td = document.createElement('td');
+                const val = matrix[col] ? matrix[col][rowCol] : null;
+                const colorClass = getColorForCorrelation(val);
+                
+                td.className = `p-2 border-l border-surface text-center ${colorClass}`;
+                td.textContent = (val !== null && val !== undefined) ? val.toFixed(2) : '-';
+                
+                tr.appendChild(td);
+            });
+            
+            body.appendChild(tr);
+        });
+    }
+
+    function findHighlights(columns, matrix) {
+        const container = document.getElementById('highlights-container');
+        const correlations = [];
+        
+        let hasData = false;
+        
+        for (let i = 0; i < columns.length; i++) {
+            for (let j = i + 1; j < columns.length; j++) {
+                const c1 = columns[i];
+                const c2 = columns[j];
+                if (matrix[c1] && typeof matrix[c1][c2] === 'number') {
+                    hasData = true;
+                    const val = matrix[c1][c2];
+                    if (Math.abs(val) > 0.5) {
+                        correlations.push({c1, c2, val});
+                    }
+                }
+            }
+        }
+        
+        if (!hasData) {
+           container.innerHTML = '<p class="text-sm text-slate-500 italic">Analysis requires sufficient data variability.</p>';
+           return;
+        }
+        
+        correlations.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+        
+        if (correlations.length === 0) {
+            container.innerHTML = '<p class="text-sm text-slate-500 italic">No strong linear correlations (|r| \> 0.5) found between parameters.</p>';
+        } else {
+            const top5 = correlations.slice(0, 5);
+            top5.forEach(corr => {
+                const isPos = corr.val > 0;
+                const color = isPos ? 'text-blue-700 bg-blue-50' : 'text-red-700 bg-red-50';
+                const el = document.createElement('div');
+                el.className = 'flex justify-between items-center text-sm p-3 rounded border border-slate-100';
+                el.innerHTML = `
+                    <div class="flex-1 min-w-0 pr-4">
+                        <span class="font-bold text-slate-700 truncate block">${corr.c1}</span>
+                        <span class="text-xs text-slate-500 italic">vs</span>
+                        <span class="font-bold text-slate-700 truncate block">${corr.c2}</span>
+                    </div>
+                    <div class="${color} font-black px-3 py-1.5 rounded min-w-[64px] text-center">
+                        ${corr.val > 0 ? '+' : ''}${corr.val.toFixed(2)}
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+    }
+</script>
+{% endblock %}
