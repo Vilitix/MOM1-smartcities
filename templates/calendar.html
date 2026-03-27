@@ -91,19 +91,16 @@
     const typeColors = { maintenance: '#ba1a1a', calibration: '#004851', export: '#004370', alert: '#d97706' };
     const typeIcons = { maintenance: '🔧', calibration: '🎯', export: '📊', alert: '⚠️' };
 
-    // Persistent events via localStorage
-    let events = JSON.parse(localStorage.getItem('hydrolens_events') || '[]');
+    let events = [];
 
-    // Seed default events if none exist
-    if (events.length === 0) {
-        const now = new Date();
-        const y = now.getFullYear(), m = now.getMonth();
-        events = [
-            { title: 'ECHO-02 Maintenance', date: `${y}-${String(m + 1).padStart(2, '0')}-15`, type: 'maintenance' },
-            { title: 'Monthly Data Export', date: `${y}-${String(m + 1).padStart(2, '0')}-01`, type: 'export' },
-            { title: 'Sensor Calibration', date: `${y}-${String(m + 1).padStart(2, '0')}-${String(now.getDate() + 1).padStart(2, '0')}`, type: 'calibration' },
-        ];
-        localStorage.setItem('hydrolens_events', JSON.stringify(events));
+    async function loadEvents() {
+        try {
+            const res = await fetch('/api/events');
+            events = await res.json();
+            renderFullCalendar();
+        } catch (e) {
+            console.error('Failed to load events', e);
+        }
     }
 
     function renderFullCalendar() {
@@ -133,7 +130,9 @@
 
             let evtHtml = '';
             dayEvents.forEach(e => {
-                evtHtml += `<div class="text-[8px] font-medium px-1 py-0.5 rounded mt-0.5 truncate text-white" style="background:${typeColors[e.type]}">${typeIcons[e.type]} ${e.title}</div>`;
+                const color = typeColors[e.type] || '#000';
+                const icon = typeIcons[e.type] || '📌';
+                evtHtml += `<div class="text-[8px] font-medium px-1 py-0.5 rounded mt-0.5 truncate text-white" style="background:${color}" title="${e.title}">${icon} ${e.title}</div>`;
             });
 
             html += `<div class="${cls}">
@@ -153,43 +152,46 @@
     function renderEventList() {
         const list = document.getElementById('event-list');
         const sorted = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const upcoming = sorted.filter(e => new Date(e.date) >= new Date(new Date().toISOString().split('T')[0]));
+        const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const upcoming = sorted.filter(e => e.date >= todayStr);
 
         if (upcoming.length === 0) {
             list.innerHTML = '<p class="text-xs text-on-surface-variant italic">No upcoming events</p>';
             return;
         }
-        list.innerHTML = upcoming.map((e, i) => `
+        list.innerHTML = upcoming.map((e) => `
         <div class="flex gap-3 items-center">
-            <div class="w-1 h-10 rounded-full flex-shrink-0" style="background:${typeColors[e.type]}"></div>
-            <div class="flex-1">
-                <p class="text-xs font-bold">${typeIcons[e.type]} ${e.title}</p>
+            <div class="w-1 h-10 rounded-full flex-shrink-0" style="background:${typeColors[e.type] || '#000'}"></div>
+            <div class="flex-1 w-0">
+                <p class="text-xs font-bold truncate" title="${e.title}">${typeIcons[e.type] || '📌'} ${e.title}</p>
                 <p class="text-[10px] text-on-surface-variant">${new Date(e.date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
             </div>
-            <button onclick="removeEvent(${i})" class="material-symbols-outlined text-on-surface-variant text-sm hover:text-error transition-colors">close</button>
+            <button onclick="removeEvent(${e.id})" class="material-symbols-outlined text-on-surface-variant text-sm hover:text-error transition-colors ml-2">close</button>
         </div>
     `).join('');
     }
 
-    function addEvent(e) {
+    async function addEvent(e) {
         e.preventDefault();
-        events.push({
+        const newEvt = {
             title: document.getElementById('evt-title').value,
             date: document.getElementById('evt-date').value,
             type: document.getElementById('evt-type').value
+        };
+        
+        await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newEvt)
         });
-        localStorage.setItem('hydrolens_events', JSON.stringify(events));
+        
         document.getElementById('evt-title').value = '';
-        renderFullCalendar();
+        loadEvents();
     }
 
-    function removeEvent(idx) {
-        const sorted = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const upcoming = sorted.filter(e => new Date(e.date) >= new Date(new Date().toISOString().split('T')[0]));
-        const toRemove = upcoming[idx];
-        events = events.filter(e => !(e.title === toRemove.title && e.date === toRemove.date && e.type === toRemove.type));
-        localStorage.setItem('hydrolens_events', JSON.stringify(events));
-        renderFullCalendar();
+    async function removeEvent(id) {
+        await fetch(`/api/events/${id}`, { method: 'DELETE' });
+        loadEvents();
     }
 
     function navMonth(delta) {
@@ -197,6 +199,6 @@
         renderFullCalendar();
     }
 
-    renderFullCalendar();
+    loadEvents();
 </script>
 {% endblock %}

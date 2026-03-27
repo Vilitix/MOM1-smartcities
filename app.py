@@ -1,5 +1,5 @@
-from flask import Flask, render_template, jsonify, Response
-from weather import get_weather_data
+from flask import Flask, render_template, jsonify, Response, request
+from weather import get_weather_data, get_weather_forecast
 from data_handler import load_and_clean_data, get_latest_sensor_metrics, get_resampled_sensor_data
 from farming_event import get_farming_data
 from datetime import datetime, date
@@ -7,8 +7,35 @@ import pandas as pd
 import numpy as np
 import json
 import io
+import sqlite3
+import os
 
 app = Flask(__name__)
+
+# --- Database Setup ---
+DB_FILE = "events.db"
+
+def init_db():
+    with sqlite3.connect(DB_FILE) as conn:
+        cursor = conn.cursor()
+        # Create events table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                date TEXT NOT NULL,
+                type TEXT NOT NULL,
+                source TEXT DEFAULT 'calendar'
+            )
+        """)
+        conn.commit()
+
+init_db()
+
+def get_db_connection():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Nancy / ECHO coordinates
 LAT = 48.693033
@@ -51,7 +78,55 @@ def connectors():
 def calendar():
     return render_template("calendar.html", active_page="calendar")
 
+@app.route("/report")
+def report():
+    return render_template("report.html", active_page="report")
+
 # --- API ---
+
+@app.route('/api/events', methods=['GET', 'POST'])
+def handle_events():
+    conn = get_db_connection()
+    if request.method == 'POST':
+        data = request.json
+        title = data.get('title')
+        date_str = data.get('date')
+        evt_type = data.get('type')
+        conn.execute("INSERT INTO events (title, date, type, source) VALUES (?, ?, ?, 'calendar')",
+                     (title, date_str, evt_type))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success"}), 201
+    else:
+        events = conn.execute("SELECT * FROM events ORDER BY date ASC").fetchall()
+        conn.close()
+        return jsonify([dict(row) for row in events])
+
+@app.route('/api/events/<int:event_id>', methods=['DELETE'])
+def delete_event(event_id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM events WHERE id = ?", (event_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success"})
+
+@app.route('/api/submit-report', methods=['POST'])
+def submit_report():
+    data = request.json
+    event_type = data.get('eventType', 'Incident')
+    event_date = data.get('eventDate', str(date.today()))
+    location = data.get('location', 'Unknown Location')
+    
+    # Map report to calendar event
+    title = f"Report: {event_type} at {location}"
+    
+    conn = get_db_connection()
+    conn.execute("INSERT INTO events (title, date, type, source) VALUES (?, ?, 'alert', 'report')",
+                 (title, event_date))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({"status": "success"}), 201
 
 @app.route("/api/weather")
 def api_weather():
@@ -83,6 +158,20 @@ def api_weather():
             "std": round(float(df["wind_speed_10m"].std()), 1),
         },
     }
+    
+    # Forecast data
+    try:
+        df_forecast = get_weather_forecast(lat=LAT, lon=LON, forecast_days=3)
+        stats["forecast"] = {
+            "upcoming_precip_3d": round(float(df_forecast["precipitation"].sum()), 2),
+            "upcoming_wind_max_3d": round(float(df_forecast["wind_speed_10m"].max()), 1)
+        }
+    except Exception as e:
+        print(f"Failed to fetch forecast: {e}")
+        stats["forecast"] = {
+            "upcoming_precip_3d": 0.0,
+            "upcoming_wind_max_3d": 0.0
+        }
     
     # Daily aggregation for yearly chart
     df_daily = df.resample("D").agg({
