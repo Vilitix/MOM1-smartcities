@@ -54,13 +54,13 @@ def train_and_predict():
     df_weather.index.name = 'Datetime'
     df_weather.reset_index(inplace=True)
 
-    # Add dummy Event_Scale
-    df_weather['DayOfWeek'] = df_weather['Datetime'].dt.dayofweek
-    def determine_event_scale(day_of_week):
-        if day_of_week >= 5: return np.random.choice([0, 1, 2], p=[0.5, 0.4, 0.1])
-        else: return np.random.choice([0, 1], p=[0.9, 0.1])
-    df_weather['Event_Scale'] = df_weather['DayOfWeek'].apply(determine_event_scale)
-    df_weather.drop(columns=['DayOfWeek'], inplace=True)
+    # # Add dummy Event_Scale
+    # df_weather['DayOfWeek'] = df_weather['Datetime'].dt.dayofweek
+    # def determine_event_scale(day_of_week):
+    #     if day_of_week >= 5: return np.random.choice([0, 1, 2], p=[0.5, 0.4, 0.1])
+    #     else: return np.random.choice([0, 1], p=[0.9, 0.1])
+    # df_weather['Event_Scale'] = df_weather['DayOfWeek'].apply(determine_event_scale)
+    # df_weather.drop(columns=['DayOfWeek'], inplace=True)
 
     print("Loading water quality dataset...")
     df_water = pd.read_csv("Consibio Cloud Datalog.csv")
@@ -70,7 +70,7 @@ def train_and_predict():
         df_water['Datetime'] = pd.to_datetime(df_water['Date'], format='mixed', dayfirst=True)
     
     df_water.set_index('Datetime', inplace=True)
-    target_cols = ['Chlorophylle-a SCALED', 'Conductivité', 'NO3', 'O2 Saturation', 'pH Test', 'Turbidité']
+    target_cols = ['Conductivité', 'NO3', 'Chlorophylle-a SCALED','Turbidité', 'O2 Saturation', 'pH Test', 'MES']
     
     # Resample to 8-hour intervals
     df_water_aligned = df_water[target_cols].resample('8h').mean()
@@ -84,7 +84,7 @@ def train_and_predict():
     imputer = SimpleImputer(strategy='mean')
     df_merged[target_cols] = imputer.fit_transform(df_merged[target_cols])
     
-    X = df_merged[['temperature_2m', 'precipitation', 'wind_speed_10m', 'Event_Scale']].values
+    X = df_merged[['temperature_2m', 'precipitation', 'wind_speed_10m']+ target_cols].values
     y = df_merged[target_cols].values
     
     # Scale Data and Create Sequences
@@ -96,8 +96,8 @@ def train_and_predict():
     y_scaled = scaler_y.fit_transform(y)
     
     # Define sequence length
-    # 9 steps = 3 days of data (8h * 9 = 72h)
-    SEQ_LENGTH = 9 
+    # 90 steps = 30 days of data (8h * 3 * 30 = 720h)
+    SEQ_LENGTH = 90 
     X_seq, y_seq = create_sequences(X_scaled, y_scaled, SEQ_LENGTH)
     
     # Split into train and test sets
