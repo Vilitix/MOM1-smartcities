@@ -241,12 +241,36 @@ def api_export():
 
 @app.route("/api/correlation")
 def api_correlation():
-    """Return correlation matrix of all numeric sensor parameters."""
+    """Return correlation matrix of all numeric sensor parameters and weather events."""
     df, numeric_cols = get_processed_sensor_data()
     if df.empty or len(numeric_cols) == 0:
         return jsonify({"error": "No data found"}), 404
         
-    num_df = df[numeric_cols].dropna()
+    # Resample sensor data daily
+    res_sensor = get_resampled_sensor_data(df, interval='D')
+    
+    # Get weather data and resample daily
+    weather_df = get_cached_weather()
+    weather_daily = weather_df.resample('D').agg({
+        "temperature_2m": "mean",
+        "precipitation": "sum",
+        "wind_speed_10m": "mean",
+        "snowfall": "sum"
+    })
+    
+    # Ensure both dataframes' indexes are compatible (tz-naive)
+    res_sensor.index = res_sensor.index.tz_localize(None)
+    weather_daily.index = weather_daily.index.tz_localize(None)
+    
+    # Join the two dataframes on date
+    merged_df = res_sensor.join(weather_daily, how='inner')
+    
+    # Get all numeric columns
+    all_numeric_cols = list(merged_df.select_dtypes(include=[np.number]).columns)
+    
+    # Drop rows with NaNs to have a clean correlation
+    num_df = merged_df[all_numeric_cols].dropna()
+    
     # Replace NaN with None in the correlation matrix so it parses to valid JSON (null)
     corr_matrix = num_df.corr().round(2)
     # where correlation is undefined (like constant battery level), fill with None
@@ -254,7 +278,7 @@ def api_correlation():
     corr_matrix = corr_matrix.to_dict()
     
     return jsonify({
-        "columns": numeric_cols.tolist(),
+        "columns": all_numeric_cols,
         "matrix": corr_matrix
     })
 
