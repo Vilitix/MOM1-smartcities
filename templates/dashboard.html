@@ -240,30 +240,31 @@
         const w = weather.stats;
 
         // Water Quality Metrics
-        document.getElementById('ph-value').textContent = s.ph.toFixed(2);
-        document.getElementById('ph-bar').style.width = (s.ph / 14 * 100) + '%';
+        document.getElementById('ph-value').textContent = s.ph != null ? s.ph.toFixed(2) : '--';
+        document.getElementById('ph-bar').style.width = ((s.ph || 0) / 14 * 100) + '%';
         document.getElementById('ph-last').textContent = 'Last Reading: ' + s.timestamp;
 
-        document.getElementById('turb-value').textContent = s.turbidity.toFixed(2);
-        document.getElementById('turb-bar').style.width = Math.min(100, (s.turbidity / 1 * 100)) + '%';
+        document.getElementById('turb-value').textContent = s.turbidity != null ? s.turbidity.toFixed(2) : '--';
+        document.getElementById('turb-bar').style.width = Math.min(100, ((s.turbidity || 0) / 1 * 100)) + '%';
         document.getElementById('turb-last').textContent = 'Station: ECHO-01';
 
-        document.getElementById('htemp-value').textContent = s.temp.toFixed(1);
-        document.getElementById('htemp-bar').style.width = Math.min(100, (s.temp / 30 * 100)) + '%';
+        const temp = s.temp != null ? s.temp : (s.oxygen_temp != null ? s.oxygen_temp : null);
+        document.getElementById('htemp-value').textContent = temp != null ? temp.toFixed(1) : '--';
+        document.getElementById('htemp-bar').style.width = Math.min(100, ((temp || 0) / 30 * 100)) + '%';
         document.getElementById('htemp-last').textContent = 'Submerged Probe';
 
-        document.getElementById('echo-batt').textContent = s.battery + '%';
+        document.getElementById('echo-batt').textContent = s.battery != null ? s.battery + '%' : '--%';
 
         // Trend Chart
         const ctx = document.getElementById('hydrolensChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: sensors.trends.labels,
+                labels: sensors.trends.labels.slice(-30),
                 datasets: [
                     {
                         label: 'Turbidity (NTU)',
-                        data: sensors.trends.turbidity,
+                        data: sensors.trends.turbidity.slice(-30),
                         borderColor: '#004370',
                         backgroundColor: 'rgba(0, 67, 112, 0.08)',
                         fill: true,
@@ -274,7 +275,7 @@
                     },
                     {
                         label: 'pH Level',
-                        data: sensors.trends.ph,
+                        data: sensors.trends.ph.slice(-30),
                         borderColor: '#006a6a',
                         borderDash: [5, 5],
                         fill: false,

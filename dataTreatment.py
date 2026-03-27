@@ -61,7 +61,7 @@ def compute_score(row):
     return round(score, 1)
 
 
-file = pd.read_csv("Consibio Cloud Datalog.csv")
+file = pd.read_csv("data.csv")
 file = file.dropna(subset=["O2 Saturation","Turbidité","NO3","Phycocyanine scaled","pH Test"])
 file["Date"] = pd.to_datetime(file["Date"], dayfirst=True, format="mixed")
 file["Date_only"] = file["Date"].dt.date

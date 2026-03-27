@@ -1,4 +1,4 @@
-Consibio Cloud Datalog.csv
+*.csv
 *.sqlite
 .cache
 test.py
@@ -6,3 +6,4 @@ test.py
 *.csv
 venv
 __pycache__
+!debit_simule_nancy.csv
