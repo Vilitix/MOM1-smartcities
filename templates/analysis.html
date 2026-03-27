@@ -301,6 +301,35 @@
         label.textContent = `${input.value} ${units[type]}`;
     }
 
+    const unitsByParam = {
+        // Use dataset column names only (Nitrate_data.csv / sensor trends keys)
+        'NO3': 'mg/L',
+        'Turbidité': 'NTU',
+        'Conductivité': 'µS/cm',
+        'pH Test': 'pH',
+        'CDOM': 'ug/L',
+        'O2 Temperature': '°C',
+        'O2 Saturation': 'mg/L',
+        'MES': 'mg/L',
+        'Chlorophylle-a SCALED': 'µg/L',
+        'Phycocyanine scaled': 'µg/L',
+        'CO2 dissous concentration calculée': 'mg/L',
+        'COTeq': 'mg/L',
+        'DBOeq': 'mg/L',
+        'DCOeq': 'mg/L',
+        'T (Con.)': '°C',
+        'Total battery charge #6f0d': '%',
+        // Weather keys used in analysis page
+        'temperature_2m': '°C',
+        'precipitation': 'mm',
+        'wind_speed_10m': 'km/h',
+        'snowfall': 'cm'
+    };
+
+    function getUnitForParam(paramName) {
+        return unitsByParam[paramName] || '';
+    }
+
     function renderFarmingEventFilters() {
         const container = document.getElementById('farming-event-filters');
         container.innerHTML = '';
@@ -374,11 +403,18 @@
             data: {
                 labels: phTurbCrop.labels,
                 datasets: [
-                    { label: 'pH Test', data: phTurbCrop.seriesList[0], borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'Turbidit\u00e9', data: phTurbCrop.seriesList[1], borderColor: '#55d7ed', backgroundColor: 'rgba(85,215,237,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
+                    { label: 'pH Test (pH)', data: phTurbCrop.seriesList[0], borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'Turbidité (NTU)', data: phTurbCrop.seriesList[1], borderColor: '#55d7ed', backgroundColor: 'rgba(85,215,237,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
                 ]
             },
-            options: { ...commonOpts, scales: { ...commonOpts.scales, y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } } } } }
+            options: {
+                ...commonOpts,
+                scales: {
+                    ...commonOpts.scales,
+                    y: { ...commonOpts.scales.y, title: { display: true, text: 'pH', font: { size: 9 } } },
+                    y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } }, title: { display: true, text: 'NTU', font: { size: 9 } } }
+                }
+            }
         });
 
         // 2. Conductivity & Temperature Chart
@@ -387,11 +423,18 @@
             data: {
                 labels: condTempCrop.labels,
                 datasets: [
-                    { label: 'Conductivit\u00e9', data: condTempCrop.seriesList[0], borderColor: '#006a6a', borderWidth: 2, tension: 0.3, pointRadius: 0 },
-                    { label: 'H2O Temp', data: condTempCrop.seriesList[1], borderColor: '#ba1a1a', borderWidth: 1.5, borderDash: [5, 5], tension: 0.3, pointRadius: 0 }
+                    { label: 'Conductivité (µS/cm)', data: condTempCrop.seriesList[0], borderColor: '#006a6a', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'H2O Temp (°C)', data: condTempCrop.seriesList[1], borderColor: '#ba1a1a', borderWidth: 1.5, borderDash: [5, 5], tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
                 ]
             },
-            options: commonOpts
+            options: {
+                ...commonOpts,
+                scales: {
+                    ...commonOpts.scales,
+                    y: { ...commonOpts.scales.y, title: { display: true, text: 'µS/cm', font: { size: 9 } } },
+                    y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } }, title: { display: true, text: '°C', font: { size: 9 } } }
+                }
+            }
         });
 
         // 3. Weather Charts
@@ -452,6 +495,7 @@
 
     function updateGlobalChart() {
         const colName = document.getElementById('paramSelect').value;
+        const colUnit = getUnitForParam(colName);
         const rawData = (state.sensors && state.sensors.trends && state.sensors.trends.all_params) ? state.sensors.trends.all_params[colName] : [];
         const rawLabels = (state.sensors && state.sensors.trends) ? state.sensors.trends.labels : [];
 
@@ -469,7 +513,7 @@
         if (globalChart) globalChart.destroy();
 
         const datasets = [{
-            label: colName,
+            label: colUnit ? `${colName} (${colUnit})` : colName,
             data: data,
             borderColor: '#004370',
             backgroundColor: 'rgba(0, 67, 112, 0.08)',
@@ -522,7 +566,17 @@
                 ...commonOpts,
                 plugins: {
                     ...commonOpts.plugins,
-                    title: { display: true, text: colName + ' Analysis with Weather Context', font: { size: 14, weight: 'bold' } },
+                    title: { display: true, text: colUnit ? `${colName} (${colUnit}) Analysis with Weather Context` : `${colName} Analysis with Weather Context`, font: { size: 14, weight: 'bold' } },
+                    tooltip: {
+                        ...commonOpts.plugins.tooltip,
+                        callbacks: {
+                            label: function (ctx) {
+                                if (ctx.parsed.y == null) return `${ctx.dataset.label}: N/A`;
+                                if (ctx.dataset.yAxisID !== 'y') return `${ctx.dataset.label}: ${ctx.parsed.y}`;
+                                return colUnit ? `${ctx.dataset.label}: ${ctx.parsed.y} ${colUnit}` : `${ctx.dataset.label}: ${ctx.parsed.y}`;
+                            }
+                        }
+                    },
                     monthHighlightPlugin: { months: highlightMonths },
                     weatherEventLinePlugin: { events: weatherEvents },
                     zoom: {
@@ -537,7 +591,7 @@
                 },
                 scales: {
                     ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: 'Sensor Value', font: { size: 10, weight: 'bold' } } }
+                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `Sensor Value (${colUnit})` : 'Sensor Value', font: { size: 10, weight: 'bold' } } }
                 }
             }
         });
