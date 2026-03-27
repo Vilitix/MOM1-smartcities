@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, Response
 from weather import get_weather_data
 from data_handler import load_and_clean_data, get_latest_sensor_metrics, get_resampled_sensor_data
+from farming_event import get_farming_data
 from datetime import datetime, date
 import pandas as pd
 import numpy as np
@@ -183,6 +184,38 @@ def api_sensor_data():
         "trends": res_data,
         "numeric_columns": numeric_cols.tolist(),
         "total_records": len(df)
+    })
+
+
+@app.route("/api/farming-events")
+def api_farming_events():
+    """Return farming events list and active months derived from farming_event DataFrame."""
+    farming_df = get_farming_data("data.csv")
+
+    event_cols = [col for col in farming_df.columns if col not in ["Timestamp", "Date"]]
+
+    parsed_date = pd.to_datetime(
+        farming_df["Date"],
+        format="%d/%m-%y %H:%M:%S",
+        errors="coerce"
+    )
+    timestamp_dt = pd.to_datetime(farming_df["Timestamp"], unit="s", errors="coerce")
+    month_series = parsed_date.dt.month.fillna(timestamp_dt.dt.month)
+
+    event_months = {}
+    for event in event_cols:
+        active_months = sorted(
+            month_series[farming_df[event] == 1]
+            .dropna()
+            .astype(int)
+            .unique()
+            .tolist()
+        )
+        event_months[event] = active_months
+
+    return jsonify({
+        "events": event_cols,
+        "event_months": event_months
     })
 
 if __name__ == "__main__":
