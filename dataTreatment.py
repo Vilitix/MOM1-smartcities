@@ -72,29 +72,6 @@ file_daily = file.groupby("Date_only")[["Turbidité"]].mean().reset_index()
 # Calcul de la variation de turbidité (différence journalière)
 file_daily["Variation_Turbidite"] = file_daily["Turbidité"].diff()
 
-# Chargement du débit
-df_debit = pd.read_csv("debit_simule_nancy_2025_2026.csv")
-df_debit["Date"] = pd.to_datetime(df_debit["Date"]).dt.date
-
-# Merge des deux datasets
-merged = pd.merge(file_daily, df_debit, left_on="Date_only", right_on="Date", how="inner")
-
-if not merged.empty:
-    print("Corrélation de Pearson détaillée :")
-    print(merged[["Variation_Turbidite", "Debit_m3_jour"]].corr())
-
-    # Affichage du nuage de points
-    fig, ax1 = plt.subplots(figsize=(10, 6))
-
-    ax1.scatter(merged["Debit_m3_jour"], merged["Variation_Turbidite"], color='blue', alpha=0.7)
-    ax1.set_xlabel("Débit simulé (m3/jour)")
-    ax1.set_ylabel("Variation de Turbidité (NTU/jour)", color='blue')
-    ax1.set_title("Corrélation entre variation de turbidité et débit du côté de Nancy")
-    ax1.grid(True)
-    plt.show()
-else:
-    print("Pas assez de dates en commun pour calculer une corrélation.")
-
 file["Score_Baignade"] = file.apply(compute_score, axis=1)
 
 # Graphe Pluies vs DBOeq (si DBOeq est présent et non-null)
