@@ -70,7 +70,7 @@ def train_and_predict():
         df_water['Datetime'] = pd.to_datetime(df_water['Date'], format='mixed', dayfirst=True)
     
     df_water.set_index('Datetime', inplace=True)
-    target_cols = ['Chlorophylle-a SCALED', 'Conductivité', 'NO3', 'O2 Saturation', 'pH Test', 'Turbidité']
+    target_cols = ['Conductivité', 'NO3', 'Chlorophylle-a SCALED','Turbidité', 'O2 Saturation', 'pH Test', 'MES']
     
     # Resample to 8-hour intervals
     df_water_aligned = df_water[target_cols].resample('8h').mean()
@@ -84,7 +84,7 @@ def train_and_predict():
     imputer = SimpleImputer(strategy='mean')
     df_merged[target_cols] = imputer.fit_transform(df_merged[target_cols])
     
-    X = df_merged[['temperature_2m', 'precipitation', 'wind_speed_10m', 'Event_Scale']].values
+    X = df_merged[['temperature_2m', 'precipitation', 'wind_speed_10m', 'Event_Scale']+ target_cols].values
     y = df_merged[target_cols].values
     
     # Scale Data and Create Sequences
