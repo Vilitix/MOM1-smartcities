@@ -3,5 +3,6 @@ Consibio Cloud Datalog.csv
 .cache
 test.py
 .png
+*.csv
 venv
 __pycache__
