@@ -2,6 +2,9 @@
 
 Analysis and simulation of water quality in the Nancy region, focusing on industrial chloride discharges and environmental stressors.
 
+**The Crucial Role of Agricultural Crowdsourcing:**
+This application enables farmers and local residents to report exceptional events (e.g., fertilizer spreading, untreated water leaks). **Inputting this data is vital:** fertilizers and chemicals that run off into rivers eventually infiltrate adjacent groundwater aquifers. Pumping this contaminated water for irrigation directly impacts local crop quality, agricultural yields, and ultimately, the agricultural economy. Reporting these events early allows for the anticipation of contamination waves before they reach critical thresholds that would harm the farming community itself.
+
 ### Chloride Discharge Data
 
 - **Annual total**: ~1,000,000 tonnes discharged into the Meurthe river downstream of soda plants.
@@ -36,3 +39,4 @@ Correlations and remarks :
 - [Grand Est DRIEAT - Prélèvements et rejets](https://www.grand-est.developpement-durable.gouv.fr/prelevements-pressions-et-rejets-a12452.html?lang=fr)
 - [Eau Rhin-Meuse - Note enjeu département 54](https://www.eau-rhin-meuse.fr/sites/default/files/2025-09/CNE_Note_enjeu_d%C3%A9partement_54_mai2025_2.pdf)
 - [Région Grand Est - Diagnostic Eau](https://www.grandest.fr/wp-content/uploads/2019/07/piece-n07-annexe-6-diagnostic-eau.pdf)
+- [Study on the Relationship between River Water and Groundwater under Different Aquifer Mediums](https://www.mdpi.com/2073-4441/14/7/1134)
