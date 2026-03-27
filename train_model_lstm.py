@@ -54,13 +54,13 @@ def train_and_predict():
     df_weather.index.name = 'Datetime'
     df_weather.reset_index(inplace=True)
 
-    # Add dummy Event_Scale
-    df_weather['DayOfWeek'] = df_weather['Datetime'].dt.dayofweek
-    def determine_event_scale(day_of_week):
-        if day_of_week >= 5: return np.random.choice([0, 1, 2], p=[0.5, 0.4, 0.1])
-        else: return np.random.choice([0, 1], p=[0.9, 0.1])
-    df_weather['Event_Scale'] = df_weather['DayOfWeek'].apply(determine_event_scale)
-    df_weather.drop(columns=['DayOfWeek'], inplace=True)
+    # # Add dummy Event_Scale
+    # df_weather['DayOfWeek'] = df_weather['Datetime'].dt.dayofweek
+    # def determine_event_scale(day_of_week):
+    #     if day_of_week >= 5: return np.random.choice([0, 1, 2], p=[0.5, 0.4, 0.1])
+    #     else: return np.random.choice([0, 1], p=[0.9, 0.1])
+    # df_weather['Event_Scale'] = df_weather['DayOfWeek'].apply(determine_event_scale)
+    # df_weather.drop(columns=['DayOfWeek'], inplace=True)
 
     print("Loading water quality dataset...")
     df_water = pd.read_csv("Consibio Cloud Datalog.csv")
@@ -84,7 +84,7 @@ def train_and_predict():
     imputer = SimpleImputer(strategy='mean')
     df_merged[target_cols] = imputer.fit_transform(df_merged[target_cols])
     
-    X = df_merged[['temperature_2m', 'precipitation', 'wind_speed_10m', 'Event_Scale']+ target_cols].values
+    X = df_merged[['temperature_2m', 'precipitation', 'wind_speed_10m']+ target_cols].values
     y = df_merged[target_cols].values
     
     # Scale Data and Create Sequences
