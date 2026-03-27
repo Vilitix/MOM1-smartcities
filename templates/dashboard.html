@@ -80,19 +80,30 @@
                 class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] relative overflow-hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="font-headline text-xl font-bold text-primary">Hydrological Correlation</h2>
-                        <p class="text-on-surface-variant text-xs">Recent 30-day cross-analysis between sensor data and
-                            climate archive</p>
+                        <h2 class="font-headline text-xl font-bold text-primary">Stakeholder View</h2>
+                        <p class="text-on-surface-variant text-xs">Monitor key indicators and thresholds by stakeholder perspective</p>
                     </div>
-                    <div
-                        class="bg-surface-container-low px-3 py-1.5 rounded-lg flex items-center gap-4 text-[10px] font-bold text-on-surface-variant">
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-600"></span>
-                            Sensor</span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            Climate</span>
+                    <div class="flex flex-wrap items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                        <button onclick="if(stakeholderChart) stakeholderChart.resetZoom()"
+                            class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-[10px] font-bold text-on-surface-variant hover:bg-slate-50 transition-colors flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[14px]">zoom_out</span> Reset Zoom
+                        </button>
+                        <span class="text-[10px] font-bold text-primary uppercase ml-2">Stakeholder:</span>
+                        <select id="stakeholderSelect" onchange="onStakeholderChange()"
+                            class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                            <option value="farmer">Farmer</option>
+                            <option value="ecosystem">Local Ecosystem</option>
+                            <option value="leisure">Leisure</option>
+                            <option value="drinking">Drinking Water</option>
+                        </select>
+                        <span class="text-[10px] font-bold text-primary uppercase">Metric:</span>
+                        <select id="stakeholderMetricSelect" onchange="updateStakeholderChart()"
+                            class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                        </select>
                     </div>
                 </div>
-                <div class="chart-container" style="height: 320px;"><canvas id="hydrolensChart"></canvas></div>
+                <div class="chart-container" style="height: 320px;"><canvas id="stakeholderChart"></canvas></div>
+                <div id="stakeholder-thresholds" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3"></div>
             </section>
 
             <!-- Connector Network Status -->
@@ -198,6 +209,45 @@
 {% block scripts %}
 <script>
     let state = { weather: null, sensors: null };
+    let stakeholderChart = null;
+
+    const stakeholderConfigs = {
+        farmer: {
+            label: 'Farmer',
+            indicators: [
+                { key: 'Conductivité', label: 'Conductivity', unit: 'mS/cm', convert: v => v == null ? null : v / 1000, thresholds: [{ label: 'Moderate stress starts', value: 0.7 }, { label: 'High salinity', value: 3.0 }] },
+                { key: 'NO3', label: 'Nitrates (NO3)', unit: 'mg/L', thresholds: [{ label: 'Good status max', value: 25 }, { label: 'High risk', value: 50 }] },
+                { key: 'Chlorophylle-a SCALED', label: 'Chlorophyll-a', unit: 'ug/L', thresholds: [{ label: 'Biofilm risk', value: 10 }] },
+                { key: 'Turbidité', label: 'Turbidity', unit: 'NTU', thresholds: [{ label: 'Safe drip max', value: 20 }, { label: 'High clogging risk', value: 50 }] }
+            ]
+        },
+        ecosystem: {
+            label: 'Local Ecosystem',
+            indicators: [
+                { key: 'O2 Saturation', label: 'Oxygen Saturation', unit: '%', thresholds: [{ label: 'Hypoxia risk', value: 50 }, { label: 'Excellent status', value: 80 }] },
+                { key: 'NO3', label: 'Nitrates (NO3)', unit: 'mg/L', thresholds: [{ label: 'Good status max', value: 25 }, { label: 'Poor status', value: 50 }] },
+                { key: 'pH Test', label: 'pH', unit: '', thresholds: [{ label: 'Optimal min', value: 6.5 }, { label: 'Optimal max', value: 8.2 }] },
+                { key: 'MES', label: 'Suspended Solids (MES)', unit: 'mg/L', thresholds: [{ label: 'Clear-water max', value: 25 }] }
+            ]
+        },
+        leisure: {
+            label: 'Leisure',
+            indicators: [
+                { key: 'Turbidité', label: 'Turbidity', unit: 'NTU', thresholds: [{ label: 'Swimming max', value: 50 }] },
+                { key: 'pH Test', label: 'pH', unit: '', thresholds: [{ label: 'Comfort min', value: 7.0 }, { label: 'Comfort max', value: 8.0 }] },
+                { key: 'Chlorophylle-a SCALED', label: 'Chlorophyll-a', unit: 'ug/L', thresholds: [{ label: 'Cyanotoxin risk max', value: 10 }] }
+            ]
+        },
+        drinking: {
+            label: 'Drinking Water',
+            indicators: [
+                { key: 'NO3', label: 'Nitrates (NO3)', unit: 'mg/L', thresholds: [{ label: 'Regulatory max', value: 50 }] },
+                { key: 'Chlorides', label: 'Chlorides', unit: 'mg/L', thresholds: [{ label: 'Guideline max', value: 250 }] },
+                { key: 'Turbidité', label: 'Turbidity', unit: 'NTU', thresholds: [{ label: 'Plant outlet target', value: 1.0 }] },
+                { key: 'Conductivité', label: 'Conductivity', unit: 'uS/cm', thresholds: [{ label: 'Standard max', value: 1100 }] }
+            ]
+        }
+    };
 
     Promise.all([
         fetch('/api/weather').then(r => r.json()),
@@ -214,9 +264,151 @@
 
         populateDashboard(sensors, weather, events);
         populateEvents(events);
+        populateStakeholderMetricSelect();
+        updateStakeholderChart();
     }).catch(err => {
         document.getElementById('loading').innerHTML = `<p class="text-error text-sm font-bold">CRITICAL SYSTEM ERROR: ${err.message}</p>`;
     });
+
+    function onStakeholderChange() {
+        populateStakeholderMetricSelect();
+        updateStakeholderChart();
+    }
+
+    function populateStakeholderMetricSelect() {
+        const stakeholder = document.getElementById('stakeholderSelect').value;
+        const config = stakeholderConfigs[stakeholder];
+        const select = document.getElementById('stakeholderMetricSelect');
+        select.innerHTML = '';
+
+        if (!config) return;
+
+        config.indicators.forEach((ind, idx) => {
+            const opt = document.createElement('option');
+            opt.value = ind.key;
+            opt.textContent = ind.label;
+            if (idx === 0) opt.selected = true;
+            select.appendChild(opt);
+        });
+    }
+
+    function updateStakeholderChart() {
+        const stakeholder = document.getElementById('stakeholderSelect').value;
+        const config = stakeholderConfigs[stakeholder];
+        if (!config) return;
+
+        const selectedMetricKey = document.getElementById('stakeholderMetricSelect').value;
+        const selectedIndicator = config.indicators.find(ind => ind.key === selectedMetricKey) || config.indicators[0];
+        if (!selectedIndicator) return;
+
+        const labels = (state.sensors.trends && state.sensors.trends.labels) || [];
+        const allParams = (state.sensors.trends && state.sensors.trends.all_params) || {};
+
+        let metricSeries = allParams[selectedIndicator.key] || [];
+        if (selectedIndicator.convert) {
+            metricSeries = metricSeries.map(v => (v == null ? null : selectedIndicator.convert(v)));
+        }
+
+        if (!metricSeries.length && labels.length) {
+            metricSeries = new Array(labels.length).fill(null);
+        }
+
+        // Start chart at the first non-null point to avoid long empty prefixes.
+        let startIdx = metricSeries.findIndex(v => v != null);
+        if (startIdx < 0) startIdx = 0;
+
+        const trimmedLabels = labels.slice(startIdx);
+        const trimmedMetricSeries = metricSeries.slice(startIdx);
+
+        const thresholdDatasets = selectedIndicator.thresholds.map((thr, idx) => ({
+            type: 'line',
+            label: thr.label,
+            data: trimmedLabels.map(() => thr.value),
+            borderColor: idx % 2 === 0 ? '#e07a00' : '#006a6a',
+            backgroundColor: idx % 2 === 0 ? '#e07a00' : '#006a6a',
+            borderWidth: 2,
+            pointRadius: 0,
+            borderDash: idx % 2 === 0 ? [] : [5, 5],
+            tension: 0,
+            fill: false
+        }));
+
+        const ctx = document.getElementById('stakeholderChart').getContext('2d');
+        if (stakeholderChart) stakeholderChart.destroy();
+
+        stakeholderChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: trimmedLabels,
+                datasets: [
+                    {
+                        label: selectedIndicator.label,
+                        data: trimmedMetricSeries,
+                        borderColor: '#004370',
+                        backgroundColor: 'rgba(0, 67, 112, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: true,
+                        tension: 0.35
+                    },
+                    ...thresholdDatasets
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 8, usePointStyle: true, font: { size: 10, family: 'Inter' } }
+                    },
+                    tooltip: {
+                        backgroundColor: '#004370',
+                        callbacks: {
+                            label: function (ctx) {
+                                const unit = selectedIndicator.unit ? ` ${selectedIndicator.unit}` : '';
+                                if (ctx.parsed.y == null) return `${ctx.dataset.label}: N/A`;
+                                return `${ctx.dataset.label}: ${ctx.parsed.y}${unit}`;
+                            }
+                        }
+                    },
+                    zoom: {
+                        zoom: {
+                            drag: {
+                                enabled: true,
+                                backgroundColor: 'rgba(56, 189, 248, 0.3)'
+                            },
+                            mode: 'x'
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#717781', maxTicksLimit: 10 } },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        ticks: { font: { size: 9 }, color: '#717781' },
+                        title: {
+                            display: true,
+                            text: selectedIndicator.unit ? `${selectedIndicator.label} (${selectedIndicator.unit})` : selectedIndicator.label,
+                            font: { size: 10, family: 'Inter', weight: 'bold' }
+                        }
+                    }
+                }
+            }
+        });
+
+        const thresholdBox = document.getElementById('stakeholder-thresholds');
+        const unit = selectedIndicator.unit ? ` ${selectedIndicator.unit}` : '';
+        const details = selectedIndicator.thresholds.map(t => `${t.label}: ${t.value}${unit}`).join(' | ');
+        thresholdBox.innerHTML = `
+            <div class="bg-surface border border-slate-200 rounded-lg px-3 py-2 md:col-span-2">
+                <p class="text-[10px] font-bold text-primary uppercase tracking-wide">${selectedIndicator.label} thresholds</p>
+                <p class="text-[10px] text-on-surface-variant mt-1">${details}</p>
+            </div>
+        `;
+    }
 
     function populateEvents(events) {
         const scheduleContainer = document.getElementById('dashboard-schedule');
@@ -273,52 +465,6 @@
         document.getElementById('htemp-last').textContent = 'Submerged Probe';
 
         document.getElementById('echo-batt').textContent = s.battery != null ? s.battery + '%' : '--%';
-
-        // Trend Chart
-        const ctx = document.getElementById('hydrolensChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: sensors.trends.labels.slice(-30),
-                datasets: [
-                    {
-                        label: 'Turbidity (NTU)',
-                        data: sensors.trends.turbidity.slice(-30),
-                        borderColor: '#004370',
-                        backgroundColor: 'rgba(0, 67, 112, 0.08)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        borderWidth: 2,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'pH Level',
-                        data: sensors.trends.ph.slice(-30),
-                        borderColor: '#006a6a',
-                        borderDash: [5, 5],
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        borderWidth: 1.5,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { display: true, position: 'top', labels: { boxWidth: 6, usePointStyle: true, font: { size: 9, family: 'Inter' } } },
-                    tooltip: { backgroundColor: '#004370', titleFont: { family: 'Manrope' } }
-                },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 8 }, maxTicksLimit: 10 } },
-                    y: { title: { display: true, text: 'Turbidity', font: { size: 9 } } },
-                    y1: { position: 'right', grid: { display: false }, title: { display: true, text: 'pH', font: { size: 9 } } }
-                }
-            }
-        });
 
         // Intelligence Alert Logic
         const prec_fcst = w.forecast ? w.forecast.upcoming_precip_3d : 0;
