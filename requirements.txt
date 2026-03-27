@@ -1,6 +1,10 @@
 openmeteo-requests
 retry-requests
-requests_cache 
-numpy 
+requests_cache
+numpy
 pandas
 flask
+torch
+scikit-learn
+matplotlib
+joblib
