@@ -359,11 +359,25 @@ def api_predict():
                 new_step_tensor = torch.tensor(new_step, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
                 current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
 
+        # Generate actual labels from the merged dataframe
+        historical_labels = [dt.strftime("%b %d, %H:%M") for dt in last_14['Datetime']]
+        
+        # 2. Get the last actual timestamp from the 'Datetime' column
+        last_ts = last_14['Datetime'].iloc[-1]
+        
+        # 3. Generate future labels starting from the last known timestamp
+        predicted_labels = []
+        for i in range(1, steps + 1):
+            future_dt = last_ts + pd.Timedelta(hours=i * 8)
+            predicted_labels.append(future_dt.strftime("%b %d, %H:%M"))
+
         return jsonify({
             "status": "success",
             "targets": target_cols,
             "historical": historical_data,
             "predicted": predicted_data,
+            "historical_labels": historical_labels,
+            "predicted_labels": predicted_labels,
             "rmse": 0.14,
             "confidence": 92
         })
