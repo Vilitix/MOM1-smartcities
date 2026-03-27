@@ -9,70 +9,8 @@
 </div>
 
 <div id="dashboard-content" class="hidden">
-    <!-- Hero Metric Grid: Water Quality Focused -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Sensor PH -->
-        <div
-            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-sky-600">
-            <div class="flex justify-between items-start mb-4">
-                <span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">pH
-                    Level (ECHO)</span>
-                <span id="ph-badge" class="text-sky-600 bg-sky-50 px-2 py-1 rounded text-[10px] font-bold">STABLE</span>
-            </div>
-            <div class="flex items-baseline gap-2">
-                <h3 class="font-headline text-4xl font-extrabold text-primary" id="ph-value">--</h3>
-                <span class="text-on-surface-variant text-sm font-medium">pH</span>
-            </div>
-            <div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
-                <div id="ph-bar" class="h-full bg-sky-600 transition-all duration-700" style="width:0%"></div>
-            </div>
-            <p id="ph-last" class="text-[9px] text-on-surface-variant mt-2 uppercase font-bold tracking-tight">Last
-                updated: --</p>
-        </div>
-
-        <!-- Sensor Turbidity -->
-        <div
-            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-emerald-500">
-            <div class="flex justify-between items-start mb-4">
-                <span
-                    class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">Turbidity</span>
-                <span id="turb-badge"
-                    class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-[10px] font-bold">OPTIMAL</span>
-            </div>
-            <div class="flex items-baseline gap-2">
-                <h3 class="font-headline text-4xl font-extrabold text-primary" id="turb-value">--</h3>
-                <span class="text-on-surface-variant text-sm font-medium">NTU</span>
-            </div>
-            <div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
-                <div id="turb-bar" class="h-full bg-emerald-500 transition-all duration-700" style="width:0%"></div>
-            </div>
-            <p id="turb-last" class="text-[9px] text-on-surface-variant mt-2 uppercase font-bold tracking-tight">Last
-                updated: --</p>
-        </div>
-
-        <!-- H2O Temperature -->
-        <div
-            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-b-4 border-tertiary-fixed-dim">
-            <div class="flex justify-between items-start mb-4">
-                <span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-bold">H2O
-                    Temperature</span>
-                <span id="htemp-badge"
-                    class="text-teal-600 bg-teal-50 px-2 py-1 rounded text-[10px] font-bold">ACTIVE</span>
-            </div>
-            <div class="flex items-baseline gap-2">
-                <h3 class="font-headline text-4xl font-extrabold text-primary" id="htemp-value">--</h3>
-                <span class="text-on-surface-variant text-sm font-medium">°C</span>
-            </div>
-            <div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
-                <div id="htemp-bar" class="h-full bg-teal-500 transition-all duration-700" style="width:0%"></div>
-            </div>
-            <p id="htemp-last" class="text-[9px] text-on-surface-variant mt-2 uppercase font-bold tracking-tight">Last
-                updated: --</p>
-        </div>
-    </div>
-
     <!-- Main Section: Trends & Intelligence -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
         <!-- Dashboard Left: Trends -->
         <div class="lg:col-span-8 space-y-8">
             <!-- Combined Trend Chart -->
@@ -105,85 +43,10 @@
                 <div class="chart-container" style="height: 320px;"><canvas id="stakeholderChart"></canvas></div>
                 <div id="stakeholder-thresholds" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3"></div>
             </section>
-
-            <!-- Connector Network Status -->
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div
-                    class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20 group hover:border-sky-500 transition-all">
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-sky-500">database</span>
-                            <h4 class="font-headline font-bold text-primary">ECHO Connector</h4>
-                        </div>
-                        <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">SYNC
-                            OK</span>
-                    </div>
-                    <div class="space-y-2 mb-4">
-                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Active
-                                Channels</span><span class="font-bold">18 Parameters</span></div>
-                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Battery
-                                Level</span><span id="echo-batt" class="font-bold text-emerald-600">--</span></div>
-                    </div>
-                    <a href="/connectors"
-                        class="w-full bg-white border border-slate-200 py-2 rounded-lg text-[11px] font-bold text-sky-900 block text-center hover:bg-sky-50 transition-colors no-underline">VIEW
-                        REFINERY</a>
-                </div>
-                <div
-                    class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/20 group hover:border-emerald-500 transition-all">
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-emerald-500">cloud_sync</span>
-                            <h4 class="font-headline font-bold text-primary">Climate Archive</h4>
-                        </div>
-                        <span
-                            class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">POLLING</span>
-                    </div>
-                    <div class="space-y-2 mb-4">
-                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Sync
-                                Latency</span><span class="font-bold">140ms</span></div>
-                        <div class="flex justify-between text-[11px]"><span class="text-on-surface-variant">Archive
-                                Depth</span><span class="font-bold">365 Days</span></div>
-                    </div>
-                    <a href="/analysis"
-                        class="w-full bg-white border border-slate-200 py-2 rounded-lg text-[11px] font-bold text-sky-900 block text-center hover:bg-emerald-50 transition-colors no-underline">CROSS
-                        ANALYSIS</a>
-                </div>
-            </section>
         </div>
 
         <!-- Dashboard Right: Context & Schedule -->
         <div class="lg:col-span-4 space-y-8">
-            <!-- Predictive Forecast UI -->
-            <section
-                class="bg-gradient-to-br from-amber-50 to-white p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-amber-200 relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-20 h-20 bg-amber-200/20 rounded-full blur-2xl"></div>
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-8 h-8 bg-amber-200 rounded-lg flex items-center justify-center">
-                        <span class="material-symbols-outlined text-amber-700 text-sm"
-                            style="font-variation-settings: 'FILL' 1;">warning</span>
-                    </div>
-                    <h2 class="font-headline font-bold text-amber-900">Intelligence Alert</h2>
-                </div>
-                <div class="space-y-6">
-                    <div>
-                        <p class="text-[11px] font-bold text-amber-800 uppercase tracking-widest mb-1" id="alert-cause">
-                            Analyzing Precipitation</p>
-                        <p class="text-sm font-bold text-primary leading-tight" id="alert-title">Turbidity risk analysis
-                            in progress...</p>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-[10px] font-bold text-amber-700">
-                            <span>RUNOFF RISK</span>
-                            <span id="risk-pct">--</span>
-                        </div>
-                        <div class="h-1.5 w-full bg-amber-200 rounded-full overflow-hidden">
-                            <div id="risk-bar" class="h-full bg-amber-500 transition-all duration-700" style="width:0%">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Calendar Side Widget -->
             <section
                 class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] divide-y divide-slate-100">
@@ -259,8 +122,16 @@
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('dashboard-content').classList.remove('hidden');
-        document.getElementById('sync-status').innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> Last Sync: Just' + ' Now';
-        document.getElementById('cal-date-label').textContent = new Date().toLocaleDateString('en', { month: 'short', year: 'numeric' });
+        
+        const syncStatusEl = document.getElementById('sync-status');
+        if (syncStatusEl) {
+            syncStatusEl.innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> Last Sync: Just' + ' Now';
+        }
+        
+        const calDateLabelEl = document.getElementById('cal-date-label');
+        if (calDateLabelEl) {
+            calDateLabelEl.textContent = new Date().toLocaleDateString('en', { month: 'short', year: 'numeric' });
+        }
 
         populateDashboard(sensors, weather, events);
         populateEvents(events);
@@ -449,61 +320,6 @@
     function populateDashboard(sensors, weather, events) {
         const s = sensors.metrics;
         const w = weather.stats;
-
-        // Water Quality Metrics
-        document.getElementById('ph-value').textContent = s.ph != null ? s.ph.toFixed(2) : '--';
-        document.getElementById('ph-bar').style.width = ((s.ph || 0) / 14 * 100) + '%';
-        document.getElementById('ph-last').textContent = 'Last Reading: ' + s.timestamp;
-
-        document.getElementById('turb-value').textContent = s.turbidity != null ? s.turbidity.toFixed(2) : '--';
-        document.getElementById('turb-bar').style.width = Math.min(100, ((s.turbidity || 0) / 1 * 100)) + '%';
-        document.getElementById('turb-last').textContent = 'Station: ECHO-01';
-
-        const temp = s.temp != null ? s.temp : (s.oxygen_temp != null ? s.oxygen_temp : null);
-        document.getElementById('htemp-value').textContent = temp != null ? temp.toFixed(1) : '--';
-        document.getElementById('htemp-bar').style.width = Math.min(100, ((temp || 0) / 30 * 100)) + '%';
-        document.getElementById('htemp-last').textContent = 'Submerged Probe';
-
-        document.getElementById('echo-batt').textContent = s.battery != null ? s.battery + '%' : '--%';
-
-        // Intelligence Alert Logic
-        const prec_fcst = w.forecast ? w.forecast.upcoming_precip_3d : 0;
-        const wind_fcst = w.forecast ? w.forecast.upcoming_wind_max_3d : 0;
-        
-        // Find upcoming critical events (alerts/reports) within the next 48h
-        const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        const upcomingAlerts = (events || []).filter(e => {
-            const isAlert = e.type === 'alert' || e.source === 'report';
-            const evtDate = new Date(e.date);
-            const diffDays = (evtDate - new Date()) / (1000 * 60 * 60 * 24);
-            return isAlert && e.date >= todayStr && diffDays <= 7;
-        });
-
-        // Compute generalized risk score based on upcoming precip, wind, or incidents
-        let rpct = Math.min(100, Math.round(prec_fcst * 5)); // Base it more on future rain
-        if (upcomingAlerts.length > 0) rpct = Math.max(rpct, 85); // Critical issue = high risk
-        if (wind_fcst > 60) rpct = Math.max(rpct, 70); // High wind = moderate/high risk
-
-        document.getElementById('risk-pct').textContent = rpct + '%';
-        document.getElementById('risk-bar').style.width = rpct + '%';
-
-        let causeEl = document.getElementById('alert-cause');
-        let titleEl = document.getElementById('alert-title');
-
-        if (upcomingAlerts.length > 0) {
-            const ev = upcomingAlerts[0];
-            causeEl.textContent = 'REPORTED INCIDENT / ALERT';
-            titleEl.innerHTML = `${ev.title} <span class='text-xs font-normal block mt-1'>Check exact location and maintain vigilance.</span>`;
-            document.getElementById('risk-bar').className = "h-full bg-rose-500 transition-all duration-700";
-        } else if (rpct > 50 || prec_fcst > 10) {
-            causeEl.textContent = 'UPCOMING STORM / RAIN';
-            titleEl.innerHTML = `High Runoff Risk <span class='text-xs font-normal block mt-1'>${prec_fcst}mm rain & ${wind_fcst}km/h wind exp. next 3 days</span>`;
-            document.getElementById('risk-bar').className = "h-full bg-amber-500 transition-all duration-700";
-        } else {
-            causeEl.textContent = 'CLIMATE CONTEXT';
-            titleEl.innerHTML = `Optimal Conditions <span class='text-xs font-normal block mt-1'>${prec_fcst}mm rain exp. next 3 days — Base flow stable</span>`;
-            document.getElementById('risk-bar').className = "h-full bg-emerald-500 transition-all duration-700";
-        }
     }
 </script>
 {% endblock %}
