@@ -55,6 +55,17 @@
                         <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
                             <label class="flex items-center justify-between gap-2 cursor-pointer group">
                                 <span class="flex items-center gap-2">
+                                    <input type="checkbox" id="overlayTemp" onchange="updateGlobalChart()"
+                                        class="w-3 h-3 rounded-full accent-sky-600 border-outline-variant">
+                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Temperature</span>
+                                </span>
+                                <span class="text-[10px] font-bold text-sky-700">°C</span>
+                            </label>
+                        </div>
+
+                        <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
+                            <label class="flex items-center justify-between gap-2 cursor-pointer group">
+                                <span class="flex items-center gap-2">
                                     <input type="checkbox" id="overlayRain" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-emerald-500 border-outline-variant">
                                     <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
@@ -535,12 +546,29 @@
         const rainContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.precipitation) : { labels: [], values: [] };
         const snowContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.snowfall) : { labels: [], values: [] };
         const windContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.wind_speed) : { labels: [], values: [] };
+        const tempContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.temperature) : { labels: [], values: [] };
 
         const mapByDate = (series) => {
             const map = {};
             series.labels.forEach((d, idx) => { map[d] = series.values[idx]; });
             return map;
         };
+
+        if (document.getElementById('overlayTemp').checked && state.weather) {
+            const tempByDate = mapByDate(tempContinuous);
+            const tempAligned = labels.map(d => (tempByDate[d] != null ? tempByDate[d] : null));
+            datasets.push({
+                label: 'Air Temperature (°C)',
+                data: tempAligned,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14, 165, 233, 0.08)',
+                fill: false,
+                tension: 0.35,
+                pointRadius: 0,
+                borderWidth: 2,
+                yAxisID: 'yTemp'
+            });
+        }
 
         const weatherEvents = [
             {
@@ -580,6 +608,7 @@
                         callbacks: {
                             label: function (ctx) {
                                 if (ctx.parsed.y == null) return `${ctx.dataset.label}: N/A`;
+                                if (ctx.dataset.yAxisID === 'yTemp') return `${ctx.dataset.label}: ${ctx.parsed.y} °C`;
                                 if (ctx.dataset.yAxisID !== 'y') return `${ctx.dataset.label}: ${ctx.parsed.y}`;
                                 return colUnit ? `${ctx.dataset.label}: ${ctx.parsed.y} ${colUnit}` : `${ctx.dataset.label}: ${ctx.parsed.y}`;
                             }
@@ -599,7 +628,14 @@
                 },
                 scales: {
                     ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `Sensor Value (${colUnit})` : 'Sensor Value', font: { size: 10, weight: 'bold' } } }
+                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `Sensor Value (${colUnit})` : 'Sensor Value', font: { size: 10, weight: 'bold' } } },
+                    yTemp: {
+                        position: 'right',
+                        display: datasets.some(d => d.yAxisID === 'yTemp'),
+                        grid: { display: false },
+                        ticks: { font: { size: 9 }, color: '#717781' },
+                        title: { display: true, text: 'Temperature (°C)', font: { size: 9 } }
+                    }
                 }
             }
         });
