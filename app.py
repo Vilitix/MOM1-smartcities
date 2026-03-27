@@ -270,8 +270,8 @@ def api_predict():
     historical_data = {col: [] for col in target_cols}
 
     try:
-        # 1. Fetch actual recent data directly from Consibio Cloud Datalog.csv
-        file_path = "Consibio Cloud Datalog.csv"
+        # 1. Fetch actual recent data directly from data.csv
+        file_path = "data.csv"
         
         # --- SAFETY CHECKS ---
         if not os.path.exists(file_path):
