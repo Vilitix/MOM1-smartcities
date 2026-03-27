@@ -317,6 +317,24 @@ def api_predict():
         for col in target_cols:
             historical_data[col] = [round(float(val), 2) for val in last_14[col].values]
 
+        try:
+            total_steps = 14 + steps
+            one_month_ago_start = last_ts - pd.Timedelta(days=30) - pd.Timedelta(hours=14 * 8)
+            
+            mask = (df_merged['Datetime'] >= one_month_ago_start)
+            df_last_month = df_merged.loc[mask].head(total_steps)
+            
+            last_month_data = {col: [] for col in target_cols}
+            for col in target_cols:
+                vals = df_last_month[col].values.tolist()
+                last_month_data[col] = [round(float(v), 2) if pd.notna(v) else None for v in vals]
+                if len(last_month_data[col]) < total_steps:
+                    last_month_data[col] += [None] * (total_steps - len(last_month_data[col]))
+                    
+        except Exception as e:
+            print(f"Last month data error: {e}")
+            last_month_data = {col: [None] * (14 + steps) for col in target_cols}
+        
         # Inference
         X_real_scaled = scaler_X.transform(last_90[feature_cols].values)
         current_seq_tensor = torch.tensor(X_real_scaled, dtype=torch.float32).unsqueeze(0)
@@ -343,6 +361,7 @@ def api_predict():
             "targets": target_cols,
             "historical": historical_data,
             "predicted": predicted_data,
+            "last_month": last_month_data,
             "historical_labels": historical_labels, # Matches frontend expectation
             "predicted_labels": predicted_labels,   # Matches frontend expectation
             "rmse": 0.14,

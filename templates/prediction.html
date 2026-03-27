@@ -28,6 +28,10 @@
                     </div>
                     <div class="flex gap-4">
                         <div class="flex items-center gap-2">
+                            <span class="w-3 h-0.5 bg-slate-300 border-t border-dotted"></span>
+                            <span class="text-[10px] font-bold text-on-surface-variant">Last Month</span>
+                        </div>
+                        <div class="flex items-center gap-2">
                             <span class="w-3 h-0.5 bg-primary"></span>
                             <span class="text-[10px] font-bold text-on-surface-variant">Historical</span>
                         </div>
@@ -43,7 +47,7 @@
                 </div>
             </section>
 
-            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/20">
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Model RMSE</p>
                     <p class="text-2xl font-extrabold text-primary" id="metric-rmse">--</p>
@@ -56,12 +60,12 @@
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Forecast Window</p>
                     <p class="text-2xl font-extrabold text-amber-600" id="metric-window">7<span class="text-sm font-medium text-slate-500 ml-1">Days</span></p>
                 </div>
-            </section>
+            </section> -->
         </div>
     
         
         <div class="lg:col-span-4 space-y-6">
-            <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-l-4 border-sky-400">
+            <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-t-4 border-primary">
                 <h3 class="font-headline font-bold text-primary mb-2 text-sm uppercase">Model Input Features</h3>
                 <p class="text-[10px] text-on-surface-variant mb-4">The LSTM model analyzes the past 30 days of the following 9 variables to generate predictions.</p>
                 
@@ -188,7 +192,7 @@
 
         const hist = globalData.historical[currentActiveTab] || [];
         const pred = globalData.predicted[currentActiveTab] || [];
-        
+        const lastMonth = globalData.last_month ? globalData.last_month[currentActiveTab] : [];
         // Use real labels from backend instead of generating new Date()
         const labels = (globalData.historical_labels || []).concat(globalData.predicted_labels || []);
 
@@ -197,6 +201,16 @@
 
         predictionChart.data.labels = labels;
         predictionChart.data.datasets = [
+            {
+                label: `Last Month ${currentActiveTab}`,
+                data: lastMonth,
+                borderColor: '#cbd5e1',
+                borderDash: [2, 2],
+                fill: false,
+                tension: 0.4,
+                borderWidth: 1.5,
+                pointRadius: 0
+            },
             {
                 label: `Historical ${currentActiveTab}`,
                 data: paddedHistorical,
@@ -229,7 +243,7 @@
         // Update dynamic text
         const days = document.getElementById('daysSelect').value;
         document.getElementById('forecast-title').textContent = `${days}-Day Forecast: ${currentActiveTab}`;
-        document.getElementById('metric-window').innerHTML = `${days}<span class="text-sm font-medium text-slate-500 ml-1">Days</span>`;
+        // document.getElementById('metric-window').innerHTML = `${days}<span class="text-sm font-medium text-slate-500 ml-1">Days</span>`;
     }
 
     // Fetch real LSTM predictions from backend
@@ -270,8 +284,8 @@
                     currentActiveTab = globalData.targets[0];
                 }
 
-                document.getElementById('metric-rmse').innerHTML = `${result.rmse}<span class="text-sm font-medium text-slate-500 ml-1"></span>`;
-                document.getElementById('metric-conf').innerHTML = `${result.confidence}<span class="text-sm font-medium text-slate-500 ml-1">%</span>`;
+                // document.getElementById('metric-rmse').innerHTML = `${result.rmse}<span class="text-sm font-medium text-slate-500 ml-1"></span>`;
+                // document.getElementById('metric-conf').innerHTML = `${result.confidence}<span class="text-sm font-medium text-slate-500 ml-1">%</span>`;
                 
                 renderTabs();
                 updateChartDisplay();
@@ -292,7 +306,7 @@
     document.getElementById('daysSelect').addEventListener('change', (e) => {
         const days = e.target.value;
         document.getElementById('forecast-title').textContent = `${days}-Day Forecast: ${currentActiveTab}`;
-        document.getElementById('metric-window').innerHTML = `${days}<span class="text-sm font-medium text-slate-500 ml-1">Days</span>`;
+        // document.getElementById('metric-window').innerHTML = `${days}<span class="text-sm font-medium text-slate-500 ml-1">Days</span>`;
     });
 
     document.addEventListener('DOMContentLoaded', initChart);
