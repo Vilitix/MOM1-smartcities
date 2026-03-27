@@ -55,6 +55,17 @@
                         <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
                             <label class="flex items-center justify-between gap-2 cursor-pointer group">
                                 <span class="flex items-center gap-2">
+                                    <input type="checkbox" id="overlayTemp" onchange="updateGlobalChart()"
+                                        class="w-3 h-3 rounded-full accent-sky-600 border-outline-variant">
+                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Temperature</span>
+                                </span>
+                                <span class="text-[10px] font-bold text-sky-700">°C</span>
+                            </label>
+                        </div>
+
+                        <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
+                            <label class="flex items-center justify-between gap-2 cursor-pointer group">
+                                <span class="flex items-center gap-2">
                                     <input type="checkbox" id="overlayRain" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-emerald-500 border-outline-variant">
                                     <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
@@ -110,22 +121,6 @@
             <div id="farming-event-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <!-- Dynamic checkboxes -->
             </div>
-        </div>
-    </section>
-
-    <!-- Detailed Correlations -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h3 class="font-headline font-bold text-primary mb-1">Standard Correlations</h3>
-            <p class="text-[10px] text-on-surface-variant mb-6 uppercase tracking-wider font-bold">pH vs. Turbidity
-                Index</p>
-            <div class="chart-container" style="height:250px;"><canvas id="phTurbidityChart"></canvas></div>
-        </div>
-        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-            <h3 class="font-headline font-bold text-primary mb-1">Thermal & Conductivity</h3>
-            <p class="text-[10px] text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Ambient Water Temp
-                vs. Conductance</p>
-            <div class="chart-container" style="height:250px;"><canvas id="condTempChart"></canvas></div>
         </div>
     </section>
 
@@ -402,49 +397,6 @@
         const s = state.sensors;
         const w = state.weather;
 
-        const phTurbCrop = cropMultiSeriesToFirstNonNull(s.trends.labels, [s.trends.ph, s.trends.turbidity]);
-        const condTempCrop = cropMultiSeriesToFirstNonNull(s.trends.labels, [s.trends.conductivity, s.trends.temp]);
-
-        // 1. pH & Turbidity Chart
-        new Chart(document.getElementById('phTurbidityChart'), {
-            type: 'line',
-            data: {
-                labels: phTurbCrop.labels,
-                datasets: [
-                    { label: 'pH Test (pH)', data: phTurbCrop.seriesList[0], borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'Turbidité (NTU)', data: phTurbCrop.seriesList[1], borderColor: '#55d7ed', backgroundColor: 'rgba(85,215,237,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
-                ]
-            },
-            options: {
-                ...commonOpts,
-                scales: {
-                    ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: 'pH', font: { size: 9 } } },
-                    y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } }, title: { display: true, text: 'NTU', font: { size: 9 } } }
-                }
-            }
-        });
-
-        // 2. Conductivity & Temperature Chart
-        new Chart(document.getElementById('condTempChart'), {
-            type: 'line',
-            data: {
-                labels: condTempCrop.labels,
-                datasets: [
-                    { label: 'Conductivité (µS/cm)', data: condTempCrop.seriesList[0], borderColor: '#006a6a', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'H2O Temp (°C)', data: condTempCrop.seriesList[1], borderColor: '#ba1a1a', borderWidth: 1.5, borderDash: [5, 5], tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
-                ]
-            },
-            options: {
-                ...commonOpts,
-                scales: {
-                    ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: 'µS/cm', font: { size: 9 } } },
-                    y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } }, title: { display: true, text: '°C', font: { size: 9 } } }
-                }
-            }
-        });
-
         // 3. Weather Charts
         const wd = w.daily;
         const tempCrop = cropSeriesToFirstNonNull(wd.labels, wd.temperature);
@@ -535,12 +487,29 @@
         const rainContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.precipitation) : { labels: [], values: [] };
         const snowContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.snowfall) : { labels: [], values: [] };
         const windContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.wind_speed) : { labels: [], values: [] };
+        const tempContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.temperature) : { labels: [], values: [] };
 
         const mapByDate = (series) => {
             const map = {};
             series.labels.forEach((d, idx) => { map[d] = series.values[idx]; });
             return map;
         };
+
+        if (document.getElementById('overlayTemp').checked && state.weather) {
+            const tempByDate = mapByDate(tempContinuous);
+            const tempAligned = labels.map(d => (tempByDate[d] != null ? tempByDate[d] : null));
+            datasets.push({
+                label: 'Air Temperature (°C)',
+                data: tempAligned,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14, 165, 233, 0.08)',
+                fill: false,
+                tension: 0.35,
+                pointRadius: 0,
+                borderWidth: 2,
+                yAxisID: 'yTemp'
+            });
+        }
 
         const weatherEvents = [
             {
@@ -580,6 +549,7 @@
                         callbacks: {
                             label: function (ctx) {
                                 if (ctx.parsed.y == null) return `${ctx.dataset.label}: N/A`;
+                                if (ctx.dataset.yAxisID === 'yTemp') return `${ctx.dataset.label}: ${ctx.parsed.y} °C`;
                                 if (ctx.dataset.yAxisID !== 'y') return `${ctx.dataset.label}: ${ctx.parsed.y}`;
                                 return colUnit ? `${ctx.dataset.label}: ${ctx.parsed.y} ${colUnit}` : `${ctx.dataset.label}: ${ctx.parsed.y}`;
                             }
@@ -599,7 +569,14 @@
                 },
                 scales: {
                     ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `Sensor Value (${colUnit})` : 'Sensor Value', font: { size: 10, weight: 'bold' } } }
+                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `Sensor Value (${colUnit})` : 'Sensor Value', font: { size: 10, weight: 'bold' } } },
+                    yTemp: {
+                        position: 'right',
+                        display: datasets.some(d => d.yAxisID === 'yTemp'),
+                        grid: { display: false },
+                        ticks: { font: { size: 9 }, color: '#717781' },
+                        title: { display: true, text: 'Temperature (°C)', font: { size: 9 } }
+                    }
                 }
             }
         });

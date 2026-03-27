@@ -55,16 +55,18 @@
                     <canvas id="ccfChart"></canvas>
                 </div>
             </div>
-        </section>
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] relative mt-8"><div class="mb-6"><h3 class="font-headline font-bold text-primary text-lg">Matrice de Corrélation</h3><p class="text-on-surface-variant text-xs mt-1">Affiche le coefficient de corrélation de Pearson entre toutes les variables.</p></div><div class="chart-container relative w-full" style="height: 600px;"><canvas id="matrixChart"></canvas></div></div></section>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
 <script>
     let state = { weather: null, sensors: null };
     let scatterChart = null;
     let ccfChart = null;
+    let matrixChart = null;
 
     Promise.all([
         fetch('/api/weather').then(r => r.json()),
@@ -206,6 +208,106 @@
         let isSignificant = Math.abs(pearson) >= threshold;
 
         updateCCFChart(aligned.xArray, aligned.yArray, weatherKey, sensorKey, threshold);
+        updateMatrixChart();
+    }
+
+    function pearson(x, y) {
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+        let n = 0;
+        for (let i = 0; i < x.length; i++) {
+            if (x[i] != null && y[i] != null && !isNaN(x[i]) && !isNaN(y[i])) {
+                sumX += x[i];
+                sumY += y[i];
+                sumXY += x[i] * y[i];
+                sumX2 += x[i] * x[i];
+                sumY2 += y[i] * y[i];
+                n++;
+            }
+        }
+        if (n === 0) return 0;
+        const num = (n * sumXY) - (sumX * sumY);
+        const den = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+        return den === 0 ? 0 : num / den;
+    }
+
+    function updateMatrixChart() {
+        if (!state.sensors || !state.weather) return;
+        const allParams = { ...state.sensors.all_params, ...state.weather.all_params };
+        
+        // Filter out strings/dates or empty arrays
+        const validKeys = Object.keys(allParams).filter(k => {
+            const arr = allParams[k];
+            if (!arr || !arr.length) return false;
+            return arr.some(v => typeof v === 'number' && !isNaN(v));
+        });
+
+        // Compute Pearson matrix
+        let matrixData = [];
+        for (let i = 0; i < validKeys.length; i++) {
+            let varY = validKeys[i];
+            let yName = varY.replace(/_/g, ' ').toUpperCase().slice(0, 15);
+            for (let j = 0; j < validKeys.length; j++) {
+                let varX = validKeys[j];
+                let xName = varX.replace(/_/g, ' ').toUpperCase().slice(0, 15);
+                let r = pearson(allParams[varX], allParams[varY]);
+                matrixData.push({ x: xName, y: yName, v: r });
+            }
+        }
+
+        const keysNames = validKeys.map(k => k.replace(/_/g, ' ').toUpperCase().slice(0, 15));
+
+        const ctx = document.getElementById('matrixChart').getContext('2d');
+        if (matrixChart) matrixChart.destroy();
+        
+        matrixChart = new Chart(ctx, {
+            type: 'matrix',
+            data: {
+                datasets: [{
+                    label: 'Pearson Correlation',
+                    data: matrixData,
+                    backgroundColor(context) {
+                        const v = context.dataset.data[context.dataIndex].v;
+                        if (isNaN(v)) return 'rgba(200, 200, 200, 0.2)';
+                        const alpha = Math.abs(v);
+                        return v < 0 ? `rgba(220, 53, 69, ${alpha})` : `rgba(16, 185, 129, ${alpha})`;
+                    },
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.5)',
+                    width: ({chart}) => (chart.chartArea || {}).width / keysNames.length - 1,
+                    height: ({chart}) => (chart.chartArea || {}).height / keysNames.length - 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title() { return ''; },
+                            label(context) {
+                                const d = context.dataset.data[context.dataIndex];
+                                return `${d.y} vs ${d.x}: ${isNaN(d.v) ? 'N/A' : d.v.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'category',
+                        labels: keysNames,
+                        ticks: { display: true, font: {size: 9}, maxRotation: 90, minRotation: 90 },
+                        grid: { display: false }
+                    },
+                    y: {
+                        type: 'category',
+                        labels: keysNames,
+                        ticks: { display: true, font: {size: 9} },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
     }
 
     function updateCCFChart(xArray, yArray, weatherKey, sensorKey, threshold) {
