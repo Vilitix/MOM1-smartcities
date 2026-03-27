@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}Correlation Matrix - Hydrolens{% endblock %}
+{% block title %}Correlation Graph - Hydrolens{% endblock %}
 
 {% block content %}
 <div class="space-y-8 animate-fade-in pb-12">
     <header>
-        <h1 class="font-headline text-3xl font-black text-primary tracking-tight">Correlation Matrix</h1>
-        <p class="text-on-surface-variant font-medium mt-2 max-w-3xl">Statistical analysis of relationships between different water quality factors in the dataset.</p>
+        <h1 class="font-headline text-3xl font-black text-primary tracking-tight">Weather & Sensor Correlation</h1>
+        <p class="text-on-surface-variant font-medium mt-2 max-w-3xl">Interactive scatter plot exploring relationships between weather events (rain, wind, snow) and water quality metrics.</p>
     </header>
 
     <div id="loading" class="flex justify-center items-center h-64">
@@ -13,43 +13,46 @@
     </div>
 
     <div id="correlation-content" class="hidden space-y-8">
-        <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] overflow-x-auto">
-            <h2 class="font-headline font-bold text-primary text-lg mb-6">Pearson Correlation Coefficients</h2>
-            <div class="inline-block min-w-full align-middle">
-                <table class="min-w-full border-collapse" id="corr-table">
-                    <thead>
-                        <tr id="corr-header" class="text-[10px] uppercase text-on-surface-variant text-left bg-surface-container-low border-b border-surface">
-                            <th class="p-3 font-bold sticky left-0 bg-surface-container-low z-10 w-48">Parameter</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corr-body" class="text-xs">
-                        <!-- Rows populated by JS -->
-                    </tbody>
-                </table>
+        <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-slate-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                <div>
+                    <h2 class="font-headline font-bold text-primary text-xl">Correlation Explorer</h2>
+                    <p class="text-on-surface-variant text-xs mt-1">Select dimensions to build the scatter plot</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    
+                    <!-- Weather Selector (X-axis) -->
+                    <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                        <span class="text-[10px] font-bold text-primary uppercase ml-2">Weather (X-Axis):</span>
+                        <select id="weatherSelect" onchange="updateScatterChart()" class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                            <option value="precipitation">Rain (Precipitation mm)</option>
+                            <option value="wind_speed">Wind Speed (km/h)</option>
+                            <option value="snowfall">Snowfall (cm)</option>
+                            <option value="temperature">Air Temperature (°C)</option>
+                        </select>
+                    </div>
+
+                    <span class="material-symbols-outlined text-outline-variant hidden md:block">sync_alt</span>
+
+                    <!-- Sensor Selector (Y-axis) -->
+                    <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                        <span class="text-[10px] font-bold text-primary uppercase ml-2">Sensor Metric (Y-Axis):</span>
+                        <select id="sensorSelect" onchange="updateScatterChart()" class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                </div>
             </div>
-            
-            <div class="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-on-surface-variant">
-                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-blue-900"></span> Strong Positive (+1.0)</span>
-                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-blue-200"></span> Weak Positive (+0.3)</span>
-                <span class="flex items-center gap-2 border border-slate-200"><span class="w-4 h-4 block rounded bg-white"></span> Uncorrelated (0.0)</span>
-                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-red-200"></span> Weak Negative (-0.3)</span>
-                <span class="flex items-center gap-2"><span class="w-4 h-4 block rounded bg-red-900"></span> Strong Negative (-1.0)</span>
-            </div>
-        </section>
-        
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-                <h3 class="font-headline font-bold text-primary mb-2">How to interpret</h3>
-                <ul class="list-disc pl-5 text-sm text-slate-600 space-y-2">
-                    <li><b>+1.0</b> : Perfect positive correlation (both values rise together)</li>
-                    <li><b>0.0</b> : No linear relationship between the variables</li>
-                    <li><b>-1.0</b> : Perfect negative correlation (one rises as the other falls)</li>
-                </ul>
-            </div>
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-                <h3 class="font-headline font-bold text-primary mb-2">Key Highlights</h3>
-                <div id="highlights-container" class="space-y-3">
-                    <!-- JS populated -->
+
+            <!-- Ajout de la fonction d'autocorrélation / cross-corrélation -->
+            <div class="mt-4">
+                <div class="mb-6">
+                    <h3 class="font-headline font-bold text-primary text-lg">Fonction de Corrélation Temporelle (Correlogramme)</h3>
+                    <p class="text-on-surface-variant text-xs mt-1">Analyse l'impact retardé (décalage en jours de mesure) entre la météo et la mesure du capteur. L'intervalle de confiance est indiqué par les lignes rouges.</p>
+                </div>
+                <div class="chart-container relative w-full" style="height: 300px;">
+                    <canvas id="ccfChart"></canvas>
                 </div>
             </div>
         </section>
@@ -59,130 +62,265 @@
 
 {% block scripts %}
 <script>
-    fetch('/api/correlation')
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('correlation-content').classList.remove('hidden');
-            
-            if (data.error) {
-                document.getElementById('correlation-content').innerHTML = `<p class='text-error p-4'>${data.error}</p>`;
-                return;
+    let state = { weather: null, sensors: null };
+    let scatterChart = null;
+    let ccfChart = null;
+
+    Promise.all([
+        fetch('/api/weather').then(r => r.json()),
+        fetch('/api/sensor-data').then(r => r.json())
+    ]).then(([weatherParams, sensorParams]) => {
+        state.weather = weatherParams.daily;
+        state.sensors = sensorParams.trends;
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('correlation-content').classList.remove('hidden');
+
+        // Populate Sensor Select
+        const sensorSelect = document.getElementById('sensorSelect');
+        const sensorCols = Object.keys(state.sensors.all_params);
+        
+        sensorCols.forEach(col => {
+            const opt = document.createElement('option');
+            opt.value = col;
+            opt.textContent = col;
+            if (col === 'Turbidité') opt.selected = true; // par défaut
+            sensorSelect.appendChild(opt);
+        });
+
+        updateScatterChart();
+    }).catch(err => {
+        document.getElementById('loading').innerHTML = `<p class="text-error font-bold">Failed to load data: ${err.message}</p>`;
+    });
+
+    function calculatePearson(x, y) {
+        if (!x.length || !y.length || x.length !== y.length) return 0;
+        const n = x.length;
+        const meanX = x.reduce((a, b) => a + b) / n;
+        const meanY = y.reduce((a, b) => a + b) / n;
+        
+        let num = 0, den1 = 0, den2 = 0;
+        for (let i = 0; i < n; i++) {
+            const dx = x[i] - meanX;
+            const dy = y[i] - meanY;
+            num += dx * dy;
+            den1 += dx * dx;
+            den2 += dy * dy;
+        }
+        if (den1 === 0 || den2 === 0) return 0;
+        return num / Math.sqrt(den1 * den2);
+    }
+
+    function calculateCCF(x, y, maxLag) {
+        const n = x.length;
+        if (n === 0) return { lags: [], values: [] };
+        
+        const meanX = x.reduce((a, b) => a + b, 0) / n;
+        const meanY = y.reduce((a, b) => a + b, 0) / n;
+        
+        let varX = 0, varY = 0;
+        for (let i = 0; i < n; i++) {
+            varX += (x[i] - meanX) ** 2;
+            varY += (y[i] - meanY) ** 2;
+        }
+        const stdX = Math.sqrt(varX);
+        const stdY = Math.sqrt(varY);
+        
+        let lags = [];
+        let values = [];
+        
+        if (stdX === 0 || stdY === 0) return { lags: [], values: [] };
+
+        // On ne regarde que pour des valeurs de lag >= 0 (jusqu'à maxLag)
+        for (let lag = 0; lag <= maxLag; lag++) {
+            let num = 0;
+            for (let i = 0; i < n; i++) {
+                let j = i + lag;
+                if (j >= 0 && j < n) {
+                    num += (x[i] - meanX) * (y[j] - meanY);
+                }
             }
-            
-            buildTable(data.columns, data.matrix);
-            findHighlights(data.columns, data.matrix);
-        })
-        .catch(err => {
-            document.getElementById('loading').innerHTML = `<p class="text-error font-bold">Failed to load data: ${err.message}</p>`;
-        });
-
-    function getColorForCorrelation(val) {
-        if (val === null || val === undefined || isNaN(val)) return 'bg-slate-100 text-slate-400';
-        
-        if (val === 1.0) return 'bg-slate-100 font-bold'; // diagonal
-        
-        // Blue scale for positive, Red scale for negative
-        if (val >= 0.8) return 'bg-blue-900 text-white font-bold';
-        if (val >= 0.6) return 'bg-blue-700 text-white font-bold';
-        if (val >= 0.4) return 'bg-blue-500 text-white';
-        if (val >= 0.2) return 'bg-blue-200 text-blue-900';
-        if (val > 0) return 'bg-blue-50 text-blue-800';
-        
-        if (val <= -0.8) return 'bg-red-900 text-white font-bold';
-        if (val <= -0.6) return 'bg-red-700 text-white font-bold';
-        if (val <= -0.4) return 'bg-red-500 text-white';
-        if (val <= -0.2) return 'bg-red-200 text-red-900';
-        if (val < 0) return 'bg-red-50 text-red-800';
-        
-        return 'bg-white';
+            // Normalisation pour obtenir un coefficient entre -1 et 1
+            let r = num / (stdX * stdY); 
+            lags.push(lag);
+            values.push(r);
+        }
+        return { lags, values };
     }
 
-    function buildTable(columns, matrix) {
-        const header = document.getElementById('corr-header');
-        columns.forEach(col => {
-            const th = document.createElement('th');
-            th.className = 'p-2 border-l border-surface truncate max-w-[120px]';
-            th.title = col;
-            th.textContent = col.length > 15 ? col.substring(0, 12) + '...' : col;
-            header.appendChild(th);
+    // Aligne les données sur les mêmes dates puisqu'elles arrivent parfois avec des intervalles ou gaps
+    function getAlignedData(weatherKey, sensorKey) {
+        const xData = [];
+        const yData = [];
+        const combined = [];
+
+        // Build dictionaries
+        const weatherDict = {};
+        state.weather.labels.forEach((date, i) => {
+            weatherDict[date] = state.weather[weatherKey][i];
         });
 
-        const body = document.getElementById('corr-body');
-        columns.forEach(rowCol => {
-            const tr = document.createElement('tr');
-            tr.className = 'border-b border-surface hover:bg-slate-50 transition-colors';
-            
-            const th = document.createElement('th');
-            th.className = 'p-3 text-left sticky left-0 font-bold bg-white z-10 truncate whitespace-nowrap shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]';
-            th.textContent = rowCol;
-            th.title = rowCol;
-            tr.appendChild(th);
-            
-            columns.forEach(col => {
-                const td = document.createElement('td');
-                const val = matrix[col] ? matrix[col][rowCol] : null;
-                const colorClass = getColorForCorrelation(val);
-                
-                td.className = `p-2 border-l border-surface text-center ${colorClass}`;
-                td.textContent = (val !== null && val !== undefined) ? val.toFixed(2) : '-';
-                
-                tr.appendChild(td);
-            });
-            
-            body.appendChild(tr);
+        const sensorDict = {};
+        state.sensors.labels.forEach((date, i) => {
+            sensorDict[date] = state.sensors.all_params[sensorKey][i];
         });
+
+        // Intersection (Inner Join journalier)
+        state.sensors.labels.forEach(date => {
+            const datePrefix = date.substring(0, 10); // Normaliser "YYYY-MM-DD"
+            
+            // Check matching in weather labels (they might be stored differently)
+            let matchingWeatherDate = datePrefix;
+            if (!weatherDict[matchingWeatherDate]) {
+                // Try finding directly
+                const wIdx = state.weather.labels.findIndex(l => String(l).startsWith(datePrefix));
+                if (wIdx !== -1) matchingWeatherDate = state.weather.labels[wIdx];
+            }
+
+            if (weatherDict[matchingWeatherDate] !== undefined && sensorDict[date] !== undefined && sensorDict[date] !== null) {
+                // Remove perfectly zero weather records if looking at Rain/Snow to avoid giant clump at 0, 
+                // but let the user see them if they want... let's include all to be statistically accurate.
+                const vx = weatherDict[matchingWeatherDate];
+                const vy = sensorDict[date];
+                xData.push(vx);
+                yData.push(vy);
+                combined.push({ x: vx, y: vy, date: datePrefix });
+            }
+        });
+
+        return { combined, xArray: xData, yArray: yData };
     }
 
-    function findHighlights(columns, matrix) {
-        const container = document.getElementById('highlights-container');
-        const correlations = [];
+    function updateScatterChart() {
+        const weatherKey = document.getElementById('weatherSelect').value;
+        const sensorKey = document.getElementById('sensorSelect').value;
+
+        const aligned = getAlignedData(weatherKey, sensorKey);
+        const n = aligned.xArray.length;
         
-        let hasData = false;
+        let pearson = calculatePearson(aligned.xArray, aligned.yArray);
+        let pStr = pearson.toFixed(3);
         
-        for (let i = 0; i < columns.length; i++) {
-            for (let j = i + 1; j < columns.length; j++) {
-                const c1 = columns[i];
-                const c2 = columns[j];
-                if (matrix[c1] && typeof matrix[c1][c2] === 'number') {
-                    hasData = true;
-                    const val = matrix[c1][c2];
-                    if (Math.abs(val) > 0.5) {
-                        correlations.push({c1, c2, val});
+        // Intervalle de confiance à 95%
+        let threshold = n > 0 ? (1.96 / Math.sqrt(n)) : 0;
+        let isSignificant = Math.abs(pearson) >= threshold;
+
+        updateCCFChart(aligned.xArray, aligned.yArray, weatherKey, sensorKey, threshold);
+    }
+
+    function updateCCFChart(xArray, yArray, weatherKey, sensorKey, threshold) {
+        if (ccfChart) ccfChart.destroy();
+        
+        const maxLag = 30; 
+        const ccfData = calculateCCF(xArray, yArray, maxLag);
+        
+        const ctx = document.getElementById('ccfChart').getContext('2d');
+        
+        // Création des annotations / lignes pour l'intervalle de confiance (±1.96/√n)
+        const thresholdLineAnnotations = {
+            upperThreshold: {
+                type: 'line',
+                yMin: threshold,
+                yMax: threshold,
+                borderColor: 'rgba(220, 38, 38, 0.5)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: { display: true, content: '95% Significatif', position: 'end', backgroundColor: 'rgba(239, 68, 68, 0.8)', font: {size: 10} }
+            },
+            lowerThreshold: {
+                type: 'line',
+                yMin: -threshold,
+                yMax: -threshold,
+                borderColor: 'rgba(220, 38, 38, 0.5)',
+                borderWidth: 2,
+                borderDash: [5, 5]
+            }
+        };
+
+        // Configuration pour Plugin Annotation de Chartjs s'il existait, 
+        // comme Chart.js pur ne les dessine pas sans le plugin `chartjs-plugin-annotation`,
+        // on dessine de fausses lignes dataset pour représenter ces bornes.
+        const upperThresholdData = Array(ccfData.lags.length).fill(threshold);
+        const lowerThresholdData = Array(ccfData.lags.length).fill(-threshold);
+
+        ccfChart = new Chart(ctx, {
+            type: 'bar', // Type principal utilisé pour pouvoir mélanger les styles
+            data: {
+                labels: ccfData.lags,
+                datasets: [
+                    {
+                        label: `Corrélation (Point)`,
+                        data: ccfData.values,
+                        type: 'line',
+                        borderColor: 'transparent', // Rend la ligne invisible
+                        pointBackgroundColor: ccfData.values.map(v => (v !== null && Math.abs(v) > threshold) ? '#dc2626' : '#0284c7'),
+                        pointBorderColor: ccfData.values.map(v => (v !== null && Math.abs(v) > threshold) ? '#dc2626' : '#0284c7'),
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        showLine: false, // Pas de ligne de liaison entre les points
+                        order: 2
+                    },
+                    {
+                        label: `Tige (Ligne verticale)`,
+                        data: ccfData.values,
+                        type: 'bar',
+                        backgroundColor: ccfData.values.map(v => (v !== null && Math.abs(v) > threshold) ? '#dc2626' : '#0284c7'),
+                        barThickness: 2, // Finesse semblable à une ligne dessinée depuis 0
+                        order: 3
+                    },
+                    {
+                        label: 'Seuil Supérieur 95%',
+                        data: upperThresholdData,
+                        type: 'line',
+                        borderColor: 'rgba(220, 38, 38, 0.4)',
+                        borderDash: [5, 5],
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                        order: 1
+                    },
+                    {
+                        label: 'Seuil Inférieur 95%',
+                        data: lowerThresholdData,
+                        type: 'line',
+                        borderColor: 'rgba(220, 38, 38, 0.4)',
+                        borderDash: [5, 5],
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(ctx) { return `Décalage: ${ctx[0].label} jours`; },
+                            label: function(ctx) {
+                                // Ne pas afficher le tooltip pour les lignes de seuil ni pour les barres verticales (index 1)
+                                if (ctx.datasetIndex > 0) return '';
+                                return `Corrélation: ${ctx.raw.toFixed(3)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Décalage Temporel (Jours)', font: { weight: 'bold' } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        title: { display: true, text: 'Coeff. Corrélation (r)' },
+                        suggestedMin: -0.5,
+                        suggestedMax: 0.5
                     }
                 }
             }
-        }
-        
-        if (!hasData) {
-           container.innerHTML = '<p class="text-sm text-slate-500 italic">Analysis requires sufficient data variability.</p>';
-           return;
-        }
-        
-        correlations.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
-        
-        if (correlations.length === 0) {
-            container.innerHTML = '<p class="text-sm text-slate-500 italic">No strong linear correlations (|r| \> 0.5) found between parameters.</p>';
-        } else {
-            const top5 = correlations.slice(0, 5);
-            top5.forEach(corr => {
-                const isPos = corr.val > 0;
-                const color = isPos ? 'text-blue-700 bg-blue-50' : 'text-red-700 bg-red-50';
-                const el = document.createElement('div');
-                el.className = 'flex justify-between items-center text-sm p-3 rounded border border-slate-100';
-                el.innerHTML = `
-                    <div class="flex-1 min-w-0 pr-4">
-                        <span class="font-bold text-slate-700 truncate block">${corr.c1}</span>
-                        <span class="text-xs text-slate-500 italic">vs</span>
-                        <span class="font-bold text-slate-700 truncate block">${corr.c2}</span>
-                    </div>
-                    <div class="${color} font-black px-3 py-1.5 rounded min-w-[64px] text-center">
-                        ${corr.val > 0 ? '+' : ''}${corr.val.toFixed(2)}
-                    </div>
-                `;
-                container.appendChild(el);
-            });
-        }
+        });
     }
 </script>
 {% endblock %}
