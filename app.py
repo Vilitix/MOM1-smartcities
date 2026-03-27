@@ -247,7 +247,6 @@ def api_weather():
     })
     
 @app.route("/api/predict", methods=['POST'])
-@app.route("/api/predict", methods=['POST'])
 def api_predict():
     if not MODEL_READY:
         return jsonify({"error": "Model not initialized"}), 500
@@ -255,129 +254,97 @@ def api_predict():
     data = request.json
     days = int(data.get('days', 7))
     
-    # --- FLAG VARIABLES REMOVED ---
-    
-    # 6 Target columns predicted by the model (Make sure these match your trained model!)
-    target_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
-    # 3 Weather features + 6 Target features = 9 Total features
+    # 6 Target columns
+    target_cols = ['Conductivité', 'NO3', 'Chlorophylle-a SCALED', 'Turbidité', 'O2 Saturation', 'pH Test']
+    # 3 Weather + 6 Targets = 9 Features
     feature_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + target_cols
     
-    # 3 steps per day (8-hour intervals)
     steps = days * 3 
-
-    # Dictionaries to hold the generated data for the frontend
     predicted_data = {col: [] for col in target_cols}
     historical_data = {col: [] for col in target_cols}
 
     try:
-        # 1. Fetch actual recent data directly from data.csv
+        # Load from your CSV file
         file_path = "data.csv"
-        
-        # --- SAFETY CHECKS ---
         if not os.path.exists(file_path):
-            return jsonify({"error": f"Sensor data file ({file_path}) not found."}), 404
+            return jsonify({"error": f"File {file_path} not found"}), 404
             
         df_sensor = pd.read_csv(file_path)
         
-        if df_sensor.empty:
-            return jsonify({"error": "Sensor data is empty."}), 404
-            
-        missing_cols = [c for c in target_cols if c not in df_sensor.columns]
-        if missing_cols:
-            return jsonify({"error": f"Missing columns in sensor data: {missing_cols}. Please check CSV headers."}), 400
-        
-        # Parse Date to Datetime
+        # Date parsing
         try:
             df_sensor['Datetime'] = pd.to_datetime(df_sensor['Date'], format='%d/%m-%y %H:%M:%S', exact=False)
         except:
             df_sensor['Datetime'] = pd.to_datetime(df_sensor['Date'], format='mixed', dayfirst=True)
-            
         df_sensor.set_index('Datetime', inplace=True)
 
+        # Weather integration
         df_weather = get_cached_weather()
-        
-        # Resample sensor data to 8-hour intervals
         df_sensor_aligned = df_sensor[target_cols].resample('8h').mean()
         df_sensor_aligned.reset_index(inplace=True)
         
-        # Merge with weather data
         df_weather.index = df_weather.index.tz_localize(None)
         df_weather.index.name = 'Datetime'
         df_weather.reset_index(inplace=True)
         df_merged = pd.merge(df_sensor_aligned, df_weather, on='Datetime', how='inner')
-        
-        if df_merged.empty:
-            return jsonify({"error": "Could not align sensor data with weather data. Timestamps may not overlap."}), 400
 
-        # Impute missing values
+        if df_merged.empty:
+            return jsonify({"error": "Data alignment failed (Check date overlap)"}), 400
+
+        # Fill missing values
         from sklearn.impute import SimpleImputer
         imputer = SimpleImputer(strategy='mean')
         df_merged[target_cols] = imputer.fit_transform(df_merged[target_cols])
         
-        # Get the last 90 steps (approx. 30 days) for model input
+        # Prepare sequence (last 90 steps)
         last_90 = df_merged.tail(90).copy()
-        
-        # Ensure we have enough data
         if len(last_90) < 90:
-            pad_length = 90 - len(last_90)
-            pad_df = pd.DataFrame([last_90.iloc[0]] * pad_length)
+            pad_df = pd.DataFrame([last_90.iloc[0]] * (90 - len(last_90)))
             last_90 = pd.concat([pad_df, last_90], ignore_index=True)
 
-        # --- Save real historical data for chart display (last 14 steps) ---
+        # --- Labels generation (Crucial for frontend) ---
         last_14 = last_90.tail(14)
-        for col in target_cols:
-            historical_data[col] = [round(float(val), 2) for val in last_14[col].values]
-
-        # 2. Data transformation for model input (Scaling)
-        X_real = last_90[feature_cols].values
-        X_real_scaled = scaler_X.transform(X_real)
-        
-        # Convert to PyTorch Tensor: (Batch, Sequence, Features) -> (1, 90, 9)
-        current_seq_tensor = torch.tensor(X_real_scaled, dtype=torch.float32).unsqueeze(0)
-
-        # 3. Real LSTM inference loop
-        lstm_model.eval()
-        with torch.no_grad():
-            for step in range(steps):
-                # Predict the next 8-hour interval
-                pred_scaled = lstm_model(current_seq_tensor) 
-                
-                # Inverse transform scaling to get real-world values
-                pred_inv = scaler_y.inverse_transform(pred_scaled.numpy())[0]
-                
-                # Store predictions
-                for i, col in enumerate(target_cols):
-                    val = float(pred_inv[i])
-                    predicted_data[col].append(round(abs(val), 2)) 
-
-                # Autoregression: Array size must be 9
-                new_step = np.zeros((9,))
-                new_step[0:3] = X_real_scaled[-1, 0:3] # Weather data
-                new_step[3:] = pred_scaled.numpy()[0]  # 6 Predicted targets
-                
-                # Shift sequence left and append the new step
-                new_step_tensor = torch.tensor(new_step, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-                current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
-
-        # Generate actual labels from the merged dataframe
+        # Use 'Datetime' column to create formatted labels
         historical_labels = [dt.strftime("%b %d, %H:%M") for dt in last_14['Datetime']]
         
-        # 2. Get the last actual timestamp from the 'Datetime' column
         last_ts = last_14['Datetime'].iloc[-1]
-        
-        # 3. Generate future labels starting from the last known timestamp
         predicted_labels = []
         for i in range(1, steps + 1):
             future_dt = last_ts + pd.Timedelta(hours=i * 8)
             predicted_labels.append(future_dt.strftime("%b %d, %H:%M"))
+
+        # Save historical data
+        for col in target_cols:
+            historical_data[col] = [round(float(val), 2) for val in last_14[col].values]
+
+        # Inference
+        X_real_scaled = scaler_X.transform(last_90[feature_cols].values)
+        current_seq_tensor = torch.tensor(X_real_scaled, dtype=torch.float32).unsqueeze(0)
+
+        lstm_model.eval()
+        with torch.no_grad():
+            for step in range(steps):
+                pred_scaled = lstm_model(current_seq_tensor)
+                pred_inv = scaler_y.inverse_transform(pred_scaled.numpy())[0]
+                
+                for i, col in enumerate(target_cols):
+                    predicted_data[col].append(round(abs(float(pred_inv[i])), 2))
+
+                # Autoregression
+                new_step = np.zeros((9,))
+                new_step[0:3] = X_real_scaled[-1, 0:3]
+                new_step[3:] = pred_scaled.numpy()[0]
+                
+                new_step_tensor = torch.tensor(new_step, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+                current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
 
         return jsonify({
             "status": "success",
             "targets": target_cols,
             "historical": historical_data,
             "predicted": predicted_data,
-            "historical_labels": historical_labels,
-            "predicted_labels": predicted_labels,
+            "historical_labels": historical_labels, # Matches frontend expectation
+            "predicted_labels": predicted_labels,   # Matches frontend expectation
             "rmse": 0.14,
             "confidence": 92
         })
@@ -395,7 +362,7 @@ def api_export():
     return Response(
         buf.getvalue(),
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment;filename=hydrolens_weather_data.csv"}
+        headers={"Content-Disposition": "attachment;filename=data.csv"}
     )
 
 @app.route("/api/correlation")

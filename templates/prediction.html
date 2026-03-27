@@ -239,13 +239,14 @@
         
         // const hasSnowmelt = document.getElementById('flagSnowmelt').checked;
         // const hasFertilizer = document.getElementById('flagFertilizer').checked;
+        
 
         btn.innerHTML = '<div class="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white mr-2"></div> Running LSTM...';
         btn.disabled = true;
         btn.classList.add('opacity-80', 'cursor-not-allowed');
         
-        const hasSnowmelt = document.getElementById('flagSnowmelt').checked;
-        const hasFertilizer = document.getElementById('flagFertilizer').checked;
+        const hasSnowmelt = false; 
+        const hasFertilizer = false;
         const days = document.getElementById('daysSelect').value;
         
         try {
