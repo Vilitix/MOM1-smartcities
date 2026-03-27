@@ -1,0 +1,16 @@
+nohup: les entrées sont ignorées
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-313-482
+127.0.0.1 - - [27/Mar/2026 10:00:29] "GET /api/correlation HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 10:01:03] "GET /correlation HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 10:01:06] "GET /api/correlation HTTP/1.1" 200 -
+ * Detected change in '/home/alexis/Documents/projets/MOM1-smartcities/app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 136-313-482
