@@ -159,26 +159,17 @@
     }
 
     // Update the chart datasets based on the currently selected tab
+    
     function updateChartDisplay() {
         if (!globalData.targets.length) return;
 
         const hist = globalData.historical[currentActiveTab] || [];
         const pred = globalData.predicted[currentActiveTab] || [];
         
-        // Generate X-axis labels
-        const labels = [];
-        const today = new Date();
-        const totalPoints = hist.length + pred.length;
-        
-        for (let i = -hist.length; i < pred.length; i++) {
-            const d = new Date(today);
-            d.setHours(d.getHours() + (i * 8)); // 8-hour intervals
-            labels.push(d.toLocaleDateString('en', { month: 'short', day: 'numeric', hour: '2-digit' }));
-        }
+        // Use real labels from backend instead of generating new Date()
+        const labels = (globalData.historical_labels || []).concat(globalData.predicted_labels || []);
 
-        // Pad predicted data with nulls so it starts AFTER historical data
         const paddedPredicted = Array(hist.length).fill(null).concat(pred);
-        // Pad historical data with nulls so it doesn't overlap into future
         const paddedHistorical = hist.concat(Array(pred.length).fill(null));
 
         predictionChart.data.labels = labels;
