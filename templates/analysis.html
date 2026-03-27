@@ -33,6 +33,12 @@
                     365-day trajectory</p>
             </div>
             <div class="flex flex-col md:flex-row items-center gap-6">
+                <!-- Reset Zoom Button -->
+                <button onclick="if(globalChart) globalChart.resetZoom()"
+                    class="bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase hover:bg-surface-container-highest transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">zoom_out</span> Reset Zoom
+                </button>
+                    
                 <!-- Parameter Selector -->
                 <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
                     <span class="text-[10px] font-bold text-primary uppercase ml-2">Parameter:</span>
@@ -400,7 +406,16 @@
                 plugins: {
                     ...commonOpts.plugins,
                     title: { display: true, text: colName + ' Analysis with Weather Context', font: { size: 14, weight: 'bold' } },
-                    monthHighlightPlugin: { months: highlightMonths }
+                    monthHighlightPlugin: { months: highlightMonths },
+                    zoom: {
+                        zoom: {
+                            drag: {
+                                enabled: true,
+                                backgroundColor: 'rgba(56, 189, 248, 0.3)'
+                            },
+                            mode: 'x'
+                        }
+                    }
                 },
                 scales: {
                     ...commonOpts.scales,
