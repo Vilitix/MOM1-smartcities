@@ -74,7 +74,7 @@ def train_and_predict():
         df_water['Datetime'] = pd.to_datetime(df_water['Date'], format='mixed', dayfirst=True)
     
     df_water.set_index('Datetime', inplace=True)
-    target_cols = ['Conductivité', 'NO3', 'Chlorophylle-a SCALED','Turbidité', 'O2 Saturation', 'pH Test', 'MES']
+    target_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
     
     df_water_aligned = df_water[target_cols].resample('8h').mean()
     df_water_aligned.reset_index(inplace=True)
@@ -90,7 +90,7 @@ def train_and_predict():
     df_merged['flag_snowmelt'] = 0
     
     # Include new flags in feature variables
-    feature_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m', 'flag_fertilizer', 'flag_snowmelt'] + target_cols
+    feature_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + target_cols
     X = df_merged[feature_cols].values
     y = df_merged[target_cols].values
     # -------------------------------------------------------------------

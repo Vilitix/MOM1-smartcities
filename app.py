@@ -15,7 +15,7 @@ from train_model_lstm import WaterQualityLSTM
 
 #import model and scalers
 try:
-    lstm_model = WaterQualityLSTM(input_size=12, hidden_size=64, num_layers=2, output_size=7)
+    lstm_model = WaterQualityLSTM(input_size=9, hidden_size=64, num_layers=2, output_size=6)
     lstm_model.load_state_dict(torch.load('lstm_model.pth'))
     lstm_model.eval()
     scaler_X = joblib.load('scaler_X.pkl')
@@ -247,17 +247,20 @@ def api_weather():
     })
     
 @app.route("/api/predict", methods=['POST'])
+@app.route("/api/predict", methods=['POST'])
 def api_predict():
     if not MODEL_READY:
         return jsonify({"error": "Model not initialized"}), 500
 
     data = request.json
     days = int(data.get('days', 7))
-    flag_fertilizer = 1 if data.get('fertilizer') else 0
-    flag_snowmelt = 1 if data.get('snowmelt') else 0
-
-    # Target columns predicted by the model
-    target_cols = ['Conductivité', 'NO3', 'Chlorophylle-a SCALED', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
+    
+    # --- FLAG VARIABLES REMOVED ---
+    
+    # 6 Target columns predicted by the model (Make sure these match your trained model!)
+    target_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
+    # 3 Weather features + 6 Target features = 9 Total features
+    feature_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + target_cols
     
     # 3 steps per day (8-hour intervals)
     steps = days * 3 
@@ -267,49 +270,94 @@ def api_predict():
     historical_data = {col: [] for col in target_cols}
 
     try:
-        # --- REAL LSTM INFERENCE ---
-        # Initialize a sequence tensor of shape (1, Sequence_Length, Features)
-        # Sequence length is 90, Features is 12. 
-        # For a robust demo, we initialize with zeros (which represents the 'mean' in standard scaled data).
-        current_seq = np.zeros((1, 90, 12), dtype=np.float32)
+        # 1. Fetch actual recent data directly from Consibio Cloud Datalog.csv
+        file_path = "Consibio Cloud Datalog.csv"
         
-        # Apply user flags to the sequence (assuming indices 3 and 4 are fertilizer and snowmelt)
-        current_seq[:, :, 3] = flag_fertilizer
-        current_seq[:, :, 4] = flag_snowmelt
+        # --- SAFETY CHECKS ---
+        if not os.path.exists(file_path):
+            return jsonify({"error": f"Sensor data file ({file_path}) not found."}), 404
+            
+        df_sensor = pd.read_csv(file_path)
         
-        current_seq_tensor = torch.tensor(current_seq)
+        if df_sensor.empty:
+            return jsonify({"error": "Sensor data is empty."}), 404
+            
+        missing_cols = [c for c in target_cols if c not in df_sensor.columns]
+        if missing_cols:
+            return jsonify({"error": f"Missing columns in sensor data: {missing_cols}. Please check CSV headers."}), 400
+        
+        # Parse Date to Datetime
+        try:
+            df_sensor['Datetime'] = pd.to_datetime(df_sensor['Date'], format='%d/%m-%y %H:%M:%S', exact=False)
+        except:
+            df_sensor['Datetime'] = pd.to_datetime(df_sensor['Date'], format='mixed', dayfirst=True)
+            
+        df_sensor.set_index('Datetime', inplace=True)
 
+        df_weather = get_cached_weather()
+        
+        # Resample sensor data to 8-hour intervals
+        df_sensor_aligned = df_sensor[target_cols].resample('8h').mean()
+        df_sensor_aligned.reset_index(inplace=True)
+        
+        # Merge with weather data
+        df_weather.index = df_weather.index.tz_localize(None)
+        df_weather.index.name = 'Datetime'
+        df_weather.reset_index(inplace=True)
+        df_merged = pd.merge(df_sensor_aligned, df_weather, on='Datetime', how='inner')
+        
+        if df_merged.empty:
+            return jsonify({"error": "Could not align sensor data with weather data. Timestamps may not overlap."}), 400
+
+        # Impute missing values
+        from sklearn.impute import SimpleImputer
+        imputer = SimpleImputer(strategy='mean')
+        df_merged[target_cols] = imputer.fit_transform(df_merged[target_cols])
+        
+        # Get the last 90 steps (approx. 30 days) for model input
+        last_90 = df_merged.tail(90).copy()
+        
+        # Ensure we have enough data
+        if len(last_90) < 90:
+            pad_length = 90 - len(last_90)
+            pad_df = pd.DataFrame([last_90.iloc[0]] * pad_length)
+            last_90 = pd.concat([pad_df, last_90], ignore_index=True)
+
+        # --- Save real historical data for chart display (last 14 steps) ---
+        last_14 = last_90.tail(14)
+        for col in target_cols:
+            historical_data[col] = [round(float(val), 2) for val in last_14[col].values]
+
+        # 2. Data transformation for model input (Scaling)
+        X_real = last_90[feature_cols].values
+        X_real_scaled = scaler_X.transform(X_real)
+        
+        # Convert to PyTorch Tensor: (Batch, Sequence, Features) -> (1, 90, 9)
+        current_seq_tensor = torch.tensor(X_real_scaled, dtype=torch.float32).unsqueeze(0)
+
+        # 3. Real LSTM inference loop
         lstm_model.eval()
         with torch.no_grad():
             for step in range(steps):
-                # 1. Predict the next 8-hour interval
-                pred_scaled = lstm_model(current_seq_tensor) # shape: (1, 7)
+                # Predict the next 8-hour interval
+                pred_scaled = lstm_model(current_seq_tensor) 
                 
-                # 2. Inverse transform to get real-world values
+                # Inverse transform scaling to get real-world values
                 pred_inv = scaler_y.inverse_transform(pred_scaled.numpy())[0]
                 
-                # 3. Store predictions
+                # Store predictions
                 for i, col in enumerate(target_cols):
-                    # Add some random noise for realism if the model output is too flat
-                    val = float(pred_inv[i]) + np.random.normal(0, 0.05) 
-                    predicted_data[col].append(round(abs(val), 2)) # Use abs() to prevent negative values
+                    val = float(pred_inv[i])
+                    predicted_data[col].append(round(abs(val), 2)) 
 
-                # 4. Prepare the next input step (Autoregressive shift)
-                new_step = np.zeros((12,))
-                new_step[3] = flag_fertilizer
-                new_step[4] = flag_snowmelt
-                new_step[5:] = pred_scaled.numpy()[0] # Inject predicted scaled targets back into features
+                # Autoregression: Array size must be 9
+                new_step = np.zeros((9,))
+                new_step[0:3] = X_real_scaled[-1, 0:3] # Weather data
+                new_step[3:] = pred_scaled.numpy()[0]  # 6 Predicted targets
                 
                 # Shift sequence left and append the new step
                 new_step_tensor = torch.tensor(new_step, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
                 current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
-
-        # Generate fake historical data just for seamless chart visualization
-        df, _ = get_processed_sensor_data()
-        for col in target_cols:
-            base_val = float(df[col].iloc[-1]) if (not df.empty and col in df.columns) else 5.0
-            for i in range(14): # 14 points of history
-                historical_data[col].append(round(base_val + np.random.normal(0, 0.5), 2))
 
         return jsonify({
             "status": "success",
@@ -323,7 +371,6 @@ def api_predict():
     except Exception as e:
         print(f"Prediction Error: {e}")
         return jsonify({"error": str(e)}), 500
-
     
 @app.route("/api/export")
 def api_export():
