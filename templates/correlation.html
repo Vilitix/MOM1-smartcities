@@ -8,8 +8,11 @@
         <p class="text-on-surface-variant font-medium mt-2 max-w-3xl">Interactive scatter plot exploring relationships between weather events (rain, wind, snow) and water quality metrics.</p>
     </header>
 
-    <div id="loading" class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    <div id="loading" class="flex items-center justify-center py-20">
+        <div class="text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-on-surface-variant text-sm">Synchronizing telemetry streams...</p>
+        </div>
     </div>
 
     <div id="correlation-content" class="hidden space-y-8">
@@ -45,28 +48,58 @@
                 </div>
             </div>
 
-            <!-- Ajout de la fonction d'autocorrélation / cross-corrélation -->
+            <!-- Add auto-correlation / cross-correlation function -->
             <div class="mt-4">
                 <div class="mb-6">
-                    <h3 class="font-headline font-bold text-primary text-lg">Fonction de Corrélation Temporelle (Correlogramme)</h3>
-                    <p class="text-on-surface-variant text-xs mt-1">Analyse l'impact retardé (décalage en jours de mesure) entre la météo et la mesure du capteur. L'intervalle de confiance est indiqué par les lignes rouges.</p>
+                    <h3 class="font-headline font-bold text-primary text-lg">Time Correlation Function (Correlogram)</h3>
+                    <p class="text-on-surface-variant text-xs mt-1">Analyzes the delayed impact (measure in days shift) between weather and sensor measurement. The confidence interval is indicated by red lines.</p>
                 </div>
                 <div class="chart-container relative w-full" style="height: 300px;">
                     <canvas id="ccfChart"></canvas>
                 </div>
             </div>
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] relative mt-8"><div class="mb-6"><h3 class="font-headline font-bold text-primary text-lg">Matrice de Corrélation</h3><p class="text-on-surface-variant text-xs mt-1">Affiche le coefficient de corrélation de Pearson entre toutes les variables.</p></div><div class="chart-container relative w-full" style="height: 600px;"><canvas id="matrixChart"></canvas></div></div></section>
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] relative mt-8 border border-slate-100">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                    <div>
+                        <h2 class="font-headline font-bold text-primary text-xl">Sensor Cross-Correlation</h2>
+                        <p class="text-on-surface-variant text-xs mt-1">Select two sensors to build the correlogram</p>
+                    </div>
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                            <span class="text-[10px] font-bold text-primary uppercase ml-2">Sensor 1 (X-Axis):</span>
+                            <select id="sensorSelect2X" onchange="updateSensorCCFChart()" class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                            </select>
+                        </div>
+                        <span class="material-symbols-outlined text-outline-variant hidden md:block">sync_alt</span>
+                        <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                            <span class="text-[10px] font-bold text-primary uppercase ml-2">Sensor 2 (Y-Axis):</span>
+                            <select id="sensorSelect2Y" onchange="updateSensorCCFChart()" class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="mb-6">
+                        <h3 class="font-headline font-bold text-primary text-lg">Time Correlation Function (Correlogram)</h3>
+                        <p class="text-on-surface-variant text-xs mt-1">Analyzes the delayed impact between two sensors. The confidence interval is indicated by red lines.</p>
+                    </div>
+                    <div class="chart-container relative w-full" style="height: 300px;">
+                        <canvas id="ccfChart2"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
 <script>
     let state = { weather: null, sensors: null };
     let scatterChart = null;
     let ccfChart = null;
-    let matrixChart = null;
+    let ccfChart2 = null;
 
     Promise.all([
         fetch('/api/weather').then(r => r.json()),
@@ -80,17 +113,55 @@
 
         // Populate Sensor Select
         const sensorSelect = document.getElementById('sensorSelect');
+        const sensorSelect2X = document.getElementById('sensorSelect2X');
+        const sensorSelect2Y = document.getElementById('sensorSelect2Y');
+        
         const sensorCols = Object.keys(state.sensors.all_params);
         
+        const translations = {
+            'CDOM': 'CDOM',
+            'Chlorophylle-a SCALED': 'Chlorophyll-a',
+            'CO2 dissous concentration calculée': 'Dissolved CO2',
+            'Conductivité': 'Conductivity',
+            'COTeq': 'TOCeq',
+            'DBOeq': 'BODeq',
+            'DCOeq': 'CODeq',
+            'MES': 'TSS',
+            'NO3': 'Nitrate (NO3)',
+            'O2 Saturation': 'O2 Saturation',
+            'O2 Temperature': 'O2 Temperature',
+            'pH Test': 'pH Test',
+            'Phycocyanine scaled': 'Phycocyanin',
+            'T (Con.)': 'Temperature',
+            'Total battery charge #6f0d': 'Battery Charge',
+            'Turbidité': 'Turbidity'
+        };
+        
         sensorCols.forEach(col => {
+            const label = translations[col] || col;
+
             const opt = document.createElement('option');
             opt.value = col;
-            opt.textContent = col;
-            if (col === 'Turbidité') opt.selected = true; // par défaut
+            opt.textContent = label;
+            if (col === 'Turbidité') opt.selected = true; // default
             sensorSelect.appendChild(opt);
+
+            const optX = document.createElement('option');
+            optX.value = col;
+            optX.textContent = label;
+            if (col === 'pH Test') optX.selected = true;
+            sensorSelect2X.appendChild(optX);
+
+            const optY = document.createElement('option');
+            optY.value = col;
+            optY.textContent = label;
+            if (col === 'Turbidité') optY.selected = true;
+            sensorSelect2Y.appendChild(optY);
         });
 
         updateScatterChart();
+        updateSensorCCFChart();
+        
     }).catch(err => {
         document.getElementById('loading').innerHTML = `<p class="text-error font-bold">Failed to load data: ${err.message}</p>`;
     });
@@ -203,112 +274,137 @@
         let pearson = calculatePearson(aligned.xArray, aligned.yArray);
         let pStr = pearson.toFixed(3);
         
-        // Intervalle de confiance à 95%
+        // 95% Confidence Interval
         let threshold = n > 0 ? (1.96 / Math.sqrt(n)) : 0;
         let isSignificant = Math.abs(pearson) >= threshold;
 
         updateCCFChart(aligned.xArray, aligned.yArray, weatherKey, sensorKey, threshold);
-        updateMatrixChart();
+        updateSensorCCFChart();
+        
     }
 
-    function pearson(x, y) {
-        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-        let n = 0;
-        for (let i = 0; i < x.length; i++) {
-            if (x[i] != null && y[i] != null && !isNaN(x[i]) && !isNaN(y[i])) {
-                sumX += x[i];
-                sumY += y[i];
-                sumXY += x[i] * y[i];
-                sumX2 += x[i] * x[i];
-                sumY2 += y[i] * y[i];
-                n++;
-            }
-        }
-        if (n === 0) return 0;
-        const num = (n * sumXY) - (sumX * sumY);
-        const den = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-        return den === 0 ? 0 : num / den;
-    }
+    
+    
+    function updateSensorCCFChart() {
+        const xKey = document.getElementById('sensorSelect2X').value;
+        const yKey = document.getElementById('sensorSelect2Y').value;
 
-    function updateMatrixChart() {
-        if (!state.sensors || !state.weather) return;
-        const allParams = { ...state.sensors.all_params, ...state.weather.all_params };
-        
-        // Filter out strings/dates or empty arrays
-        const validKeys = Object.keys(allParams).filter(k => {
-            const arr = allParams[k];
-            if (!arr || !arr.length) return false;
-            return arr.some(v => typeof v === 'number' && !isNaN(v));
-        });
+        // Create an aligned dataset similar to getAlignedData
+        const combined = [];
+        const xArray = [];
+        const yArray = [];
 
-        // Compute Pearson matrix
-        let matrixData = [];
-        for (let i = 0; i < validKeys.length; i++) {
-            let varY = validKeys[i];
-            let yName = varY.replace(/_/g, ' ').toUpperCase().slice(0, 15);
-            for (let j = 0; j < validKeys.length; j++) {
-                let varX = validKeys[j];
-                let xName = varX.replace(/_/g, ' ').toUpperCase().slice(0, 15);
-                let r = pearson(allParams[varX], allParams[varY]);
-                matrixData.push({ x: xName, y: yName, v: r });
-            }
+        if (state.sensors && state.sensors.labels && state.sensors.all_params[xKey] && state.sensors.all_params[yKey]) {
+            state.sensors.labels.forEach((date, i) => {
+                const xVal = state.sensors.all_params[xKey][i];
+                const yVal = state.sensors.all_params[yKey][i];
+                if (xVal !== null && xVal !== undefined && yVal !== null && yVal !== undefined) {
+                    combined.push({ x: xVal, y: yVal });
+                    xArray.push(xVal);
+                    yArray.push(yVal);
+                }
+            });
         }
 
-        const keysNames = validKeys.map(k => k.replace(/_/g, ' ').toUpperCase().slice(0, 15));
+        const n = xArray.length;
+        let threshold = n > 0 ? (1.96 / Math.sqrt(n)) : 0;
 
-        const ctx = document.getElementById('matrixChart').getContext('2d');
-        if (matrixChart) matrixChart.destroy();
+        if (ccfChart2) ccfChart2.destroy();
         
-        matrixChart = new Chart(ctx, {
-            type: 'matrix',
+        const maxLag = 30; 
+        const ccfData = calculateCCF(xArray, yArray, maxLag);
+        
+        const ctx = document.getElementById('ccfChart2').getContext('2d');
+        
+        const upperThresholdData = Array(ccfData.lags.length).fill(threshold);
+        const lowerThresholdData = Array(ccfData.lags.length).fill(-threshold);
+
+        ccfChart2 = new Chart(ctx, {
+            type: 'bar',
             data: {
-                datasets: [{
-                    label: 'Pearson Correlation',
-                    data: matrixData,
-                    backgroundColor(context) {
-                        const v = context.dataset.data[context.dataIndex].v;
-                        if (isNaN(v)) return 'rgba(200, 200, 200, 0.2)';
-                        const alpha = Math.abs(v);
-                        return v < 0 ? `rgba(220, 53, 69, ${alpha})` : `rgba(16, 185, 129, ${alpha})`;
+                labels: ccfData.lags,
+                datasets: [
+                    {
+                        label: `Correlation (Point)`,
+                        data: ccfData.values,
+                        type: 'line',
+                        borderColor: 'transparent',
+                        pointBackgroundColor: ccfData.values.map(v => (v !== null && Math.abs(v) > threshold) ? '#dc2626' : '#0284c7'),
+                        pointBorderColor: ccfData.values.map(v => (v !== null && Math.abs(v) > threshold) ? '#dc2626' : '#0284c7'),
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        showLine: false,
+                        order: 2
                     },
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.5)',
-                    width: ({chart}) => (chart.chartArea || {}).width / keysNames.length - 1,
-                    height: ({chart}) => (chart.chartArea || {}).height / keysNames.length - 1
-                }]
+                    {
+                        label: `Stem (Vertical line)`,
+                        data: ccfData.values,
+                        type: 'bar',
+                        backgroundColor: ccfData.values.map(v => (v !== null && Math.abs(v) > threshold) ? '#dc2626' : '#0284c7'),
+                        barThickness: 2,
+                        order: 3
+                    },
+                    {
+                        label: 'Upper Threshold 95%',
+                        data: upperThresholdData,
+                        type: 'line',
+                        borderColor: 'rgba(220, 38, 38, 0.4)',
+                        borderDash: [5, 5],
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                        order: 1
+                    },
+                    {
+                        label: 'Lower Threshold 95%',
+                        data: lowerThresholdData,
+                        type: 'line',
+                        borderColor: 'rgba(220, 38, 38, 0.4)',
+                        borderDash: [5, 5],
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                        order: 1
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            title() { return ''; },
-                            label(context) {
-                                const d = context.dataset.data[context.dataIndex];
-                                return `${d.y} vs ${d.x}: ${isNaN(d.v) ? 'N/A' : d.v.toFixed(2)}`;
-                            }
-                        }
-                    }
-                },
                 scales: {
                     x: {
-                        type: 'category',
-                        labels: keysNames,
-                        ticks: { display: true, font: {size: 9}, maxRotation: 90, minRotation: 90 },
+                        title: { display: true, text: 'Lag (Days)', font: {weight: 'bold'} },
                         grid: { display: false }
                     },
                     y: {
-                        type: 'category',
-                        labels: keysNames,
-                        ticks: { display: true, font: {size: 9} },
-                        grid: { display: false }
+                        title: { display: true, text: 'Cross-Correlation Coefficient', font: {weight: 'bold'} },
+                        min: -1,
+                        max: 1
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            filter: function(item) {
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if(context.dataset.label.includes('Threshold') || context.dataset.label.includes('Stem')){
+                                    return null;
+                                }
+                                let val = context.raw;
+                                return `Correlation: ${val !== null ? val.toFixed(3) : 'N/A'}`;
+                            }
+                        }
                     }
                 }
             }
         });
     }
+
 
     function updateCCFChart(xArray, yArray, weatherKey, sensorKey, threshold) {
         if (ccfChart) ccfChart.destroy();
@@ -327,7 +423,7 @@
                 borderColor: 'rgba(220, 38, 38, 0.5)',
                 borderWidth: 2,
                 borderDash: [5, 5],
-                label: { display: true, content: '95% Significatif', position: 'end', backgroundColor: 'rgba(239, 68, 68, 0.8)', font: {size: 10} }
+                label: { display: true, content: '95% Significant', position: 'end', backgroundColor: 'rgba(239, 68, 68, 0.8)', font: {size: 10} }
             },
             lowerThreshold: {
                 type: 'line',
@@ -351,7 +447,7 @@
                 labels: ccfData.lags,
                 datasets: [
                     {
-                        label: `Corrélation (Point)`,
+                        label: `Correlation (Point)`,
                         data: ccfData.values,
                         type: 'line',
                         borderColor: 'transparent', // Rend la ligne invisible
@@ -363,7 +459,7 @@
                         order: 2
                     },
                     {
-                        label: `Tige (Ligne verticale)`,
+                        label: `Stem (Vertical line)`,
                         data: ccfData.values,
                         type: 'bar',
                         backgroundColor: ccfData.values.map(v => (v !== null && Math.abs(v) > threshold) ? '#dc2626' : '#0284c7'),
@@ -371,7 +467,7 @@
                         order: 3
                     },
                     {
-                        label: 'Seuil Supérieur 95%',
+                        label: 'Upper Threshold 95%',
                         data: upperThresholdData,
                         type: 'line',
                         borderColor: 'rgba(220, 38, 38, 0.4)',
@@ -382,7 +478,7 @@
                         order: 1
                     },
                     {
-                        label: 'Seuil Inférieur 95%',
+                        label: 'Lower Threshold 95%',
                         data: lowerThresholdData,
                         type: 'line',
                         borderColor: 'rgba(220, 38, 38, 0.4)',
@@ -401,22 +497,22 @@
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            title: function(ctx) { return `Décalage: ${ctx[0].label} jours`; },
+                            title: function(ctx) { return `Lag: ${ctx[0].label} days`; },
                             label: function(ctx) {
                                 // Ne pas afficher le tooltip pour les lignes de seuil ni pour les barres verticales (index 1)
                                 if (ctx.datasetIndex > 0) return '';
-                                return `Corrélation: ${ctx.raw.toFixed(3)}`;
+                                return `Correlation: ${ctx.raw.toFixed(3)}`;
                             }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        title: { display: true, text: 'Décalage Temporel (Jours)', font: { weight: 'bold' } },
+                        title: { display: true, text: 'Lag (Days)', font: { weight: 'bold' } },
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: 'Coeff. Corrélation (r)' },
+                        title: { display: true, text: 'Correlation Coeff. (r)' },
                         suggestedMin: -0.5,
                         suggestedMax: 0.5
                     }
