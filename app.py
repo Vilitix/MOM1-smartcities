@@ -83,7 +83,8 @@ def api_weather():
     df_daily = df.resample("D").agg({
         "temperature_2m": "mean",
         "precipitation": "sum",
-        "wind_speed_10m": "mean"
+        "wind_speed_10m": "mean",
+        "snowfall": "sum"
     })
     df_daily.index = df_daily.index.strftime("%Y-%m-%d")
     
@@ -113,18 +114,21 @@ def api_weather():
             "temperature": [round(v, 1) if pd.notna(v) else None for v in df_daily["temperature_2m"].tolist()],
             "precipitation": [round(v, 1) if pd.notna(v) else None for v in df_daily["precipitation"].tolist()],
             "wind_speed": [round(v, 1) if pd.notna(v) else None for v in df_daily["wind_speed_10m"].tolist()],
+            "snowfall": [round(v, 1) if pd.notna(v) else None for v in df_daily["snowfall"].tolist()],
         },
         "weekly": {
             "labels": week_labels,
             "temperature": [round(v, 1) if pd.notna(v) else None for v in df_week["temperature_2m"].tolist()],
             "precipitation": [round(v, 1) if pd.notna(v) else None for v in df_week["precipitation"].tolist()],
             "wind_speed": [round(v, 1) if pd.notna(v) else None for v in df_week["wind_speed_10m"].tolist()],
+            "snowfall": [round(v, 1) if pd.notna(v) else None for v in df_week["snowfall"].tolist()],
         },
         "monthly": {
             "labels": month_labels,
             "temperature": [round(v, 1) if pd.notna(v) else None for v in df_month["temperature_2m"].tolist()],
             "precipitation": [round(v, 1) if pd.notna(v) else None for v in df_month["precipitation"].tolist()],
             "wind_speed": [round(v, 1) if pd.notna(v) else None for v in df_month["wind_speed_10m"].tolist()],
+            "snowfall": [round(v, 1) if pd.notna(v) else None for v in df_month["snowfall"].tolist()],
         },
         "table": table_data,
     })

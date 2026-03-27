@@ -64,18 +64,22 @@
     <!-- Climate Context -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
         <h2 class="font-headline font-bold text-primary text-lg mb-6">Meteorological Sync (Open-Meteo)</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-2">
                 <p class="text-[10px] font-bold text-on-surface-variant uppercase">Air Temperature (2m)</p>
-                <div class="chart-container" style="height:120px;"><canvas id="weatherTempChart"></canvas></div>
+                <div class="chart-container" style="height:200px;"><canvas id="weatherTempChart"></canvas></div>
             </div>
             <div class="space-y-2">
                 <p class="text-[10px] font-bold text-on-surface-variant uppercase">Precipitation Events</p>
-                <div class="chart-container" style="height:120px;"><canvas id="weatherPrecipChart"></canvas></div>
+                <div class="chart-container" style="height:200px;"><canvas id="weatherPrecipChart"></canvas></div>
             </div>
             <div class="space-y-2">
                 <p class="text-[10px] font-bold text-on-surface-variant uppercase">Wind Speed Velocity</p>
-                <div class="chart-container" style="height:120px;"><canvas id="weatherWindChart"></canvas></div>
+                <div class="chart-container" style="height:200px;"><canvas id="weatherWindChart"></canvas></div>
+            </div>
+            <div class="space-y-2">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Snowfall</p>
+                <div class="chart-container" style="height:200px;"><canvas id="weatherSnowChart"></canvas></div>
             </div>
         </div>
     </section>
@@ -152,13 +156,23 @@
         const wd = w.daily;
         new Chart(document.getElementById('weatherTempChart'), {
             type: 'line',
-            data: { labels: wd.labels, datasets: [{ label: 'Air Temp', data: wd.temperature, borderColor: '#004370', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
-            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } } }
+            data: { labels: wd.labels, datasets: [{ label: 'Air Temp (°C)', data: wd.temperature, borderColor: '#004370', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: '°C' } } } }
         });
         new Chart(document.getElementById('weatherPrecipChart'), {
             type: 'bar',
-            data: { labels: wd.labels, datasets: [{ label: 'Precip', data: wd.precipitation, backgroundColor: 'rgba(0,106,106,0.5)', borderWidth: 0 }] },
-            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } } }
+            data: { labels: wd.labels, datasets: [{ label: 'Precip (mm)', data: wd.precipitation, backgroundColor: 'rgba(0,106,106,0.5)', borderWidth: 0 }] },
+            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'mm' } } } }
+        });
+        new Chart(document.getElementById('weatherWindChart'), {
+            type: 'line',
+            data: { labels: wd.labels, datasets: [{ label: 'Wind Speed (km/h)', data: wd.wind_speed, borderColor: '#7ca8ce', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'km/h' } } } }
+        });
+        new Chart(document.getElementById('weatherSnowChart'), {
+            type: 'bar',
+            data: { labels: wd.labels, datasets: [{ label: 'Snowfall (cm)', data: wd.snowfall, backgroundColor: 'rgba(85,215,237,0.5)', borderWidth: 0 }] },
+            options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'cm' } } } }
         });
     }
 
