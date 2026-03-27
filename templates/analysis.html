@@ -334,7 +334,15 @@
         const container = document.getElementById('farming-event-filters');
         container.innerHTML = '';
 
-        const events = (state.farming && state.farming.events) || [];
+        const allowedEventNames = ['slurry spreading', 'fertilizer', 'pesticide', 'pesticides'];
+        const normalize = (name) => String(name || '').trim().toLowerCase();
+
+        const events = ((state.farming && state.farming.events) || [])
+            .filter(eventName => allowedEventNames.includes(normalize(eventName)));
+
+        state.selectedFarmingEvents = state.selectedFarmingEvents
+            .filter(eventName => allowedEventNames.includes(normalize(eventName)));
+
         events.forEach(eventName => {
             const label = document.createElement('label');
             label.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-primary cursor-pointer hover:bg-slate-50 transition-colors';
