@@ -49,26 +49,51 @@
                 </div>
 
                 <!-- Weather Legends / Toggles -->
-                <div class="flex items-center gap-4 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                <div class="flex flex-wrap items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
                     <span class="text-[10px] font-bold text-primary uppercase ml-2">Weather Context:</span>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="overlayRain" onchange="updateGlobalChart()"
-                            class="w-3 h-3 rounded-full accent-emerald-500 border-outline-variant">
-                        <span
-                            class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="overlaySnow" onchange="updateGlobalChart()"
-                            class="w-3 h-3 rounded-full accent-cyan-400 border-outline-variant">
-                        <span
-                            class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Snow</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="overlayWind" onchange="updateGlobalChart()"
-                            class="w-3 h-3 rounded-full accent-sky-400 border-outline-variant">
-                        <span
-                            class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Wind</span>
-                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
+                            <label class="flex items-center justify-between gap-2 cursor-pointer group">
+                                <span class="flex items-center gap-2">
+                                    <input type="checkbox" id="overlayRain" onchange="updateGlobalChart()"
+                                        class="w-3 h-3 rounded-full accent-emerald-500 border-outline-variant">
+                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
+                                </span>
+                                <span id="rainThresholdLabel" class="text-[10px] font-bold text-emerald-700">5 mm</span>
+                            </label>
+                            <input type="range" id="rainThreshold" min="0" max="40" step="0.5" value="5"
+                                oninput="updateThresholdLabel('rain'); updateGlobalChart()"
+                                class="w-full mt-0.5 h-1 accent-emerald-500">
+                        </div>
+
+                        <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
+                            <label class="flex items-center justify-between gap-2 cursor-pointer group">
+                                <span class="flex items-center gap-2">
+                                    <input type="checkbox" id="overlaySnow" onchange="updateGlobalChart()"
+                                        class="w-3 h-3 rounded-full accent-cyan-400 border-outline-variant">
+                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Snow</span>
+                                </span>
+                                <span id="snowThresholdLabel" class="text-[10px] font-bold text-cyan-700">2 cm</span>
+                            </label>
+                            <input type="range" id="snowThreshold" min="0" max="20" step="0.5" value="2"
+                                oninput="updateThresholdLabel('snow'); updateGlobalChart()"
+                                class="w-full mt-0.5 h-1 accent-cyan-400">
+                        </div>
+
+                        <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
+                            <label class="flex items-center justify-between gap-2 cursor-pointer group">
+                                <span class="flex items-center gap-2">
+                                    <input type="checkbox" id="overlayWind" onchange="updateGlobalChart()"
+                                        class="w-3 h-3 rounded-full accent-sky-400 border-outline-variant">
+                                    <span class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Wind</span>
+                                </span>
+                                <span id="windThresholdLabel" class="text-[10px] font-bold text-sky-700">30 km/h</span>
+                            </label>
+                            <input type="range" id="windThreshold" min="0" max="120" step="1" value="30"
+                                oninput="updateThresholdLabel('wind'); updateGlobalChart()"
+                                class="w-full mt-0.5 h-1 accent-sky-400">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -187,6 +212,49 @@
         }
     };
 
+    const weatherEventLinePlugin = {
+        id: 'weatherEventLinePlugin',
+        afterDatasetsDraw(chart, args, pluginOptions) {
+            const events = (pluginOptions && pluginOptions.events) || [];
+            if (!events.length) return;
+
+            const labels = (chart.data && chart.data.labels) || [];
+            const xScale = chart.scales.x;
+            if (!xScale || !labels.length) return;
+
+            const { top } = chart.chartArea;
+            const ctx = chart.ctx;
+
+            ctx.save();
+            events.forEach((evt, evtIdx) => {
+                if (!evt.enabled) return;
+                ctx.fillStyle = evt.color;
+                ctx.strokeStyle = evt.strokeColor || evt.color;
+                ctx.globalAlpha = 0.95;
+                ctx.lineWidth = 1;
+
+                // Stack event markers slightly so multiple event types on the same date stay visible.
+                const markerBaseY = top + 8 + (evtIdx * 9);
+                const markerSize = 4;
+
+                for (let i = 0; i < labels.length; i++) {
+                    const val = evt.valuesByDate[labels[i]];
+                    if (val == null || val < evt.threshold) continue;
+
+                    const x = xScale.getPixelForValue(i);
+                    ctx.beginPath();
+                    ctx.moveTo(x, markerBaseY + markerSize);
+                    ctx.lineTo(x - markerSize, markerBaseY - markerSize);
+                    ctx.lineTo(x + markerSize, markerBaseY - markerSize);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            });
+            ctx.restore();
+        }
+    };
+
     const commonOpts = {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
@@ -217,10 +285,21 @@
         });
 
         renderFarmingEventFilters();
+        updateThresholdLabel('rain');
+        updateThresholdLabel('snow');
+        updateThresholdLabel('wind');
 
         initCharts();
         updateGlobalChart();
     });
+
+    function updateThresholdLabel(type) {
+        const units = { rain: 'mm', snow: 'cm', wind: 'km/h' };
+        const input = document.getElementById(type + 'Threshold');
+        const label = document.getElementById(type + 'ThresholdLabel');
+        if (!input || !label) return;
+        label.textContent = `${input.value} ${units[type]}`;
+    }
 
     function renderFarmingEventFilters() {
         const container = document.getElementById('farming-event-filters');
@@ -251,18 +330,52 @@
         });
     }
 
+    function cropSeriesToFirstNonNull(labels, values) {
+        if (!labels || !labels.length) {
+            return { labels: [], values: [] };
+        }
+
+        let startIdx = values.findIndex(v => v != null);
+        if (startIdx < 0) startIdx = 0;
+
+        return {
+            labels: labels.slice(startIdx),
+            values: values.slice(startIdx)
+        };
+    }
+
+    function cropMultiSeriesToFirstNonNull(labels, seriesList) {
+        if (!labels || !labels.length) {
+            return { labels: [], seriesList: seriesList.map(() => []) };
+        }
+
+        const indexes = seriesList
+            .map(arr => arr.findIndex(v => v != null))
+            .filter(idx => idx >= 0);
+
+        const startIdx = indexes.length ? Math.min(...indexes) : 0;
+
+        return {
+            labels: labels.slice(startIdx),
+            seriesList: seriesList.map(arr => arr.slice(startIdx))
+        };
+    }
+
     function initCharts() {
         const s = state.sensors;
         const w = state.weather;
+
+        const phTurbCrop = cropMultiSeriesToFirstNonNull(s.trends.labels, [s.trends.ph, s.trends.turbidity]);
+        const condTempCrop = cropMultiSeriesToFirstNonNull(s.trends.labels, [s.trends.conductivity, s.trends.temp]);
 
         // 1. pH & Turbidity Chart
         new Chart(document.getElementById('phTurbidityChart'), {
             type: 'line',
             data: {
-                labels: s.trends.labels,
+                labels: phTurbCrop.labels,
                 datasets: [
-                    { label: 'pH Test', data: s.trends.ph, borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'Turbidit\u00e9', data: s.trends.turbidity, borderColor: '#55d7ed', backgroundColor: 'rgba(85,215,237,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
+                    { label: 'pH Test', data: phTurbCrop.seriesList[0], borderColor: '#004370', backgroundColor: 'rgba(0,67,112,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'Turbidit\u00e9', data: phTurbCrop.seriesList[1], borderColor: '#55d7ed', backgroundColor: 'rgba(85,215,237,0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y1' }
                 ]
             },
             options: { ...commonOpts, scales: { ...commonOpts.scales, y1: { position: 'right', grid: { display: false }, ticks: { font: { size: 9 } } } } }
@@ -272,10 +385,10 @@
         new Chart(document.getElementById('condTempChart'), {
             type: 'line',
             data: {
-                labels: s.trends.labels,
+                labels: condTempCrop.labels,
                 datasets: [
-                    { label: 'Conductivit\u00e9', data: s.trends.conductivity, borderColor: '#006a6a', borderWidth: 2, tension: 0.3, pointRadius: 0 },
-                    { label: 'H2O Temp', data: s.trends.temp, borderColor: '#ba1a1a', borderWidth: 1.5, borderDash: [5, 5], tension: 0.3, pointRadius: 0 }
+                    { label: 'Conductivit\u00e9', data: condTempCrop.seriesList[0], borderColor: '#006a6a', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'H2O Temp', data: condTempCrop.seriesList[1], borderColor: '#ba1a1a', borderWidth: 1.5, borderDash: [5, 5], tension: 0.3, pointRadius: 0 }
                 ]
             },
             options: commonOpts
@@ -283,24 +396,29 @@
 
         // 3. Weather Charts
         const wd = w.daily;
+        const tempCrop = cropSeriesToFirstNonNull(wd.labels, wd.temperature);
+        const precipCrop = cropSeriesToFirstNonNull(wd.labels, wd.precipitation);
+        const windCrop = cropSeriesToFirstNonNull(wd.labels, wd.wind_speed);
+        const snowCrop = cropSeriesToFirstNonNull(wd.labels, wd.snowfall);
+
         new Chart(document.getElementById('weatherTempChart'), {
             type: 'line',
-            data: { labels: wd.labels, datasets: [{ label: 'Air Temp (°C)', data: wd.temperature, borderColor: '#004370', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            data: { labels: tempCrop.labels, datasets: [{ label: 'Air Temp (°C)', data: tempCrop.values, borderColor: '#004370', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: '°C' } } } }
         });
         new Chart(document.getElementById('weatherPrecipChart'), {
             type: 'bar',
-            data: { labels: wd.labels, datasets: [{ label: 'Precip (mm)', data: wd.precipitation, backgroundColor: 'rgba(16, 185, 129, 0.4)', borderColor: '#10b981', borderWidth: 1 }] },
+            data: { labels: precipCrop.labels, datasets: [{ label: 'Precip (mm)', data: precipCrop.values, backgroundColor: 'rgba(16, 185, 129, 0.4)', borderColor: '#10b981', borderWidth: 1 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'mm' } } } }
         });
         new Chart(document.getElementById('weatherWindChart'), {
             type: 'line',
-            data: { labels: wd.labels, datasets: [{ label: 'Wind Speed (km/h)', data: wd.wind_speed, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            data: { labels: windCrop.labels, datasets: [{ label: 'Wind Speed (km/h)', data: windCrop.values, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'km/h' } } } }
         });
         new Chart(document.getElementById('weatherSnowChart'), {
             type: 'bar',
-            data: { labels: wd.labels, datasets: [{ label: 'Snowfall (cm)', data: wd.snowfall, backgroundColor: 'rgba(34, 211, 238, 0.4)', borderColor: '#22d3ee', borderWidth: 1 }] },
+            data: { labels: snowCrop.labels, datasets: [{ label: 'Snowfall (cm)', data: snowCrop.values, backgroundColor: 'rgba(34, 211, 238, 0.4)', borderColor: '#22d3ee', borderWidth: 1 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'cm' } } } }
         });
     }
@@ -338,8 +456,9 @@
         const rawLabels = (state.sensors && state.sensors.trends) ? state.sensors.trends.labels : [];
 
         const continuous = buildContinuousDailySeries(rawLabels, rawData);
-        const data = continuous.values;
-        const labels = continuous.labels;
+        const globalCrop = cropSeriesToFirstNonNull(continuous.labels, continuous.values);
+        const data = globalCrop.values;
+        const labels = globalCrop.labels;
         const ctx = document.getElementById('globalTrendChart').getContext('2d');
 
         const eventMonths = (state.farming && state.farming.event_months) || {};
@@ -361,45 +480,43 @@
             yAxisID: 'y'
         }];
 
-        const weatherOpt = { tension: 0.4, pointRadius: 0, borderWidth: 1.5, fill: true };
+        const rainContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.precipitation) : { labels: [], values: [] };
+        const snowContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.snowfall) : { labels: [], values: [] };
+        const windContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.wind_speed) : { labels: [], values: [] };
 
-        if (document.getElementById('overlayRain').checked && state.weather) {
-            const wc = buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.precipitation);
-            datasets.push({
-                label: 'Rain (mm)',
-                data: wc.values,
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                yAxisID: 'yWeather',
-                ...weatherOpt
-            });
-        }
-        if (document.getElementById('overlaySnow').checked && state.weather) {
-            const wc = buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.snowfall);
-            datasets.push({
-                label: 'Snow (cm)',
-                data: wc.values,
-                borderColor: '#22d3ee',
-                backgroundColor: 'rgba(34, 211, 238, 0.1)',
-                yAxisID: 'yWeather',
-                ...weatherOpt
-            });
-        }
-        if (document.getElementById('overlayWind').checked && state.weather) {
-            const wc = buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.wind_speed);
-            datasets.push({
-                label: 'Wind (km/h)',
-                data: wc.values,
-                borderColor: '#38bdf8',
-                backgroundColor: 'rgba(56, 189, 248, 0.05)',
-                yAxisID: 'yWind',
-                ...weatherOpt
-            });
-        }
+        const mapByDate = (series) => {
+            const map = {};
+            series.labels.forEach((d, idx) => { map[d] = series.values[idx]; });
+            return map;
+        };
+
+        const weatherEvents = [
+            {
+                enabled: document.getElementById('overlayRain').checked,
+                threshold: parseFloat(document.getElementById('rainThreshold').value),
+                color: '#2563eb',
+                strokeColor: '#1d4ed8',
+                valuesByDate: mapByDate(rainContinuous)
+            },
+            {
+                enabled: document.getElementById('overlaySnow').checked,
+                threshold: parseFloat(document.getElementById('snowThreshold').value),
+                color: '#ffffff',
+                strokeColor: '#94a3b8',
+                valuesByDate: mapByDate(snowContinuous)
+            },
+            {
+                enabled: document.getElementById('overlayWind').checked,
+                threshold: parseFloat(document.getElementById('windThreshold').value),
+                color: '#6b7280',
+                strokeColor: '#4b5563',
+                valuesByDate: mapByDate(windContinuous)
+            }
+        ];
 
         globalChart = new Chart(ctx, {
             type: 'line',
-            plugins: [monthHighlightPlugin],
+            plugins: [monthHighlightPlugin, weatherEventLinePlugin],
             data: { labels: labels, datasets: datasets },
             options: {
                 ...commonOpts,
@@ -407,6 +524,7 @@
                     ...commonOpts.plugins,
                     title: { display: true, text: colName + ' Analysis with Weather Context', font: { size: 14, weight: 'bold' } },
                     monthHighlightPlugin: { months: highlightMonths },
+                    weatherEventLinePlugin: { events: weatherEvents },
                     zoom: {
                         zoom: {
                             drag: {
@@ -419,9 +537,7 @@
                 },
                 scales: {
                     ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: 'Sensor Value', font: { size: 10, weight: 'bold' } } },
-                    yWeather: { position: 'right', display: datasets.some(d => d.yAxisID === 'yWeather'), grid: { display: false }, title: { display: true, text: 'Precipitation', font: { size: 9 } } },
-                    yWind: { position: 'right', display: datasets.some(d => d.yAxisID === 'yWind'), grid: { display: false }, title: { display: true, text: 'Wind (km/h)', font: { size: 9 } } }
+                    y: { ...commonOpts.scales.y, title: { display: true, text: 'Sensor Value', font: { size: 10, weight: 'bold' } } }
                 }
             }
         });
