@@ -15,7 +15,7 @@ from train_model_lstm import WaterQualityLSTM
 
 #import model and scalers
 try:
-    lstm_model = WaterQualityLSTM(input_size=9, hidden_size=64, num_layers=2, output_size=6)
+    lstm_model = WaterQualityLSTM(input_size=9, hidden_size=128, num_layers=2, output_size=9)
     lstm_model.load_state_dict(torch.load('lstm_model.pth'))
     lstm_model.eval()
     scaler_X = joblib.load('scaler_X.pkl')
@@ -254,10 +254,9 @@ def api_predict():
     data = request.json
     days = int(data.get('days', 7))
     
-    # 6 Target columns
-    target_cols = ['Conductivité', 'NO3', 'Chlorophylle-a SCALED', 'Turbidité', 'O2 Saturation', 'pH Test']
-    # 3 Weather + 6 Targets = 9 Features
-    feature_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + target_cols
+    water_cols = ['Conductivité', 'NO3', 'MES', 'Turbidité', 'O2 Saturation', 'pH Test']
+    target_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + water_cols
+    feature_cols = target_cols
     
     steps = days * 3 
     predicted_data = {col: [] for col in target_cols}
@@ -280,7 +279,7 @@ def api_predict():
 
         # Weather integration
         df_weather = get_cached_weather()
-        df_sensor_aligned = df_sensor[target_cols].resample('8h').mean()
+        df_sensor_aligned = df_sensor[water_cols].resample('8h').mean()
         df_sensor_aligned.reset_index(inplace=True)
         
         df_weather.index = df_weather.index.tz_localize(None)
@@ -339,21 +338,23 @@ def api_predict():
         X_real_scaled = scaler_X.transform(last_90[feature_cols].values)
         current_seq_tensor = torch.tensor(X_real_scaled, dtype=torch.float32).unsqueeze(0)
 
+        # app.py の api_predict 関数内
+
+        # 推論 (Inference) ループ
         lstm_model.eval()
         with torch.no_grad():
             for step in range(steps):
                 pred_scaled = lstm_model(current_seq_tensor)
-                pred_inv = scaler_y.inverse_transform(pred_scaled.numpy())[0]
+                new_step_values = pred_scaled.detach().cpu().numpy()[0]
                 
-                for i, col in enumerate(target_cols):
-                    predicted_data[col].append(round(abs(float(pred_inv[i])), 2))
 
-                # Autoregression
-                new_step = np.zeros((9,))
-                new_step[0:3] = X_real_scaled[-1, 0:3]
-                new_step[3:] = pred_scaled.numpy()[0]
-                
-                new_step_tensor = torch.tensor(new_step, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+                pred_inv = scaler_y.inverse_transform(pred_scaled.cpu().numpy())[0]
+                for i, col in enumerate(target_cols):
+                    val = float(pred_inv[i])
+                    predicted_data[col].append(round(max(0, val), 2))
+
+                # current_seq_tensor 
+                new_step_tensor = torch.tensor(new_step_values, dtype=torch.float32).view(1, 1, -1)
                 current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
 
         return jsonify({

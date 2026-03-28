@@ -235,7 +235,10 @@
                 pointBorderColor: '#f59e0b'
             }
         ];
-        
+        let unit = 'Value';
+        if (currentActiveTab.includes('temperature')) unit = '°C';
+        else if (currentActiveTab.includes('precipitation')) unit = 'mm';
+        else if (currentActiveTab.includes('wind')) unit = 'm/s';
         // Update Y-axis title
         predictionChart.options.scales.y.title.text = currentActiveTab;
         predictionChart.update();
