@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.impute import SimpleImputer
@@ -31,7 +32,7 @@ class WaterQualityLSTM(nn.Module):
         
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :]) 
-        return out
+        return torch.sigmoid(out)
 
 
 # Sequence Generator Function
@@ -82,8 +83,8 @@ def train_and_predict():
     y = df_merged[target_cols].values
     # -------------------------------------------------------------------
     
-    scaler_X = StandardScaler()
-    scaler_y = StandardScaler()
+    scaler_X = MinMaxScaler(feature_range=(0.1, 0.9))
+    scaler_y = MinMaxScaler(feature_range=(0.1, 0.9))
     
     X_scaled = scaler_X.fit_transform(X)
     y_scaled = scaler_y.fit_transform(y)
@@ -127,6 +128,7 @@ def train_and_predict():
             outputs = model(inputs)
             loss = criterion(outputs, targets)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
         if loss < best_loss:
