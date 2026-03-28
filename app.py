@@ -254,7 +254,7 @@ def api_predict():
     data = request.json
     days = int(data.get('days', 7))
     
-    water_cols = ['Conductivité', 'NO3', 'MES', 'Turbidité', 'O2 Saturation', 'pH Test']
+    water_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
     target_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + water_cols
     feature_cols = target_cols
     
