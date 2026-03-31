@@ -585,4 +585,7 @@ def api_farming_events():
     })
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # For local development: python app.py
+    # Use LITE_MODE=true for skipping heavy libraries
+    print(f"Starting HydroLens in {'LITE' if LITE_MODE else 'AI'} mode...")
+    app.run(host="0.0.0.0", port=5000, debug=not LITE_MODE)
