@@ -28,7 +28,8 @@ def get_farming_data(csv_path='data.csv'):
         DataFrame with ``Timestamp``, ``Date`` and one binary column per
         distinct event from ``calendar``.
     """
-    df = pd.read_csv(csv_path)
+    # Only load required columns for speed optimization
+    df = pd.read_csv(csv_path, usecols=['Timestamp', 'Date'])
 
     required_cols = ['Timestamp', 'Date']
     missing_cols = [col for col in required_cols if col not in df.columns]
@@ -49,19 +50,22 @@ def get_farming_data(csv_path='data.csv'):
     
     month_series = parsed_date.dt.month.fillna(timestamp_dt.dt.month)
 
-    # Keep event order as first encountered in the calendar dictionary.
-    distinct_events = []
-    seen_events = set()
-    for month in sorted(calendar.keys()):
-        for event in calendar[month]:
-            if event not in seen_events:
-                seen_events.add(event)
-                distinct_events.append(event)
+    # Pre-calculate active months for each event to avoid slow lambda applies
+    event_month_map = {}
+    for month, events in calendar.items():
+        for event in events:
+            if event not in event_month_map:
+                event_month_map[event] = []
+            event_month_map[event].append(month)
 
-    for event in distinct_events:
-        out[event] = month_series.apply(
-            lambda month: 1 if pd.notna(month) and event in calendar.get(int(month), []) else 0
-        ).astype(int)
+    # Convert month_series to integer where possible, safely.
+    # We use a helper mask since month_series might have NaN
+    month_int_series = month_series.fillna(0).astype(int)
+    
+    for event in event_month_map.keys():
+        active_months = event_month_map.get(event, [])
+        # Vectorized check: is the month in the list of active months for this event?
+        out[event] = month_int_series.isin(active_months).astype(int)
 
     return out
 
