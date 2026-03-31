@@ -5,13 +5,15 @@
     <div class="flex justify-between items-center">
         <div>
             <h1 class="font-headline text-2xl font-bold text-primary">Data Connectors</h1>
-            <p class="text-on-surface-variant text-xs mt-1">Status of live and archival telemetry streams</p>
+            <p class="text-on-surface-variant text-xs mt-1">Operational window: <span
+                    class="font-bold text-primary">August 2025 – Present</span></p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex flex-col items-end gap-1">
             <span
                 class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span> ALL SYSTEMS ONLINE
             </span>
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sync resolution: 8 Hours</p>
         </div>
     </div>
 
@@ -62,9 +64,10 @@
                         <span class="material-symbols-outlined text-emerald-600 text-3xl">cloud_sync</span>
                     </div>
                     <div>
-                        <h3 class="font-headline font-bold text-primary text-lg">Weather Archive</h3>
-                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">External API
-                            (Open-Meteo)</p>
+                        <h3 class="font-headline font-bold text-primary text-lg">Meteorological Data</h3>
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Source: <a
+                                href="https://open-meteo.com" target="_blank"
+                                class="text-emerald-600 underline">Open-Meteo API</a></p>
                     </div>
                 </div>
                 <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded">ACTIVE</span>
@@ -72,26 +75,72 @@
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Sync Interval</p>
-                    <p class="text-xl font-bold text-primary">8 hours</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Time Window</p>
+                    <p class="text-[11px] font-bold text-primary">Since 08/2025</p>
                 </div>
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Correlation Status</p>
-                    <p class="text-xl font-bold text-primary text-emerald-600">Sync'd</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Sync Status</p>
+                    <p class="text-[11px] font-bold text-emerald-600">Archived</p>
                 </div>
             </div>
 
             <div class="space-y-3">
                 <p class="text-[10px] font-bold text-on-surface-variant uppercase">Mapped Variables</p>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center text-[11px]">
-                        <span class="text-on-surface-variant">temperature_2m</span>
-                        <span class="bg-sky-50 text-sky-700 px-2 py-0.5 rounded">Active</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
+                        <span class="text-on-surface-variant">Temperature (2m)</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     </div>
-                    <div class="flex justify-between items-center text-[11px]">
-                        <span class="text-on-surface-variant">precipitation</span>
-                        <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">Active</span>
+                    <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
+                        <span class="text-on-surface-variant">Precipitation</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     </div>
+                    <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
+                        <span class="text-on-surface-variant">Wind Speed</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
+                        <span class="text-on-surface-variant">Snowfall</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hydro Data Connector (Hydro.eaufrance) -->
+        <div
+            class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-l-4 border-amber-500">
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+                        <span class="material-symbols-outlined text-amber-600 text-3xl">waves</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline font-bold text-primary text-lg">Hydrometric Flows</h3>
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Source: <a
+                                href="https://hydro.eaufrance.fr" target="_blank"
+                                class="text-amber-600 underline">Hydro.eaufrance.fr</a></p>
+                    </div>
+                </div>
+                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded">CONNECTED</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-surface p-3 rounded-lg text-center">
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Data Frequency</p>
+                    <p class="text-[11px] font-bold text-primary">Daily Average</p>
+                </div>
+                <div class="bg-surface p-3 rounded-lg text-center">
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Station ID</p>
+                    <p class="text-[11px] font-bold text-primary">Nancy Site</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Archived Streams</p>
+                <div class="flex justify-between items-center text-[10px] bg-slate-50 p-2 rounded">
+                    <span class="text-on-surface-variant">Throughput (Debit L/s)</span>
+                    <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">Stream A-1</span>
                 </div>
             </div>
         </div>
@@ -121,13 +170,15 @@
     </section>
 
     <!-- Agricultural Calendar -->
-    <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-l-4 border-l-emerald-400">
+    <section
+        class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-l-4 border-l-emerald-400">
         <h2 class="font-headline font-bold text-primary text-lg mb-6">Agricultural Calendar - Water Quality Impact</h2>
         <p class="text-[11px] text-on-surface-variant mb-6">Monthly agricultural activities affecting water quality</p>
-        
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- January -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">January</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Slurry spreading</div>
@@ -135,7 +186,8 @@
             </div>
 
             <!-- February -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">February</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Fertilizer</div>
@@ -144,7 +196,8 @@
             </div>
 
             <!-- March -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">March</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Fertilizer</div>
@@ -153,7 +206,8 @@
             </div>
 
             <!-- April -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">April</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Pesticides</div>
@@ -162,7 +216,8 @@
             </div>
 
             <!-- May -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">May</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Pesticides</div>
@@ -171,7 +226,8 @@
             </div>
 
             <!-- June -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">June</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Pesticides</div>
@@ -179,7 +235,8 @@
             </div>
 
             <!-- July -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">July</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Bare soils after harvest</div>
@@ -187,7 +244,8 @@
             </div>
 
             <!-- August -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">August</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Stubble tillage</div>
@@ -196,8 +254,10 @@
             </div>
 
             <!-- September -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">September</p>
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">September
+                </p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Corn harvest</div>
                     <div class="text-[9px] text-on-surface-variant">• Soil work</div>
@@ -205,7 +265,8 @@
             </div>
 
             <!-- October -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">October</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Sowing + Fertilizer</div>
@@ -214,7 +275,8 @@
             </div>
 
             <!-- November -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">November</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Plowed soils</div>
@@ -222,7 +284,8 @@
             </div>
 
             <!-- December -->
-            <div class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
+            <div
+                class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
                 <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">December</p>
                 <div class="space-y-1">
                     <div class="text-[9px] text-on-surface-variant">• Slurry spreading</div>
@@ -231,34 +294,27 @@
         </div>
     </section>
 
-    <!-- Integration Architecture -->
+    <!-- Data Origin Section -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-        <h2 class="font-headline font-bold text-primary text-lg mb-6">Integration Architecture</h2>
-        <div class="flex flex-col md:flex-row items-center justify-between gap-8 py-8 relative">
-            <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 z-0"></div>
-
-            <div class="z-10 bg-white border border-slate-200 p-4 rounded-xl w-48 text-center shadow-sm">
-                <p class="text-[10px] font-bold text-sky-600 mb-1">SOURCE A</p>
-                <p class="text-xs font-bold">Local Storage (CSV)</p>
-                <p class="text-[9px] text-slate-400">data_handler.py</p>
+        <h2 class="font-headline font-bold text-primary text-lg mb-4">Official Data Sources</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="p-4 rounded-lg bg-slate-50 border border-slate-100">
+                <p class="text-[10px] font-black text-sky-600 uppercase mb-2">Water Quality</p>
+                <p class="text-xs font-bold text-primary mb-1">Local ECHO Station</p>
+                <p class="text-[10px] text-slate-500 leading-relaxed">High-resolution sensor telemetry collected
+                    on-site. Measurements include Conductivity, NO3, Turbidity, and O2 levels.</p>
             </div>
-
-            <div class="z-10 bg-white border border-slate-200 p-4 rounded-xl w-48 text-center shadow-sm">
-                <p class="text-[10px] font-bold text-emerald-600 mb-1">SOURCE B</p>
-                <p class="text-xs font-bold">Open-Meteo REST API</p>
-                <p class="text-[9px] text-slate-400">Direct HTTPS (8h)</p>
+            <div class="p-4 rounded-lg bg-slate-50 border border-slate-100">
+                <p class="text-[10px] font-black text-emerald-600 uppercase mb-2">Atmospheric Drivers</p>
+                <p class="text-xs font-bold text-primary mb-1">Open-Meteo Weather API</p>
+                <p class="text-[10px] text-slate-500 leading-relaxed">Meteorological archives providing temperature,
+                    wind, and precipitation data synchronized with sensor timestamps.</p>
             </div>
-
-            <div class="z-10 bg-primary p-4 rounded-xl w-56 text-center shadow-lg border-2 border-primary-container">
-                <p class="text-[10px] font-bold text-sky-200 mb-1">REFINERY</p>
-                <p class="text-xs font-bold text-white uppercase">Data Refinery</p>
-                <p class="text-[9px] text-sky-200/70">Cleaning & Resampling</p>
-            </div>
-
-            <div class="z-10 bg-white border border-slate-200 p-4 rounded-xl w-48 text-center shadow-sm">
-                <p class="text-[10px] font-bold text-slate-500 mb-1">CONSUMER</p>
-                <p class="text-xs font-bold text-primary">Web Dashboard</p>
-                <p class="text-[9px] text-slate-400">Jinja2 Reactive UI</p>
+            <div class="p-4 rounded-lg bg-slate-50 border border-slate-100">
+                <p class="text-[10px] font-black text-amber-600 uppercase mb-2">River Dynamics</p>
+                <p class="text-xs font-bold text-primary mb-1">Hydro.eaufrance.fr</p>
+                <p class="text-[10px] text-slate-500 leading-relaxed">Official French hydrometric throughput (flow) data
+                    used for cross-correlation with local water turbidity and nitrate spikes.</p>
             </div>
         </div>
     </section>

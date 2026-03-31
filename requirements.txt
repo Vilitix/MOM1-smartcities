@@ -8,4 +8,4 @@ torch
 scikit-learn
 matplotlib
 joblib
-gunicorn
+waitress
