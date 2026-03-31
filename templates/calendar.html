@@ -95,8 +95,7 @@
 
     async function loadEvents() {
         try {
-            const res = await fetch('/api/events');
-            events = await res.json();
+            events = await window.HydroLensCache.getJSON('/api/events', { ttlMs: 60 * 1000 });
             renderFullCalendar();
         } catch (e) {
             console.error('Failed to load events', e);
@@ -184,6 +183,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newEvt)
         });
+        window.HydroLensCache.invalidate('/api/events');
         
         document.getElementById('evt-title').value = '';
         loadEvents();
@@ -191,6 +191,7 @@
 
     async function removeEvent(id) {
         await fetch(`/api/events/${id}`, { method: 'DELETE' });
+        window.HydroLensCache.invalidate('/api/events');
         loadEvents();
     }
 

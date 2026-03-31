@@ -275,10 +275,10 @@
     };
 
     Promise.all([
-        fetch('/api/weather').then(r => r.json()),
-        fetch('/api/sensor-data').then(r => r.json()),
-        fetch('/api/farming-events').then(r => r.json()),
-        fetch('/api/hydro-data').then(r => r.json())
+        window.HydroLensCache.getJSON('/api/weather'),
+        window.HydroLensCache.getJSON('/api/sensor-data'),
+        window.HydroLensCache.getJSON('/api/farming-events'),
+        window.HydroLensCache.getJSON('/api/hydro-data').catch(() => ({ labels: [], throughput: [] }))
     ]).then(([weather, sensors, farming, hydro]) => {
         state.weather = weather;
         state.sensors = sensors;
@@ -305,6 +305,11 @@
 
         initCharts();
         updateGlobalChart();
+    }).catch((err) => {
+        const loading = document.getElementById('loading');
+        if (loading) {
+            loading.innerHTML = `<p class="text-error text-sm font-bold">Failed to load analysis data: ${err.message}</p>`;
+        }
     });
 
     function updateThresholdLabel(type) {

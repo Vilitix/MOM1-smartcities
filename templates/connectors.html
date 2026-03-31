@@ -268,8 +268,7 @@
 {% block scripts %}
 <script>
     function fetchSensorData() {
-        fetch('/api/sensor-data')
-            .then(r => r.json())
+        window.HydroLensCache.getJSON('/api/sensor-data')
             .then(data => {
                 if (data.error) throw new Error(data.error);
 

@@ -109,6 +109,7 @@
         })
         .then(response => response.json())
         .then(result => {
+            window.HydroLensCache.invalidate('/api/events');
             btn.innerHTML = originalText;
             btn.disabled = false;
             status.textContent = "Report submitted and added to calendar.";

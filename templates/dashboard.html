@@ -113,9 +113,9 @@
     };
 
     Promise.all([
-        fetch('/api/weather').then(r => r.json()),
-        fetch('/api/sensor-data').then(r => r.json()),
-        fetch('/api/events').then(r => r.json())
+        window.HydroLensCache.getJSON('/api/weather'),
+        window.HydroLensCache.getJSON('/api/sensor-data'),
+        window.HydroLensCache.getJSON('/api/events', { ttlMs: 60 * 1000 })
     ]).then(([weather, sensors, events]) => {
         state.weather = weather;
         state.sensors = sensors;

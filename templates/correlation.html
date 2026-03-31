@@ -102,8 +102,8 @@
     let ccfChart2 = null;
 
     Promise.all([
-        fetch('/api/weather').then(r => r.json()),
-        fetch('/api/sensor-data').then(r => r.json())
+        window.HydroLensCache.getJSON('/api/weather'),
+        window.HydroLensCache.getJSON('/api/sensor-data')
     ]).then(([weatherParams, sensorParams]) => {
         state.weather = weatherParams.daily;
         state.sensors = sensorParams.trends;

@@ -237,6 +237,108 @@
         class="fixed bottom-0 w-full z-50 flex justify-between px-8 items-center bg-sky-900 text-white h-8 font-inter text-[10px] uppercase tracking-widest shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
     </footer>
 
+    <script>
+        window.HydroLensCache = (() => {
+            const memoryCache = {};
+            const prefix = 'hydrolens:api:';
+
+            function nowMs() {
+                return Date.now();
+            }
+
+            function storageKey(url) {
+                return prefix + url;
+            }
+
+            function readFromStorage(url) {
+                try {
+                    const raw = sessionStorage.getItem(storageKey(url));
+                    if (!raw) return null;
+                    return JSON.parse(raw);
+                } catch (_) {
+                    return null;
+                }
+            }
+
+            function writeToStorage(url, entry) {
+                try {
+                    sessionStorage.setItem(storageKey(url), JSON.stringify(entry));
+                } catch (_) {
+                    // Ignore storage quota/privacy mode errors.
+                }
+            }
+
+            function removeFromStorage(url) {
+                try {
+                    sessionStorage.removeItem(storageKey(url));
+                } catch (_) {
+                    // Ignore storage errors.
+                }
+            }
+
+            async function getJSON(url, options = {}) {
+                const ttlMs = Number.isFinite(options.ttlMs) ? options.ttlMs : 10 * 60 * 1000;
+                const forceRefresh = options.forceRefresh === true;
+                const currentTime = nowMs();
+
+                if (!forceRefresh) {
+                    const mem = memoryCache[url];
+                    if (mem && mem.expiresAt > currentTime) return mem.payload;
+
+                    const persisted = readFromStorage(url);
+                    if (persisted && persisted.expiresAt > currentTime) {
+                        memoryCache[url] = persisted;
+                        return persisted.payload;
+                    }
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch ' + url + ' (' + response.status + ')');
+                }
+                const payload = await response.json();
+
+                const entry = {
+                    payload,
+                    expiresAt: currentTime + ttlMs
+                };
+                memoryCache[url] = entry;
+                writeToStorage(url, entry);
+                return payload;
+            }
+
+            function invalidate(url) {
+                delete memoryCache[url];
+                removeFromStorage(url);
+            }
+
+            async function prefetch(urls, optionsByUrl = {}) {
+                const tasks = urls.map((url) => getJSON(url, optionsByUrl[url] || {}));
+                return Promise.allSettled(tasks);
+            }
+
+            return { getJSON, invalidate, prefetch };
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const prefetchFlag = 'hydrolens:prefetch:v1';
+            try {
+                if (sessionStorage.getItem(prefetchFlag)) return;
+                sessionStorage.setItem(prefetchFlag, '1');
+            } catch (_) {
+                // If storage is unavailable, still attempt prefetch for this page load.
+            }
+
+            window.HydroLensCache.prefetch([
+                '/api/weather',
+                '/api/sensor-data',
+                '/api/farming-events',
+                '/api/hydro-data',
+                '/api/events'
+            ]);
+        });
+    </script>
+
     {% block scripts %}{% endblock %}
 </body>
 

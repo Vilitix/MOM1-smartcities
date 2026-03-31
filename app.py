@@ -59,12 +59,19 @@ LON = 6.204775
 # Global cache for sensor data
 _df_sensor = None
 _numeric_cols = []
+_sensor_data_mtime = None
 
 def get_processed_sensor_data():
     """Load and return processed sensor data from data_handler."""
-    global _df_sensor, _numeric_cols
-    # Re-loading every time for now as requested or until we add a proper trigger
-    _df_sensor, _numeric_cols = load_and_clean_data("data.csv")
+    global _df_sensor, _numeric_cols, _sensor_data_mtime
+    file_path = "data.csv"
+    current_mtime = os.path.getmtime(file_path) if os.path.exists(file_path) else None
+
+    # Reload only if cache is empty or source file changed.
+    if _df_sensor is None or _numeric_cols is None or _sensor_data_mtime != current_mtime:
+        _df_sensor, _numeric_cols = load_and_clean_data(file_path)
+        _sensor_data_mtime = current_mtime
+
     return _df_sensor, _numeric_cols
 
 def get_cached_weather():
