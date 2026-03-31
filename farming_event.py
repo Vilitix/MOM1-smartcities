@@ -40,6 +40,13 @@ def get_farming_data(csv_path='data.csv'):
     # Parse month from Date first; fallback to Unix Timestamp when needed.
     parsed_date = pd.to_datetime(out['Date'], format='%d/%m-%y %H:%M:%S', errors='coerce')
     timestamp_dt = pd.to_datetime(out['Timestamp'], unit='s', errors='coerce')
+    
+    # Filter since August 2025 for performance
+    mask = parsed_date >= '2025-08-01'
+    out = out[mask].copy()
+    parsed_date = parsed_date[mask]
+    timestamp_dt = timestamp_dt[mask]
+    
     month_series = parsed_date.dt.month.fillna(timestamp_dt.dt.month)
 
     # Keep event order as first encountered in the calendar dictionary.

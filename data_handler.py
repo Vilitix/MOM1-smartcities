@@ -21,6 +21,9 @@ def load_and_clean_data(file_path="data.csv"):
         df = df.dropna(subset=['datetime'])
         df.set_index('datetime', inplace=True)
         
+        # Filter data from August 2025 onwards for performance optimization
+        df = df[df.index >= '2025-08-01']
+        
         # Drop the original string 'Date' and 'Timestamp' columns as we have the datetime index
         # This prevents them from interfering with numeric operations
         cols_to_drop = [c for c in ['Date', 'Timestamp'] if c in df.columns]

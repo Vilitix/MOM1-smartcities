@@ -9,23 +9,43 @@ import json
 import io
 import sqlite3
 import os
-import torch
-import joblib
-from train_model_lstm import WaterQualityLSTM
+import sys
+import time
 
-#import model and scalers
-try:
-    lstm_model = WaterQualityLSTM(input_size=9, hidden_size=128, num_layers=2, output_size=9)
-    lstm_model.load_state_dict(torch.load('lstm_model.pth'))
-    lstm_model.eval()
-    scaler_X = joblib.load('scaler_X.pkl')
-    scaler_y = joblib.load('scaler_y.pkl')
-    MODEL_READY = True
-except Exception as e:
-    print(f"Model load failed: {e}")
-    MODEL_READY = False
+# --- Lite Mode Detection ---
+# Enable if LITE_MODE environment variable is set OR if "lite" is in command line arguments
+LITE_MODE = (os.environ.get("LITE_MODE", "false").lower() == "true" or 
+             "lite" in sys.argv)
+
+# Placeholder variables for AI model
+MODEL_READY = False
+lstm_model = None
+scaler_X = None
+scaler_y = None
+
+# Conditionally import Heavy AI libraries
+if not LITE_MODE:
+    try:
+        import torch
+        import joblib
+        from train_model_lstm import WaterQualityLSTM
+
+        #import model and scalers
+        lstm_model = WaterQualityLSTM(input_size=9, hidden_size=128, num_layers=2, output_size=9)
+        lstm_model.load_state_dict(torch.load('lstm_model.pth', map_location=torch.device('cpu')))
+        lstm_model.eval()
+        scaler_X = joblib.load('scaler_X.pkl')
+        scaler_y = joblib.load('scaler_y.pkl')
+        MODEL_READY = True
+    except Exception as e:
+        print(f"AI Model load failed: {e}")
+        MODEL_READY = False
 
 app = Flask(__name__)
+
+@app.context_processor
+def inject_lite_mode():
+    return dict(lite_mode=LITE_MODE)
 
 # --- Database Setup ---
 DB_FILE = "events.db"
@@ -69,14 +89,20 @@ def get_processed_sensor_data():
 
     # Reload only if cache is empty or source file changed.
     if _df_sensor is None or _numeric_cols is None or _sensor_data_mtime != current_mtime:
+        start = time.time()
+        print(f"[DEBUG] Sensor reload starting from {file_path}...")
         _df_sensor, _numeric_cols = load_and_clean_data(file_path)
         _sensor_data_mtime = current_mtime
+        print(f"[DEBUG] Sensor reload COMPLETED in {time.time() - start:.3f}s (Rows: {len(_df_sensor)})")
 
     return _df_sensor, _numeric_cols
 
 def get_cached_weather():
     """Fetch weather data (cached by requests_cache in weather.py)."""
-    return get_weather_data(lat=LAT, lon=LON, days=365)
+    start = time.time()
+    res = get_weather_data(lat=LAT, lon=LON, days=365)
+    print(f"[DEBUG] Weather Fetch took {time.time() - start:.3f}s")
+    return res
 
 # --- Pages ---
 
@@ -157,6 +183,7 @@ def submit_report():
 @app.route("/api/weather")
 def api_weather():
     """Return weather data as JSON for Chart.js."""
+    start = time.time()
     df = get_cached_weather()
     
     # Latest values
@@ -258,6 +285,7 @@ def api_predict():
     if not MODEL_READY:
         return jsonify({"error": "Model not initialized"}), 500
 
+    start_total = time.time()
     data = request.json
     days = int(data.get('days', 7))
     
@@ -283,6 +311,9 @@ def api_predict():
         except:
             df_sensor['Datetime'] = pd.to_datetime(df_sensor['Date'], format='mixed', dayfirst=True)
         df_sensor.set_index('Datetime', inplace=True)
+        
+        # Filter since 2025-08 for speed
+        df_sensor = df_sensor[df_sensor.index >= '2025-08-01']
 
         # Weather integration
         df_weather = get_cached_weather()
@@ -364,6 +395,7 @@ def api_predict():
                 new_step_tensor = torch.tensor(new_step_values, dtype=torch.float32).view(1, 1, -1)
                 current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
 
+        print(f"[DEBUG] Prediction total cycle took {time.time() - start_total:.3f}s")
         return jsonify({
             "status": "success",
             "targets": target_cols,
@@ -395,6 +427,7 @@ def api_export():
 @app.route("/api/correlation")
 def api_correlation():
     """Return correlation matrix of all numeric sensor parameters and weather events."""
+    start = time.time()
     df, numeric_cols = get_processed_sensor_data()
     if df.empty or len(numeric_cols) == 0:
         return jsonify({"error": "No data found"}), 404
@@ -430,6 +463,7 @@ def api_correlation():
     corr_matrix = corr_matrix.replace({np.nan: None})
     corr_matrix = corr_matrix.to_dict()
     
+    print(f"[DEBUG] Correlation compute took {time.time() - start:.3f}s")
     return jsonify({
         "columns": all_numeric_cols,
         "matrix": corr_matrix
@@ -479,6 +513,7 @@ def api_sensor_data():
 @app.route("/api/hydro-data")
 def api_hydro_data():
     """Return hydrometric throughput (flow) data from export_hydro_series.csv."""
+    start = time.time()
     file_path = "export_hydro_series.csv"
     if not os.path.exists(file_path):
         return jsonify({"error": "Hydro data file not found."}), 404
@@ -501,9 +536,13 @@ def api_hydro_data():
         
         df_clean.set_index('DtObsHydro', inplace=True)
         
-        # Resample daily (mean)
-        df_daily = df_clean['ResObsHydro'].resample('D').mean()
+        # Filter from 2025-08-01 onwards for speed
+        df_filtered = df_clean[df_clean.index >= '2025-08-01']
         
+        # Resample daily (mean)
+        df_daily = df_filtered['ResObsHydro'].resample('D').mean()
+        
+        print(f"[DEBUG] Hydro Data Processing took {time.time() - start:.3f}s")
         return jsonify({
             "labels": df_daily.index.strftime("%Y-%m-%d").tolist(),
             "throughput": [round(float(v), 2) if pd.notna(v) else None for v in df_daily.values]
@@ -515,6 +554,7 @@ def api_hydro_data():
 @app.route("/api/farming-events")
 def api_farming_events():
     """Return farming events list and active months derived from farming_event DataFrame."""
+    start = time.time()
     farming_df = get_farming_data("data.csv")
 
     event_cols = [col for col in farming_df.columns if col not in ["Timestamp", "Date"]]
@@ -538,6 +578,7 @@ def api_farming_events():
         )
         event_months[event] = active_months
 
+    print(f"[DEBUG] Farming Events processing took {time.time() - start:.3f}s")
     return jsonify({
         "events": event_cols,
         "event_months": event_months
