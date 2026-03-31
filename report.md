@@ -7,3 +7,17 @@ Consequently, the core business case has shifted from agricultural productivity 
 The chemical balance of the soil is further compromised by the use of de-icing salts. Sodium ions from salt displace essential nutrients like calcium and magnesium within the clay-humus complex. This displacement triggers clay dispersion, leading to soil compaction, loss of air and water permeability, and a significant increase in pH (alkalization). These structural changes in the soil also directly impact regional ecology; sodium breaks down the soil's organic structure, releasing humus and organic compounds that were previously sequestered.
 
 Finally, we observe a strong correlation between de-icing salt usage and spikes in Colored Dissolved Organic Matter (CDOM). Salt not only degrades the soil structure but also accumulates in fallen vegetation. During snowmelt, the resulting runoff leaches these degraded soils and decomposing organic matter into the river system. This influx of organic acids and tannins causes CDOM levels to climb, further straining the aquatic environment. In summary, monitoring markers like phycocyanine (toxic algae) and Biochemical Oxygen Demand (BOD/DBO) remains critical to preventing the total asphyxiation of local aquatic ecosystems.
+
+
+Map logistic, water drinkable agriculture we did focus on la Meurthe provide, show relevance for stakeholder city, aqua monitoring system to convince new customers or partners  focus on exemple,  deploy demo videos shoking fact in a report. Distribute talking time, 
+
+15 minutes wednesday use question as topic for the presentation  points on the questoin so they need to be answered on the soutenance 
+
+
+report videos demos how  
+
+
+after demos advice 
+
+
+corosive salt / nitrates  maybe find erosions stats online

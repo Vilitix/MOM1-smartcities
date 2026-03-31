@@ -2,13 +2,24 @@
 {% block title %}Prediction{% endblock %}
 {% block content %}
 
+{% if lite_mode %}
+<div class="flex flex-col items-center justify-center pt-24 pb-12 w-full text-center">
+    <span class="material-symbols-outlined text-6xl text-slate-300 mb-4"
+        style="font-variation-settings: 'FILL' 1;">dns</span>
+    <h2 class="font-headline text-3xl font-black text-primary tracking-tight mb-2">Prediction Module Unavailable</h2>
+    <p class="text-on-surface-variant max-w-md mx-auto">Closed for this deployment. Need a GPU deployment to use it.</p>
+</div>
+{% else %}
+
 <div class="space-y-8 animate-fade-in pb-12">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
             <h1 class="font-headline text-3xl font-black text-primary tracking-tight">Water Quality Prediction</h1>
-            <p class="text-on-surface-variant font-medium mt-2 max-w-3xl">AI-driven forecasting utilizing LSTM networks to predict multiple water parameters based on meteorological and agricultural events.</p>
+            <p class="text-on-surface-variant font-medium mt-2 max-w-3xl">AI-driven forecasting utilizing LSTM networks
+                to predict multiple water parameters based on meteorological and agricultural events.</p>
         </div>
-        <div class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200">
+        <div
+            class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200">
             <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
             <span class="text-[10px] font-bold uppercase tracking-wider">Model Status: Active</span>
         </div>
@@ -17,14 +28,17 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-8 space-y-6">
             <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-                
-                <div class="flex overflow-x-auto gap-2 mb-6 pb-2 border-b border-slate-100 scrollbar-hide" id="parameter-tabs">
-                    </div>
+
+                <div class="flex overflow-x-auto gap-2 mb-6 pb-2 border-b border-slate-100 scrollbar-hide"
+                    id="parameter-tabs">
+                </div>
 
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 id="forecast-title" class="font-headline font-bold text-primary text-lg">7-Day Forecast: Loading...</h2>
-                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Historical Data vs. LSTM Prediction</p>
+                        <h2 id="forecast-title" class="font-headline font-bold text-primary text-lg">7-Day Forecast:
+                            Loading...</h2>
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Historical
+                            Data vs. LSTM Prediction</p>
                     </div>
                     <div class="flex gap-4">
                         <div class="flex items-center gap-2">
@@ -37,7 +51,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="chart-container" style="height: 350px;">
                     <canvas id="predictionChart"></canvas>
                 </div>
@@ -50,39 +64,54 @@
                 </div>
                 <div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/20">
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Confidence Interval</p>
-                    <p class="text-2xl font-extrabold text-primary" id="metric-conf">--<span class="text-sm font-medium text-slate-500 ml-1">%</span></p>
+                    <p class="text-2xl font-extrabold text-primary" id="metric-conf">--<span
+                            class="text-sm font-medium text-slate-500 ml-1">%</span></p>
                 </div>
                 <div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/20">
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Forecast Window</p>
-                    <p class="text-2xl font-extrabold text-amber-600" id="metric-window">7<span class="text-sm font-medium text-slate-500 ml-1">Days</span></p>
+                    <p class="text-2xl font-extrabold text-amber-600" id="metric-window">7<span
+                            class="text-sm font-medium text-slate-500 ml-1">Days</span></p>
                 </div>
             </section>
         </div>
-    
-        
+
+
         <div class="lg:col-span-4 space-y-6">
-            <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-l-4 border-sky-400">
+            <section
+                class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-l-4 border-sky-400">
                 <h3 class="font-headline font-bold text-primary mb-2 text-sm uppercase">Model Input Features</h3>
-                <p class="text-[10px] text-on-surface-variant mb-4">The LSTM model analyzes the past 30 days of the following 9 variables to generate predictions.</p>
-                
+                <p class="text-[10px] text-on-surface-variant mb-4">The LSTM model analyzes the past 30 days of the
+                    following 9 variables to generate predictions.</p>
+
                 <div class="space-y-2">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">Weather Drivers</p>
+                    <p
+                        class="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">
+                        Weather Drivers</p>
                     <ul class="text-[11px] space-y-1 text-slate-700">
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Air Temperature (2m)</li>
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Precipitation</li>
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Wind Speed (10m)</li>
+                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                            Air Temperature (2m)</li>
+                        <li class="flex items-center gap-2"><span
+                                class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Precipitation</li>
+                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                            Wind Speed (10m)</li>
                     </ul>
-                    
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1 mt-4">Water Quality Drivers</p>
+
+                    <p
+                        class="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1 mt-4">
+                        Water Quality Drivers</p>
                     <ul class="text-[11px] space-y-1 text-slate-700">
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Conductivity & NO3</li>
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> MES & Turbidity</li>
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> O2 Saturation & pH Level</li>
+                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                            Conductivity & NO3</li>
+                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                            MES & Turbidity</li>
+                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> O2
+                            Saturation & pH Level</li>
                     </ul>
                 </div>
             </section>
 
-            <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-t-4 border-primary">
+            <section
+                class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-t-4 border-primary">
                 <h3 class="font-headline font-bold text-primary mb-2">Simulation Parameters</h3>
                 <!-- <p class="text-[11px] text-on-surface-variant mb-6">Toggle environmental and agricultural flags to see how they impact the LSTM prediction model.</p> -->
 
@@ -110,15 +139,18 @@
                     </div> -->
 
                     <div>
-                        <label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-2">Prediction Window (Days)</label>
-                        <select id="daysSelect" class="w-full bg-surface-container-high border-none rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary font-bold text-primary">
+                        <label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-2">Prediction
+                            Window (Days)</label>
+                        <select id="daysSelect"
+                            class="w-full bg-surface-container-high border-none rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary font-bold text-primary">
                             <option value="3">3 Days</option>
                             <option value="7" selected>7 Days</option>
                             <option value="14">14 Days</option>
                         </select>
                     </div>
 
-                    <button type="button" onclick="runSimulation()" class="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 mt-4">
+                    <button type="button" onclick="runSimulation()"
+                        class="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 mt-4">
                         <span class="material-symbols-outlined text-sm">model_training</span>
                         Run Simulation
                     </button>
@@ -127,9 +159,11 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
+{% if not lite_mode %}
 <script>
     let predictionChart = null;
     let globalData = { historical: {}, predicted: {}, targets: [] };
@@ -142,7 +176,7 @@
             type: 'line',
             data: { labels: [], datasets: [] },
             options: {
-                responsive: true, 
+                responsive: true,
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
@@ -164,14 +198,14 @@
     function renderTabs() {
         const container = document.getElementById('parameter-tabs');
         container.innerHTML = '';
-        
+
         globalData.targets.forEach(target => {
             const btn = document.createElement('button');
             const isActive = target === currentActiveTab;
-            
+
             btn.className = `px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${isActive ? 'bg-primary text-white shadow-md' : 'bg-surface-container-low text-slate-500 hover:bg-slate-200'}`;
             btn.textContent = target;
-            
+
             btn.onclick = () => {
                 currentActiveTab = target;
                 renderTabs(); // Re-render to update active styling
@@ -182,13 +216,13 @@
     }
 
     // Update the chart datasets based on the currently selected tab
-    
+
     function updateChartDisplay() {
         if (!globalData.targets.length) return;
 
         const hist = globalData.historical[currentActiveTab] || [];
         const pred = globalData.predicted[currentActiveTab] || [];
-        
+
         // Use real labels from backend instead of generating new Date()
         const labels = (globalData.historical_labels || []).concat(globalData.predicted_labels || []);
 
@@ -221,7 +255,7 @@
                 pointBorderColor: '#f59e0b'
             }
         ];
-        
+
         // Update Y-axis title
         predictionChart.options.scales.y.title.text = currentActiveTab;
         predictionChart.update();
@@ -236,18 +270,18 @@
     async function runSimulation() {
         const btn = document.querySelector('button[onclick="runSimulation()"]');
         const originalHtml = btn.innerHTML;
-        
+
         // const hasSnowmelt = document.getElementById('flagSnowmelt').checked;
         // const hasFertilizer = document.getElementById('flagFertilizer').checked;
 
         btn.innerHTML = '<div class="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white mr-2"></div> Running LSTM...';
         btn.disabled = true;
         btn.classList.add('opacity-80', 'cursor-not-allowed');
-        
+
         const hasSnowmelt = document.getElementById('flagSnowmelt').checked;
         const hasFertilizer = document.getElementById('flagFertilizer').checked;
         const days = document.getElementById('daysSelect').value;
-        
+
         try {
             const response = await fetch('/api/predict', {
                 method: 'POST',
@@ -258,12 +292,12 @@
                     fertilizer: hasFertilizer
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.status === 'success') {
                 globalData = result; // Save to global object
-                
+
                 // Ensure currentActiveTab is valid
                 if (!globalData.targets.includes(currentActiveTab)) {
                     currentActiveTab = globalData.targets[0];
@@ -271,7 +305,7 @@
 
                 document.getElementById('metric-rmse').innerHTML = `${result.rmse}<span class="text-sm font-medium text-slate-500 ml-1"></span>`;
                 document.getElementById('metric-conf').innerHTML = `${result.confidence}<span class="text-sm font-medium text-slate-500 ml-1">%</span>`;
-                
+
                 renderTabs();
                 updateChartDisplay();
             } else {
@@ -296,4 +330,5 @@
 
     document.addEventListener('DOMContentLoaded', initChart);
 </script>
+{% endif %}
 {% endblock %}

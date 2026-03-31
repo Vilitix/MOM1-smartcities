@@ -9,20 +9,27 @@ import json
 import io
 import sqlite3
 import os
-import torch
-import joblib
-from train_model_lstm import WaterQualityLSTM
+import sys
 
-#import model and scalers
-try:
-    lstm_model = WaterQualityLSTM(input_size=9, hidden_size=64, num_layers=2, output_size=6)
-    lstm_model.load_state_dict(torch.load('lstm_model.pth'))
-    lstm_model.eval()
-    scaler_X = joblib.load('scaler_X.pkl')
-    scaler_y = joblib.load('scaler_y.pkl')
-    MODEL_READY = True
-except Exception as e:
-    print(f"Model load failed: {e}")
+LITE_MODE = 'lite' in sys.argv
+
+if not LITE_MODE:
+    import torch
+    import joblib
+    from train_model_lstm import WaterQualityLSTM
+
+    #import model and scalers
+    try:
+        lstm_model = WaterQualityLSTM(input_size=9, hidden_size=64, num_layers=2, output_size=6)
+        lstm_model.load_state_dict(torch.load('lstm_model.pth'))
+        lstm_model.eval()
+        scaler_X = joblib.load('scaler_X.pkl')
+        scaler_y = joblib.load('scaler_y.pkl')
+        MODEL_READY = True
+    except Exception as e:
+        print(f"Model load failed: {e}")
+        MODEL_READY = False
+else:
     MODEL_READY = False
 
 app = Flask(__name__)
@@ -99,7 +106,7 @@ def report():
 
 @app.route("/prediction")
 def prediction():
-    return render_template("prediction.html", active_page="prediction")
+    return render_template("prediction.html", active_page="prediction", lite_mode=LITE_MODE)
 
 # --- API ---
 
