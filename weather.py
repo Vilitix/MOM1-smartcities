@@ -27,7 +27,7 @@ def get_weather_data(lat=48.693033, lon=6.204775, days=365):
     url = "https://archive-api.open-meteo.com/v1/archive"
 
     # Time range
-    end_date = date.today()
+    end_date = date.today() - timedelta(days=1)  # Use yesterday as the end date to ensure complete data
     start_date = end_date - timedelta(days=days)
 
     params = {

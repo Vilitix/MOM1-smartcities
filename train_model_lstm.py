@@ -4,11 +4,12 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.impute import SimpleImputer
 from weather import get_weather_data
-
+import joblib
 # Define LSTM Model (PyTorch)
 class WaterQualityLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
@@ -17,7 +18,7 @@ class WaterQualityLSTM(nn.Module):
         self.num_layers = num_layers
         
         # LSTM Layer
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=0.2 if num_layers > 1 else 0)
         # Fully Connected Layer (Output Layer)
         self.fc = nn.Linear(hidden_size, output_size)
         
@@ -31,7 +32,7 @@ class WaterQualityLSTM(nn.Module):
         
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :]) 
-        return out
+        return torch.sigmoid(out)
 
 
 # Sequence Generator Function
@@ -46,18 +47,6 @@ def create_sequences(X_data, y_data, seq_length):
         ys.append(y_data[i + seq_length])
     return np.array(xs), np.array(ys)
 
-import pandas as pd
-import numpy as np
-import torch
-import torch.nn as nn
-from torch.utils.data import TensorDataset, DataLoader
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-from sklearn.impute import SimpleImputer
-import joblib # Add this for saving scalers
-from weather import get_weather_data
-
 
 def train_and_predict():
     print("Fetching weather data...")
@@ -67,21 +56,21 @@ def train_and_predict():
     df_weather.reset_index(inplace=True)
 
     print("Loading water quality dataset...")
-    df_water = pd.read_csv("Consibio Cloud Datalog.csv")
+    df_water = pd.read_csv("data.csv")
     try:
         df_water['Datetime'] = pd.to_datetime(df_water['Date'], format='%d/%m-%y %H:%M:%S', exact=False)
     except:
         df_water['Datetime'] = pd.to_datetime(df_water['Date'], format='mixed', dayfirst=True)
     
     df_water.set_index('Datetime', inplace=True)
-    target_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
-    
-    df_water_aligned = df_water[target_cols].resample('8h').mean()
+    water_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
+    df_water_aligned = df_water[water_cols].resample('8h').mean()
     df_water_aligned.reset_index(inplace=True)
     
     df_merged = pd.merge(df_water_aligned, df_weather, on='Datetime', how='inner')
     if df_merged.empty: return
-
+    target_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + water_cols
+    feature_cols = target_cols
     imputer = SimpleImputer(strategy='mean')
     df_merged[target_cols] = imputer.fit_transform(df_merged[target_cols])
     
@@ -90,13 +79,12 @@ def train_and_predict():
     df_merged['flag_snowmelt'] = 0
     
     # Include new flags in feature variables
-    feature_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + target_cols
     X = df_merged[feature_cols].values
     y = df_merged[target_cols].values
     # -------------------------------------------------------------------
     
-    scaler_X = StandardScaler()
-    scaler_y = StandardScaler()
+    scaler_X = MinMaxScaler(feature_range=(0.1, 0.9))
+    scaler_y = MinMaxScaler(feature_range=(0.1, 0.9))
     
     X_scaled = scaler_X.fit_transform(X)
     y_scaled = scaler_y.fit_transform(y)
@@ -106,7 +94,7 @@ def train_and_predict():
     joblib.dump(scaler_y, 'scaler_y.pkl')
     # ----------------------------------------
     
-    SEQ_LENGTH = 90 
+    SEQ_LENGTH = 45
     X_seq, y_seq = create_sequences(X_scaled, y_scaled, SEQ_LENGTH)
     
     split_idx = int(len(X_seq) * 0.8)
@@ -122,17 +110,17 @@ def train_and_predict():
     train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
     
     input_size = X.shape[1]
-    hidden_size = 64
+    hidden_size = 128
     num_layers = 2
     output_size = y.shape[1]
     
     model = WaterQualityLSTM(input_size, hidden_size, num_layers, output_size)
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-5)
     
     epochs = 100
     print(f"Training LSTM for {epochs} epochs...")
-    
+    best_loss = float('inf')
     model.train()
     for epoch in range(epochs):
         for inputs, targets in train_loader:
@@ -140,8 +128,14 @@ def train_and_predict():
             outputs = model(inputs)
             loss = criterion(outputs, targets)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
+        if loss < best_loss:
+            best_loss = loss
+            torch.save(model.state_dict(), 'lstm_model.pth') # save best model
+            print(f"Epoch {epoch+1}: Best model saved with loss {loss:.4f}")
+
         if (epoch+1) % 20 == 0:
             print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}")
 
