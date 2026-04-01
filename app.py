@@ -601,7 +601,22 @@ def api_farming_events():
     })
 
 if __name__ == "__main__":
-    # For local development: python app.py
     # Use LITE_MODE=true for skipping heavy libraries
     print(f"Starting HydroLens in {'LITE' if LITE_MODE else 'AI'} mode...")
-    app.run(host="0.0.0.0", port=5000, debug=not LITE_MODE)
+    
+    # Check if we are running in a production or PM2 environment
+    is_prod = os.environ.get("DEPLOYMENT") == "true" or os.environ.get("PM2_HOME") is not None
+
+    if is_prod:
+        # Waitress for production stability (even on phone)
+        from waitress import serve
+        print("Production Deployment: Running with Waitress on port 5000...")
+        # Use Fewer threads for phone hosting to save memory/CPU
+        num_threads = 4 if LITE_MODE else 6
+        serve(app, host="0.0.0.0", port=5000, threads=num_threads)
+    else:
+        # Local development with debugger
+        print("Development Mode: Running with Flask Debugger...")
+        app.run(host="0.0.0.0", port=5000, debug=True)
+
+

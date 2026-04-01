@@ -2,7 +2,7 @@
 *.sqlite
 .cache
 test.py
-*.png
+.png
 *.csv
 venv
 __pycache__
