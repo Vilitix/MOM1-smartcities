@@ -11,6 +11,7 @@ import sqlite3
 import os
 import sys
 import time
+import threading
 
 # --- Lite Mode Detection ---
 # Enable if LITE_MODE environment variable is set OR if "lite" is in command line arguments
@@ -103,6 +104,21 @@ def get_cached_weather():
     res = get_weather_data(lat=LAT, lon=LON, days=365)
     print(f"[DEBUG] Weather Fetch took {time.time() - start:.3f}s")
     return res
+
+# --- Cache Preloading on Startup ---
+def warm_up_caches():
+    """Runs a background warm-up of sensor and weather data."""
+    def _run():
+        print("[DEBUG] STARTING CACHE WARM-UP (Background Thread)...")
+        get_processed_sensor_data()
+        get_cached_weather()
+        print("[DEBUG] CACHE WARM-UP COMPLETED.")
+
+    # Start the warm-up in a daemon thread so it doesn't block app startup
+    threading.Thread(target=_run, daemon=True).start()
+
+# Execute warm-up
+warm_up_caches()
 
 # --- Pages ---
 
