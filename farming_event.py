@@ -14,6 +14,21 @@ calendar = {
     11: ['Plowed soils'],
     12: ['Slurry spreading']}
 
+def get_event_metadata():
+    """Return list of events and their active months without reading CSV."""
+    event_month_map = {}
+    for month, events in calendar.items():
+        for event in events:
+            if event not in event_month_map:
+                event_month_map[event] = []
+            if month not in event_month_map[event]:
+                event_month_map[event].append(month)
+    
+    return {
+        "events": sorted(list(event_month_map.keys())),
+        "event_months": event_month_map
+    }
+
 def get_farming_data(csv_path='data.csv'):
     """Return farming-event indicators aligned with sensor rows.
 

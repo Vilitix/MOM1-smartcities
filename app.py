@@ -13,6 +13,9 @@ import sys
 import time
 import threading
 
+# Create a global lock for data loading
+data_lock = threading.Lock()
+
 # --- Lite Mode Detection ---
 # Enable if LITE_MODE environment variable is set OR if "lite" is in command line arguments
 LITE_MODE = (os.environ.get("LITE_MODE", "false").lower() == "true" or 
@@ -81,20 +84,24 @@ LON = 6.204775
 _df_sensor = None
 _numeric_cols = []
 _sensor_data_mtime = None
+_farming_cache = None # Cache for farming metadata
 
 def get_processed_sensor_data():
     """Load and return processed sensor data from data_handler."""
     global _df_sensor, _numeric_cols, _sensor_data_mtime
     file_path = "data.csv"
-    current_mtime = os.path.getmtime(file_path) if os.path.exists(file_path) else None
+    
+    # Use lock to prevent multiple threads from loading data at once
+    with data_lock:
+        current_mtime = os.path.getmtime(file_path) if os.path.exists(file_path) else None
 
-    # Reload only if cache is empty or source file changed.
-    if _df_sensor is None or _numeric_cols is None or _sensor_data_mtime != current_mtime:
-        start = time.time()
-        print(f"[DEBUG] Sensor reload starting from {file_path}...")
-        _df_sensor, _numeric_cols = load_and_clean_data(file_path)
-        _sensor_data_mtime = current_mtime
-        print(f"[DEBUG] Sensor reload COMPLETED in {time.time() - start:.3f}s (Rows: {len(_df_sensor)})")
+        # Reload only if cache is empty or source file changed.
+        if _df_sensor is None or _numeric_cols is None or _sensor_data_mtime != current_mtime:
+            start = time.time()
+            print(f"[DEBUG] Sensor reload starting from {file_path}...")
+            _df_sensor, _numeric_cols = load_and_clean_data(file_path)
+            _sensor_data_mtime = current_mtime
+            print(f"[DEBUG] Sensor reload COMPLETED in {time.time() - start:.3f}s (Rows: {len(_df_sensor)})")
 
     return _df_sensor, _numeric_cols
 
@@ -107,11 +114,17 @@ def get_cached_weather():
 
 # --- Cache Preloading on Startup ---
 def warm_up_caches():
-    """Runs a background warm-up of sensor and weather data."""
+    """Runs a background warm-up of sensor, weather and farming data."""
     def _run():
         print("[DEBUG] STARTING CACHE WARM-UP (Background Thread)...")
         get_processed_sensor_data()
         get_cached_weather()
+        
+        # Pre-load farming metadata
+        global _farming_cache
+        from farming_event import get_event_metadata
+        _farming_cache = get_event_metadata()
+        
         print("[DEBUG] CACHE WARM-UP COMPLETED.")
 
     # Start the warm-up in a daemon thread so it doesn't block app startup
@@ -314,26 +327,20 @@ def api_predict():
     historical_data = {col: [] for col in target_cols}
 
     try:
-        # Load from your CSV file
-        file_path = "data.csv"
-        if not os.path.exists(file_path):
-            return jsonify({"error": f"File {file_path} not found"}), 404
+        # Use cached sensor data
+        df_sensor_cached, numeric_cols_cached = get_processed_sensor_data()
+        if df_sensor_cached.empty:
+            return jsonify({"error": "Sensor data cache is empty"}), 404
             
-        df_sensor = pd.read_csv(file_path)
-        
-        # Date parsing
-        try:
-            df_sensor['Datetime'] = pd.to_datetime(df_sensor['Date'], format='%d/%m-%y %H:%M:%S', exact=False)
-        except:
-            df_sensor['Datetime'] = pd.to_datetime(df_sensor['Date'], format='mixed', dayfirst=True)
-        df_sensor.set_index('Datetime', inplace=True)
-        
-        # Filter since 2025-08 for speed
-        df_sensor = df_sensor[df_sensor.index >= '2025-08-01']
+        # We need the water columns for prediction.
+        # Since _df_sensor already has its index as datetime and is filtered from 2025-08-01,
+        # we can use it directly.
+        df_sensor = df_sensor_cached.copy()
 
         # Weather integration
         df_weather = get_cached_weather()
         df_sensor_aligned = df_sensor[water_cols].resample('8h').mean()
+        df_sensor_aligned.index.name = 'Datetime' # Align index name for merge
         df_sensor_aligned.reset_index(inplace=True)
         
         df_weather.index = df_weather.index.tz_localize(None)
@@ -512,9 +519,8 @@ def api_sensor_data():
         "temp": safe_get_col("O2 Temperature", 1),
         "all_params": {}
     }
-    
+
     # Store all numeric columns for potential plotting
-    _, numeric_cols = load_and_clean_data("data.csv")
     for col in numeric_cols:
         res_data["all_params"][col] = safe_get_col(col, 3)
     
@@ -569,36 +575,16 @@ def api_hydro_data():
 
 @app.route("/api/farming-events")
 def api_farming_events():
-    """Return farming events list and active months derived from farming_event DataFrame."""
-    start = time.time()
-    farming_df = get_farming_data("data.csv")
-
-    event_cols = [col for col in farming_df.columns if col not in ["Timestamp", "Date"]]
-
-    parsed_date = pd.to_datetime(
-        farming_df["Date"],
-        format="%d/%m-%y %H:%M:%S",
-        errors="coerce"
-    )
-    timestamp_dt = pd.to_datetime(farming_df["Timestamp"], unit="s", errors="coerce")
-    month_series = parsed_date.dt.month.fillna(timestamp_dt.dt.month)
-
-    event_months = {}
-    for event in event_cols:
-        active_months = sorted(
-            month_series[farming_df[event] == 1]
-            .dropna()
-            .astype(int)
-            .unique()
-            .tolist()
-        )
-        event_months[event] = active_months
-
-    print(f"[DEBUG] Farming Events processing took {time.time() - start:.3f}s")
-    return jsonify({
-        "events": event_cols,
-        "event_months": event_months
-    })
+    """Return farming events list and active months derived from farming_event dictionary."""
+    global _farming_cache
+    
+    if _farming_cache is None:
+        start = time.time()
+        from farming_event import get_event_metadata
+        _farming_cache = get_event_metadata()
+        print(f"[DEBUG] Farming Events cache generated in {time.time() - start:.3f}s")
+        
+    return jsonify(_farming_cache)
 
 if __name__ == "__main__":
     # Use LITE_MODE=true for skipping heavy libraries
