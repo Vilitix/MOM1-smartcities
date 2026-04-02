@@ -4,16 +4,20 @@
 <div class="space-y-8">
     <div class="flex justify-between items-center">
         <div>
-            <h1 class="font-headline text-2xl font-bold text-primary">Data Connectors</h1>
-            <p class="text-on-surface-variant text-xs mt-1">Operational window: <span
-                    class="font-bold text-primary">August 2025 – Present</span></p>
+            <h1 class="font-headline text-2xl font-bold text-primary">{% if lang == 'fr' %}Connecteurs de Données{% else
+                %}Data Connectors{% endif %}</h1>
+            <p class="text-on-surface-variant text-xs mt-1">{% if lang == 'fr' %}Fenêtre opérationnelle :{% else
+                %}Operational window:{% endif %} <span class="font-bold text-primary">{% if lang == 'fr' %}Août 2025 –
+                    Présent{% else %}August 2025 – Present{% endif %}</span></p>
         </div>
         <div class="flex flex-col items-end gap-1">
             <span
                 class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span> ALL SYSTEMS ONLINE
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-indicator"></span> {% if lang == 'fr' %}TOUS
+                LES SYSTÈMES EN LIGNE{% else %}ALL SYSTEMS ONLINE{% endif %}
             </span>
-            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sync resolution: 8 Hours</p>
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{% if lang == 'fr' %}Résolution de
+                sync : 8 Heures{% else %}Sync resolution: 8 Hours{% endif %}</p>
         </div>
     </div>
 
@@ -38,17 +42,20 @@
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Total Records</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">{% if lang == 'fr' %}Total
+                        Enregistrements{% else %}Total Records{% endif %}</p>
                     <p id="echo-count" class="text-xl font-bold text-primary">--</p>
                 </div>
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Last Reading</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">{% if lang == 'fr' %}Dernière
+                        Mesure{% else %}Last Reading{% endif %}</p>
                     <p id="echo-last-time" class="text-[10px] font-bold text-primary">--</p>
                 </div>
             </div>
 
             <div class="space-y-3">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Stream Metadata</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Métadonnées du
+                    flux{% else %}Stream Metadata{% endif %}</p>
                 <div class="flex flex-wrap gap-2" id="echo-columns">
                     <!-- Dynamic -->
                 </div>
@@ -64,43 +71,54 @@
                         <span class="material-symbols-outlined text-emerald-600 text-3xl">cloud_sync</span>
                     </div>
                     <div>
-                        <h3 class="font-headline font-bold text-primary text-lg">Meteorological Data</h3>
-                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Source: <a
+                        <h3 class="font-headline font-bold text-primary text-lg">{% if lang == 'fr' %}Données
+                            Météorologiques{% else %}Meteorological Data{% endif %}</h3>
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Source : <a
                                 href="https://open-meteo.com" target="_blank"
                                 class="text-emerald-600 underline">Open-Meteo API</a></p>
                     </div>
                 </div>
-                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded">ACTIVE</span>
+                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded">{% if lang == 'fr'
+                    %}ACTIF{% else %}ACTIVE{% endif %}</span>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Time Window</p>
-                    <p class="text-[11px] font-bold text-primary">Since 08/2025</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">{% if lang == 'fr' %}Fenêtre
+                        Temporelle{% else %}Time Window{% endif %}</p>
+                    <p class="text-[11px] font-bold text-primary">{% if lang == 'fr' %}Depuis 08/2025{% else %}Since
+                        08/2025{% endif %}</p>
                 </div>
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Sync Status</p>
-                    <p class="text-[11px] font-bold text-emerald-600">Archived</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">{% if lang == 'fr' %}État Sync{%
+                        else %}Sync Status{% endif %}</p>
+                    <p class="text-[11px] font-bold text-emerald-600">{% if lang == 'fr' %}Archivé{% else %}Archived{%
+                        endif %}</p>
                 </div>
             </div>
 
             <div class="space-y-3">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Mapped Variables</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Variables
+                    Associées{% else %}Mapped Variables{% endif %}</p>
                 <div class="grid grid-cols-2 gap-2">
                     <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
-                        <span class="text-on-surface-variant">Temperature (2m)</span>
+                        <span class="text-on-surface-variant">{% if lang == 'fr' %}Température (2m){% else %}Temperature
+                            (2m){% endif %}</span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     </div>
                     <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
-                        <span class="text-on-surface-variant">Precipitation</span>
+                        <span class="text-on-surface-variant">{% if lang == 'fr' %}Précipitations{% else
+                            %}Precipitation{% endif %}</span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     </div>
                     <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
-                        <span class="text-on-surface-variant">Wind Speed</span>
+                        <span class="text-on-surface-variant">{% if lang == 'fr' %}Vitesse du Vent{% else %}Wind Speed{%
+                            endif %}</span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     </div>
                     <div class="flex justify-between items-center text-[10px] bg-slate-50 p-1.5 rounded">
-                        <span class="text-on-surface-variant">Snowfall</span>
+                        <span class="text-on-surface-variant">{% if lang == 'fr' %}Chutes de Neige{% else %}Snowfall{%
+                            endif %}</span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     </div>
                 </div>
@@ -116,31 +134,40 @@
                         <span class="material-symbols-outlined text-amber-600 text-3xl">waves</span>
                     </div>
                     <div>
-                        <h3 class="font-headline font-bold text-primary text-lg">Hydrometric Flows</h3>
-                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Source: <a
+                        <h3 class="font-headline font-bold text-primary text-lg">{% if lang == 'fr' %}Débits
+                            Hydrométriques{% else %}Hydrometric Flows{% endif %}</h3>
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Source : <a
                                 href="https://hydro.eaufrance.fr" target="_blank"
                                 class="text-amber-600 underline">Hydro.eaufrance.fr</a></p>
                     </div>
                 </div>
-                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded">CONNECTED</span>
+                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded">{% if lang == 'fr'
+                    %}CONNECTÉ{% else %}CONNECTED{% endif %}</span>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Data Frequency</p>
-                    <p class="text-[11px] font-bold text-primary">Daily Average</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">{% if lang == 'fr' %}Fréquence des
+                        Données{% else %}Data Frequency{% endif %}</p>
+                    <p class="text-[11px] font-bold text-primary">{% if lang == 'fr' %}Moyenne Journalière{% else
+                        %}Daily Average{% endif %}</p>
                 </div>
                 <div class="bg-surface p-3 rounded-lg text-center">
-                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">Station ID</p>
-                    <p class="text-[11px] font-bold text-primary">Nancy Site</p>
+                    <p class="text-[9px] text-on-surface-variant uppercase font-bold">{% if lang == 'fr' %}ID Station{%
+                        else %}Station ID{% endif %}</p>
+                    <p class="text-[11px] font-bold text-primary">{% if lang == 'fr' %}Site de Nancy{% else %}Nancy
+                        Site{% endif %}</p>
                 </div>
             </div>
 
             <div class="space-y-3">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Archived Streams</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Flux Archivés{%
+                    else %}Archived Streams{% endif %}</p>
                 <div class="flex justify-between items-center text-[10px] bg-slate-50 p-2 rounded">
-                    <span class="text-on-surface-variant">Throughput (Debit L/s)</span>
-                    <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">Stream A-1</span>
+                    <span class="text-on-surface-variant">{% if lang == 'fr' %}Débit (L/s){% else %}Throughput (Debit
+                        L/s){% endif %}</span>
+                    <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">{% if lang == 'fr' %}Flux
+                        A-1{% else %}Stream A-1{% endif %}</span>
                 </div>
             </div>
         </div>
@@ -148,22 +175,28 @@
 
     <!-- Sensor Reliability / Overview -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] text-center">
-        <h2 class="font-headline font-bold text-primary text-lg mb-6">Sensor Reliability</h2>
+        <h2 class="font-headline font-bold text-primary text-lg mb-6">{% if lang == 'fr' %}Fiabilité des Capteurs{% else
+            %}Sensor Reliability{% endif %}</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Availability</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Disponibilité{%
+                    else %}Availability{% endif %}</p>
                 <p class="text-2xl font-extrabold text-emerald-600">99.8%</p>
             </div>
             <div>
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Integrity</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Intégrité{% else
+                    %}Integrity{% endif %}</p>
                 <p class="text-2xl font-extrabold text-emerald-600">100%</p>
             </div>
             <div>
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Calibration</p>
-                <p class="text-2xl font-extrabold text-amber-500">Due 5d</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Calibrage{% else
+                    %}Calibration{% endif %}</p>
+                <p class="text-2xl font-extrabold text-amber-500">{% if lang == 'fr' %}Prévu 5j{% else %}Due 5d{% endif
+                    %}</p>
             </div>
             <div>
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Battery</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Batterie{% else
+                    %}Battery{% endif %}</p>
                 <p id="echo-battery" class="text-2xl font-extrabold text-emerald-600">--</p>
             </div>
         </div>
@@ -172,123 +205,157 @@
     <!-- Agricultural Calendar -->
     <section
         class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border-l-4 border-l-emerald-400">
-        <h2 class="font-headline font-bold text-primary text-lg mb-6">Agricultural Calendar - Water Quality Impact</h2>
-        <p class="text-[11px] text-on-surface-variant mb-6">Monthly agricultural activities affecting water quality</p>
+        <h2 class="font-headline font-bold text-primary text-lg mb-6">{% if lang == 'fr' %}Calendrier Agricole - Impact
+            sur la Qualité de l'Eau{% else %}Agricultural Calendar - Water Quality Impact{% endif %}</h2>
+        <p class="text-[11px] text-on-surface-variant mb-6">{% if lang == 'fr' %}Activités agricoles mensuelles
+            affectant la qualité de l'eau{% else %}Monthly agricultural activities affecting water quality{% endif %}
+        </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- January -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">January</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Janvier{% else %}January{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Slurry spreading</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Épandage de lisier{% else
+                        %}Slurry spreading{% endif %}</div>
                 </div>
             </div>
 
             <!-- February -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">February</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Février{% else %}February{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Fertilizer</div>
-                    <div class="text-[9px] text-on-surface-variant">• Slurry spreading</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Engrais{% else %}Fertilizer{%
+                        endif %}</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Épandage de lisier{% else
+                        %}Slurry spreading{% endif %}</div>
                 </div>
             </div>
 
             <!-- March -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">March</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Mars{% else %}March{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Fertilizer</div>
-                    <div class="text-[9px] text-on-surface-variant">• Plowing</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Engrais{% else %}Fertilizer{%
+                        endif %}</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Labour{% else %}Plowing{%
+                        endif %}</div>
                 </div>
             </div>
 
             <!-- April -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">April</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Avril{% else %}April{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Pesticides</div>
-                    <div class="text-[9px] text-on-surface-variant">• Fertilizer</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Pesticides{% else
+                        %}Pesticides{% endif %}</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Engrais{% else %}Fertilizer{%
+                        endif %}</div>
                 </div>
             </div>
 
             <!-- May -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">May</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Mai{% else %}May{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Pesticides</div>
-                    <div class="text-[9px] text-on-surface-variant">• Weeding</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Pesticides{% else
+                        %}Pesticides{% endif %}</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Désherbage{% else %}Weeding{%
+                        endif %}</div>
                 </div>
             </div>
 
             <!-- June -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">June</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Juin{% else %}June{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Pesticides</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Pesticides{% else
+                        %}Pesticides{% endif %}</div>
                 </div>
             </div>
 
             <!-- July -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">July</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Juillet{% else %}July{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Bare soils after harvest</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Sols nus après récolte{% else
+                        %}Bare soils after harvest{% endif %}</div>
                 </div>
             </div>
 
             <!-- August -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">August</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Août{% else %}August{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Stubble tillage</div>
-                    <div class="text-[9px] text-on-surface-variant">• Soil work</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Déchaumage{% else %}Stubble
+                        tillage{% endif %}</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Travail du sol{% else %}Soil
+                        work{% endif %}</div>
                 </div>
             </div>
 
             <!-- September -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">September
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Septembre{% else %}September{% endif %}
                 </p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Corn harvest</div>
-                    <div class="text-[9px] text-on-surface-variant">• Soil work</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Récolte de maïs{% else %}Corn
+                        harvest{% endif %}</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Travail du sol{% else %}Soil
+                        work{% endif %}</div>
                 </div>
             </div>
 
             <!-- October -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">October</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Octobre{% else %}October{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Sowing + Fertilizer</div>
-                    <div class="text-[9px] text-on-surface-variant">• Plowing</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Semis + Engrais{% else
+                        %}Sowing + Fertilizer{% endif %}</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Labour{% else %}Plowing{%
+                        endif %}</div>
                 </div>
             </div>
 
             <!-- November -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">November</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Novembre{% else %}November{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Plowed soils</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Sols labourés{% else %}Plowed
+                        soils{% endif %}</div>
                 </div>
             </div>
 
             <!-- December -->
             <div
                 class="bg-surface border border-slate-200 border-l-4 border-l-emerald-400 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">December</p>
+                <p class="text-[11px] font-bold text-primary uppercase mb-2 pb-2 border-b border-slate-200">{% if lang
+                    == 'fr' %}Décembre{% else %}December{% endif %}</p>
                 <div class="space-y-1">
-                    <div class="text-[9px] text-on-surface-variant">• Slurry spreading</div>
+                    <div class="text-[9px] text-on-surface-variant">• {% if lang == 'fr' %}Épandage de lisier{% else
+                        %}Slurry spreading{% endif %}</div>
                 </div>
             </div>
         </div>
@@ -296,25 +363,37 @@
 
     <!-- Data Origin Section -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
-        <h2 class="font-headline font-bold text-primary text-lg mb-4">Official Data Sources</h2>
+        <h2 class="font-headline font-bold text-primary text-lg mb-4">{% if lang == 'fr' %}Sources de Données
+            Officielles{% else %}Official Data Sources{% endif %}</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="p-4 rounded-lg bg-slate-50 border border-slate-100">
-                <p class="text-[10px] font-black text-sky-600 uppercase mb-2">Water Quality</p>
-                <p class="text-xs font-bold text-primary mb-1">Local ECHO Station</p>
-                <p class="text-[10px] text-slate-500 leading-relaxed">High-resolution sensor telemetry collected
-                    on-site. Measurements include Conductivity, NO3, Turbidity, and O2 levels.</p>
+                <p class="text-[10px] font-black text-sky-600 uppercase mb-2">{% if lang == 'fr' %}Qualité de l'Eau{%
+                    else %}Water Quality{% endif %}</p>
+                <p class="text-xs font-bold text-primary mb-1">{% if lang == 'fr' %}Station ECHO Locale{% else %}Local
+                    ECHO Station{% endif %}</p>
+                <p class="text-[10px] text-slate-500 leading-relaxed">{% if lang == 'fr' %}Télémétrie haute résolution
+                    collectée sur site. Les mesures incluent la conductivité, NO3, la turbidité et les niveaux d'O2.{%
+                    else %}High-resolution sensor telemetry collected on-site. Measurements include Conductivity, NO3,
+                    Turbidity, and O2 levels.{% endif %}</p>
             </div>
             <div class="p-4 rounded-lg bg-slate-50 border border-slate-100">
-                <p class="text-[10px] font-black text-emerald-600 uppercase mb-2">Atmospheric Drivers</p>
-                <p class="text-xs font-bold text-primary mb-1">Open-Meteo Weather API</p>
-                <p class="text-[10px] text-slate-500 leading-relaxed">Meteorological archives providing temperature,
-                    wind, and precipitation data synchronized with sensor timestamps.</p>
+                <p class="text-[10px] font-black text-emerald-600 uppercase mb-2">{% if lang == 'fr' %}Facteurs
+                    Atmosphériques{% else %}Atmospheric Drivers{% endif %}</p>
+                <p class="text-xs font-bold text-primary mb-1">{% if lang == 'fr' %}API Météo Open-Meteo{% else
+                    %}Open-Meteo Weather API{% endif %}</p>
+                <p class="text-[10px] text-slate-500 leading-relaxed">{% if lang == 'fr' %}Archives météorologiques
+                    fournissant température, vent et précipitations synchronisées avec les horodatages des capteurs.{%
+                    else %}Meteorological archives providing temperature, wind, and precipitation data synchronized with
+                    sensor timestamps.{% endif %}</p>
             </div>
             <div class="p-4 rounded-lg bg-slate-50 border border-slate-100">
-                <p class="text-[10px] font-black text-amber-600 uppercase mb-2">River Dynamics</p>
+                <p class="text-[10px] font-black text-amber-600 uppercase mb-2">{% if lang == 'fr' %}Dynamique
+                    Fluviale{% else %}River Dynamics{% endif %}</p>
                 <p class="text-xs font-bold text-primary mb-1">Hydro.eaufrance.fr</p>
-                <p class="text-[10px] text-slate-500 leading-relaxed">Official French hydrometric throughput (flow) data
-                    used for cross-correlation with local water turbidity and nitrate spikes.</p>
+                <p class="text-[10px] text-slate-500 leading-relaxed">{% if lang == 'fr' %}Données officielles de débit
+                    hydrométrique français utilisées pour la corrélation croisée avec la turbidité locale et les
+                    nitrates.{% else %}Official French hydrometric throughput (flow) data used for cross-correlation
+                    with local water turbidity and nitrate spikes.{% endif %}</p>
             </div>
         </div>
     </section>

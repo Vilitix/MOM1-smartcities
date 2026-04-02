@@ -4,7 +4,10 @@
 <div id="loading" class="flex items-center justify-center py-20">
     <div class="text-center">
         <div class="loading-spinner mx-auto mb-4"></div>
-        <p class="text-on-surface-variant text-sm">Synchronizing telemetry streams...</p>
+        <p class="text-on-surface-variant text-sm">
+            {% if lang == 'fr' %}Synchronisation des flux de télémétrie...{% else %}Synchronizing telemetry streams...{%
+            endif %}
+        </p>
     </div>
 </div>
 
@@ -18,23 +21,37 @@
                 class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] relative overflow-hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="font-headline text-xl font-bold text-primary">Stakeholder View</h2>
-                        <p class="text-on-surface-variant text-xs">Monitor key indicators and thresholds by stakeholder perspective</p>
+                        <h2 class="font-headline text-xl font-bold text-primary">
+                            {% if lang == 'fr' %}Vue des Parties Prenantes{% else %}Stakeholder View{% endif %}
+                        </h2>
+                        <p class="text-on-surface-variant text-xs">
+                            {% if lang == 'fr' %}Surveillance des indicateurs clés et des seuils par perspective
+                            d'acteur{% else %}Monitor key indicators and thresholds by stakeholder perspective{% endif
+                            %}
+                        </p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
+                    <div
+                        class="flex flex-wrap items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
                         <button onclick="if(stakeholderChart) stakeholderChart.resetZoom()"
                             class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-[10px] font-bold text-on-surface-variant hover:bg-slate-50 transition-colors flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-[14px]">zoom_out</span> Reset Zoom
+                            <span class="material-symbols-outlined text-[14px]">zoom_out</span>
+                            {% if lang == 'fr' %}Réinitialiser Zoom{% else %}Reset Zoom{% endif %}
                         </button>
-                        <span class="text-[10px] font-bold text-primary uppercase ml-2">Stakeholder:</span>
+                        <span class="text-[10px] font-bold text-primary uppercase ml-2">
+                            {% if lang == 'fr' %}Partie prenante :{% else %}Stakeholder:{% endif %}
+                        </span>
                         <select id="stakeholderSelect" onchange="onStakeholderChange()"
                             class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
-                            <option value="farmer">Farmer</option>
-                            <option value="ecosystem">Local Ecosystem</option>
-                            <option value="leisure">Leisure</option>
-                            <option value="drinking">Drinking Water</option>
+                            <option value="farmer">{% if lang == 'fr' %}Agriculteur{% else %}Farmer{% endif %}</option>
+                            <option value="ecosystem">{% if lang == 'fr' %}Écosystème Local{% else %}Local Ecosystem{%
+                                endif %}</option>
+                            <option value="leisure">{% if lang == 'fr' %}Loisirs / Baignade{% else %}Leisure{% endif %}
+                            </option>
+                            <option value="drinking">{% if lang == 'fr' %}Eau Potable{% else %}Drinking Water{% endif %}
+                            </option>
                         </select>
-                        <span class="text-[10px] font-bold text-primary uppercase">Metric:</span>
+                        <span class="text-[10px] font-bold text-primary uppercase">{% if lang == 'fr' %}Métrique :{%
+                            else %}Metric:{% endif %}</span>
                         <select id="stakeholderMetricSelect" onchange="updateStakeholderChart()"
                             class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
                         </select>
@@ -51,18 +68,21 @@
             <section
                 class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] divide-y divide-slate-100">
                 <div class="flex justify-between items-center pb-4">
-                    <h2 class="font-headline font-bold text-primary">Schedule</h2>
+                    <h2 class="font-headline font-bold text-primary">{% if lang == 'fr' %}Calendrier{% else %}Schedule{%
+                        endif %}</h2>
                     <span id="cal-date-label" class="text-[10px] font-bold text-on-surface-variant uppercase"></span>
                 </div>
                 <div id="dashboard-schedule" class="pt-4 space-y-6">
                     <div class="text-center py-4">
-                         <div class="loading-spinner w-4 h-4 border-2 border-primary/30 border-t-primary mx-auto mb-2"></div>
-                         <p class="text-[10px] text-slate-400 italic">Chargement...</p>
+                        <div class="loading-spinner w-4 h-4 border-2 border-primary/30 border-t-primary mx-auto mb-2">
+                        </div>
+                        <p class="text-[10px] text-slate-400 italic">Chargement...</p>
                     </div>
                 </div>
                 <a href="/calendar"
-                    class="w-full block pt-4 text-center text-[10px] font-bold text-sky-600 hover:text-sky-800 transition-colors no-underline">VIEW
-                    FULL CALENDAR</a>
+                    class="w-full block pt-4 text-center text-[10px] font-bold text-sky-600 hover:text-sky-800 transition-colors no-underline">
+                    {% if lang == 'fr' %}VOIR LE CALENDRIER COMPLET{% else %}VIEW FULL CALENDAR{% endif %}
+                </a>
             </section>
         </div>
     </div>
@@ -74,40 +94,59 @@
     let state = { weather: null, sensors: null };
     let stakeholderChart = null;
 
+    const currentLang = "{{ lang }}";
+    const translations = {
+        farmer: { label: currentLang === 'fr' ? 'Agriculteur' : 'Farmer' },
+        ecosystem: { label: currentLang === 'fr' ? 'Écosystème Local' : 'Local Ecosystem' },
+        leisure: { label: currentLang === 'fr' ? 'Loisirs' : 'Leisure' },
+        drinking: { label: currentLang === 'fr' ? 'Eau Potable' : 'Drinking Water' },
+        conductivity: currentLang === 'fr' ? 'Conductivité' : 'Conductivity',
+        nitrates: currentLang === 'fr' ? 'Nitrates (NO3)' : 'Nitrates (NO3)',
+        chlorophyll: currentLang === 'fr' ? 'Chlorophylle-a' : 'Chlorophyll-a',
+        turbidity: currentLang === 'fr' ? 'Turbidité' : 'Turbidity',
+        oxygen: currentLang === 'fr' ? 'Saturation en Oxygène' : 'Oxygen Saturation',
+        ph: 'pH',
+        mes: currentLang === 'fr' ? 'Matières en Suspension (MES)' : 'Suspended Solids (MES)',
+        chlorides: currentLang === 'fr' ? 'Chlorures' : 'Chlorides',
+        thresholdsLabel: currentLang === 'fr' ? 'seuils' : 'thresholds',
+        reportedLabel: currentLang === 'fr' ? '⚠️ Incident signalé' : '⚠️ Reported Issue',
+        syncLabel: currentLang === 'fr' ? 'Dernière sync : À l\'instant' : 'Last Sync: Just Now'
+    };
+
     const stakeholderConfigs = {
         farmer: {
-            label: 'Farmer',
+            label: translations.farmer.label,
             indicators: [
-                { key: 'Conductivité', label: 'Conductivity', unit: 'mS/cm', convert: v => v == null ? null : v / 1000, thresholds: [{ label: 'Moderate stress starts', value: 0.7 }, { label: 'High salinity', value: 3.0 }] },
-                { key: 'NO3', label: 'Nitrates (NO3)', unit: 'mg/L', thresholds: [{ label: 'Good status max', value: 25 }, { label: 'High risk', value: 50 }] },
-                { key: 'Chlorophylle-a SCALED', label: 'Chlorophyll-a', unit: 'ug/L', thresholds: [{ label: 'Biofilm risk', value: 10 }] },
-                { key: 'Turbidité', label: 'Turbidity', unit: 'NTU', thresholds: [{ label: 'Safe drip max', value: 20 }, { label: 'High clogging risk', value: 50 }] }
+                { key: 'Conductivité', label: translations.conductivity, unit: 'mS/cm', convert: v => v == null ? null : v / 1000, thresholds: [{ label: currentLang === 'fr' ? 'Début stress modéré' : 'Moderate stress starts', value: 0.7 }, { label: currentLang === 'fr' ? 'Salinité élevée' : 'High salinity', value: 3.0 }] },
+                { key: 'NO3', label: translations.nitrates, unit: 'mg/L', thresholds: [{ label: currentLang === 'fr' ? 'Max bon état' : 'Good status max', value: 25 }, { label: currentLang === 'fr' ? 'Risque élevé' : 'High risk', value: 50 }] },
+                { key: 'Chlorophylle-a SCALED', label: translations.chlorophyll, unit: 'ug/L', thresholds: [{ label: currentLang === 'fr' ? 'Risque biofilm' : 'Biofilm risk', value: 10 }] },
+                { key: 'Turbidité', label: translations.turbidity, unit: 'NTU', thresholds: [{ label: currentLang === 'fr' ? 'Max goutte-à-goutte' : 'Safe drip max', value: 20 }, { label: currentLang === 'fr' ? 'Risque colmatage élevé' : 'High clogging risk', value: 50 }] }
             ]
         },
         ecosystem: {
-            label: 'Local Ecosystem',
+            label: translations.ecosystem.label,
             indicators: [
-                { key: 'O2 Saturation', label: 'Oxygen Saturation', unit: '%', thresholds: [{ label: 'Hypoxia risk', value: 50 }, { label: 'Excellent status', value: 80 }] },
-                { key: 'NO3', label: 'Nitrates (NO3)', unit: 'mg/L', thresholds: [{ label: 'Good status max', value: 25 }, { label: 'Poor status', value: 50 }] },
-                { key: 'pH Test', label: 'pH', unit: '', thresholds: [{ label: 'Optimal min', value: 6.5 }, { label: 'Optimal max', value: 8.2 }] },
-                { key: 'MES', label: 'Suspended Solids (MES)', unit: 'mg/L', thresholds: [{ label: 'Clear-water max', value: 25 }] }
+                { key: 'O2 Saturation', label: translations.oxygen, unit: '%', thresholds: [{ label: currentLang === 'fr' ? 'Risque hypoxie' : 'Hypoxia risk', value: 50 }, { label: currentLang === 'fr' ? 'Excellent état' : 'Excellent status', value: 80 }] },
+                { key: 'NO3', label: translations.nitrates, unit: 'mg/L', thresholds: [{ label: currentLang === 'fr' ? 'Max bon état' : 'Good status max', value: 25 }, { label: currentLang === 'fr' ? 'Mauvais état' : 'Poor status', value: 50 }] },
+                { key: 'pH Test', label: translations.ph, unit: '', thresholds: [{ label: 'Optimal min', value: 6.5 }, { label: 'Optimal max', value: 8.2 }] },
+                { key: 'MES', label: translations.mes, unit: 'mg/L', thresholds: [{ label: currentLang === 'fr' ? 'Max eaux claires' : 'Clear-water max', value: 25 }] }
             ]
         },
         leisure: {
-            label: 'Leisure',
+            label: translations.leisure.label,
             indicators: [
-                { key: 'Turbidité', label: 'Turbidity', unit: 'NTU', thresholds: [{ label: 'Swimming max', value: 50 }] },
-                { key: 'pH Test', label: 'pH', unit: '', thresholds: [{ label: 'Comfort min', value: 7.0 }, { label: 'Comfort max', value: 8.0 }] },
-                { key: 'Chlorophylle-a SCALED', label: 'Chlorophyll-a', unit: 'ug/L', thresholds: [{ label: 'Cyanotoxin risk max', value: 10 }] }
+                { key: 'Turbidité', label: translations.turbidity, unit: 'NTU', thresholds: [{ label: currentLang === 'fr' ? 'Max baignade' : 'Swimming max', value: 50 }] },
+                { key: 'pH Test', label: translations.ph, unit: '', thresholds: [{ label: currentLang === 'fr' ? 'Min confort' : 'Comfort min', value: 7.0 }, { label: currentLang === 'fr' ? 'Max confort' : 'Comfort max', value: 8.0 }] },
+                { key: 'Chlorophylle-a SCALED', label: translations.chlorophyll, unit: 'ug/L', thresholds: [{ label: currentLang === 'fr' ? 'Max risque cyanotoxine' : 'Cyanotoxin risk max', value: 10 }] }
             ]
         },
         drinking: {
-            label: 'Drinking Water',
+            label: translations.drinking.label,
             indicators: [
-                { key: 'NO3', label: 'Nitrates (NO3)', unit: 'mg/L', thresholds: [{ label: 'Regulatory max', value: 50 }] },
-                { key: 'Chlorides', label: 'Chlorides', unit: 'mg/L', thresholds: [{ label: 'Guideline max', value: 250 }] },
-                { key: 'Turbidité', label: 'Turbidity', unit: 'NTU', thresholds: [{ label: 'Plant outlet target', value: 1.0 }] },
-                { key: 'Conductivité', label: 'Conductivity', unit: 'uS/cm', thresholds: [{ label: 'Standard max', value: 1100 }] }
+                { key: 'NO3', label: translations.nitrates, unit: 'mg/L', thresholds: [{ label: currentLang === 'fr' ? 'Max réglementaire' : 'Regulatory max', value: 50 }] },
+                { key: 'Chlorides', label: currentLang === 'fr' ? 'Chlorures' : 'Chlorides', unit: 'mg/L', thresholds: [{ label: currentLang === 'fr' ? 'Max indicatif' : 'Guideline max', value: 250 }] },
+                { key: 'Turbidité', label: translations.turbidity, unit: 'NTU', thresholds: [{ label: currentLang === 'fr' ? 'Cible sortie station' : 'Plant outlet target', value: 1.0 }] },
+                { key: 'Conductivité', label: translations.conductivity, unit: 'uS/cm', thresholds: [{ label: 'Standard max', value: 1100 }] }
             ]
         }
     };
@@ -122,15 +161,15 @@
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('dashboard-content').classList.remove('hidden');
-        
+
         const syncStatusEl = document.getElementById('sync-status');
         if (syncStatusEl) {
-            syncStatusEl.innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> Last Sync: Just' + ' Now';
+            syncStatusEl.innerHTML = '<span class="material-symbols-outlined text-[12px]">sync</span> ' + translations.syncLabel;
         }
-        
+
         const calDateLabelEl = document.getElementById('cal-date-label');
         if (calDateLabelEl) {
-            calDateLabelEl.textContent = new Date().toLocaleDateString('en', { month: 'short', year: 'numeric' });
+            calDateLabelEl.textContent = new Date().toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', year: 'numeric' });
         }
 
         populateDashboard(sensors, weather, events);
@@ -275,7 +314,7 @@
         const details = selectedIndicator.thresholds.map(t => `${t.label}: ${t.value}${unit}`).join(' | ');
         thresholdBox.innerHTML = `
             <div class="bg-surface border border-slate-200 rounded-lg px-3 py-2 md:col-span-2">
-                <p class="text-[10px] font-bold text-primary uppercase tracking-wide">${selectedIndicator.label} thresholds</p>
+                <p class="text-[10px] font-bold text-primary uppercase tracking-wide">${selectedIndicator.label} - ${translations.thresholdsLabel}</p>
                 <p class="text-[10px] text-on-surface-variant mt-1">${details}</p>
             </div>
         `;
@@ -293,14 +332,14 @@
         }
 
         const nextEvents = upcoming.slice(0, 2);
-        
+
         let html = '';
         nextEvents.forEach(e => {
             const dateObj = new Date(e.date);
             const isAlert = e.type === 'alert' || e.source === 'report';
-            const shortDay = dateObj.toLocaleDateString('en', { weekday: 'short' }).toUpperCase();
+            const shortDay = dateObj.toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'short' }).toUpperCase();
             const dayNum = dateObj.getDate();
-            
+
             html += `
             <div class="flex gap-4 items-center group cursor-pointer ${isAlert ? '' : 'opacity-80 hover:opacity-100'}">
                 <div class="w-10 h-10 rounded-xl bg-slate-50 border ${isAlert ? 'border-amber-400 bg-amber-50' : 'border-slate-100'} flex flex-col items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
@@ -309,11 +348,11 @@
                 </div>
                 <div class="flex-1 w-0">
                     <p class="text-xs font-bold ${isAlert ? 'text-amber-900' : 'text-slate-900'} leading-tight truncate" title="${e.title}">${e.title}</p>
-                    <p class="text-[10px] ${isAlert ? 'text-amber-700 font-medium' : 'text-slate-400'} mt-0.5">${isAlert ? '⚠️ Reported Issue' : e.type.toUpperCase()}</p>
+                    <p class="text-[10px] ${isAlert ? 'text-amber-700 font-medium' : 'text-slate-400'} mt-0.5">${isAlert ? translations.reportedLabel : e.type.toUpperCase()}</p>
                 </div>
             </div>`;
         });
-        
+
         scheduleContainer.innerHTML = html;
     }
 

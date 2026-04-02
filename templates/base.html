@@ -170,6 +170,19 @@
                     FR — 48.69°N 6.20°E</span>
             </nav>
         </div>
+        <!-- Language Switcher Top Right -->
+        <div class="flex items-center gap-4">
+            <div class="flex bg-surface-container-high rounded-full p-1 border border-outline-variant/30">
+                <a href="/set_language/fr"
+                    class="px-3 py-1 rounded-full text-[10px] font-bold no-underline transition-all {% if lang == 'fr' %}bg-primary text-white shadow-sm{% else %}text-on-surface-variant hover:text-primary{% endif %}">
+                    FR
+                </a>
+                <a href="/set_language/en"
+                    class="px-3 py-1 rounded-full text-[10px] font-bold no-underline transition-all {% if lang == 'en' %}bg-primary text-white shadow-sm{% else %}text-on-surface-variant hover:text-primary{% endif %}">
+                    EN
+                </a>
+            </div>
+        </div>
     </header>
 
     <!-- Side Navigation Bar -->
@@ -183,8 +196,9 @@
                 </div>
                 <div>
                     <h2 class="font-headline font-bold text-sky-900 leading-none">Station ECHO</h2>
-                    <span class="text-[10px] uppercase tracking-widest text-secondary font-bold">Active
-                        Monitoring</span>
+                    <span class="text-[10px] uppercase tracking-widest text-secondary font-bold">
+                        {% if lang == 'fr' %}Surveillance Active{% else %}Active Monitoring{% endif %}
+                    </span>
                 </div>
             </div>
         </div>
@@ -192,38 +206,38 @@
             <a href="/"
                 class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'dashboard' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
                 <span class="material-symbols-outlined">dashboard</span>
-                Dashboard
+                {% if lang == 'fr' %}Tableau de bord{% else %}Dashboard{% endif %}
             </a>
             <a href="/analysis"
                 class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'analysis' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
                 <span class="material-symbols-outlined">analytics</span>
-                Detailed Analysis
+                {% if lang == 'fr' %}Analyse détaillée{% else %}Detailed Analysis{% endif %}
             </a>
             <a href="/correlation"
                 class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'correlation' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
                 <span class="material-symbols-outlined">scatter_plot</span>
-                Correlation Logic
+                {% if lang == 'fr' %}Corrélation{% else %}Correlation Logic{% endif %}
             </a>
             <a href="/connectors"
                 class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'connectors' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
                 <span class="material-symbols-outlined">hub</span>
-                Connectors
+                {% if lang == 'fr' %}Connecteurs{% else %}Connectors{% endif %}
             </a>
             <a href="/calendar"
                 class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'calendar' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
                 <span class="material-symbols-outlined">calendar_month</span>
-                Event Calendar
+                {% if lang == 'fr' %}Calendrier{% else %}Event Calendar{% endif %}
             </a>
             <a href="/report"
                 class="nav-item cursor-pointer flex items-center gap-3 px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'report' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
                 <span class="material-symbols-outlined">report</span>
-                Report Event
+                {% if lang == 'fr' %}Signaler un incident{% else %}Report Event{% endif %}
             </a>
             <a href="/prediction"
                 class="nav-item cursor-pointer flex items-center justify-between px-4 py-3 m-2 rounded-lg text-sm no-underline {% if active_page == 'prediction' %}active{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined">online_prediction</span>
-                    Prediction
+                    {% if lang == 'fr' %}Prédiction{% else %}Prediction{% endif %}
                 </div>
                 {% if lite_mode %}
                 <span
@@ -240,7 +254,20 @@
 
     <!-- Bottom Status Bar -->
     <footer
-        class="fixed bottom-0 w-full z-50 flex justify-between px-8 items-center bg-sky-900 text-white h-8 font-inter text-[10px] uppercase tracking-widest shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
+        class="fixed bottom-0 w-full z-50 flex justify-center px-8 items-center bg-sky-900 text-white h-10 font-inter text-[10px] uppercase tracking-widest shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-8 border-r border-white/20 px-8">
+                <!-- White background box for logo visibility -->
+                <div class="bg-white p-1 rounded-sm flex items-center shadow-sm">
+                    <img src="/static/Telecom_nancy.png" alt="Telecom Nancy" class="h-6 brightness-100">
+                </div>
+                <img src="/static/univ_lorraine.jpg" alt="Université de Lorraine" class="h-6 brightness-100">
+            </div>
+            <div class="flex items-center gap-4 opacity-80">
+                <span>Arthur Saltel • Daisuke Nozaki • Alexis Borne • Celian Mathieu • Lukasz Damian Swiech</span>
+                <span class="border-l border-white/20 pl-4">© 2026</span>
+            </div>
+        </div>
     </footer>
 
     <script>

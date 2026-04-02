@@ -4,16 +4,23 @@
 <div id="loading" class="flex items-center justify-center py-20">
     <div class="text-center">
         <div class="loading-spinner mx-auto mb-4"></div>
-        <p class="text-on-surface-variant text-sm">Synchronizing telemetry streams...</p>
+        <p class="text-on-surface-variant text-sm">
+            {% if lang == 'fr' %}Synchronisation des flux de télémétrie...{% else %}Synchronizing telemetry streams...{%
+            endif %}
+        </p>
     </div>
 </div>
 
 <div id="analysis-content" class="hidden space-y-12">
     <div class="flex justify-between items-center">
         <div>
-            <h1 class="font-headline text-2xl font-bold text-primary">Hydrometric Analysis</h1>
-            <p class="text-on-surface-variant text-xs mt-1">Cross-correlating weather patterns with water quality
-                metrics</p>
+            <h1 class="font-headline text-2xl font-bold text-primary">
+                {% if lang == 'fr' %}Analyse Hydrométrique{% else %}Hydrometric Analysis{% endif %}
+            </h1>
+            <p class="text-on-surface-variant text-xs mt-1">
+                {% if lang == 'fr' %}Corrélation des conditions météorologiques avec les métriques de qualité de l'eau{%
+                else %}Cross-correlating weather patterns with water quality metrics{% endif %}
+            </p>
         </div>
         <div class="flex gap-2">
             <a href="/api/export"
@@ -28,20 +35,27 @@
         class="bg-surface-container-lowest p-8 rounded-2xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-slate-100">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-                <h2 class="font-headline font-bold text-primary text-xl">Parameter Explorer</h2>
-                <p class="text-on-surface-variant text-xs mt-1">Select any metric from the ECHO sensor array to view its
-                    365-day trajectory</p>
+                <h2 class="font-headline font-bold text-primary text-xl">
+                    {% if lang == 'fr' %}Explorateur de Paramètres{% else %}Parameter Explorer{% endif %}
+                </h2>
+                <p class="text-on-surface-variant text-xs mt-1">
+                    {% if lang == 'fr' %}Sélectionnez n'importe quelle métrique du réseau de capteurs ECHO pour voir sa
+                    trajectoire sur 365 jours{% else %}Select any metric from the ECHO sensor array to view its 365-day
+                    trajectory{% endif %}
+                </p>
             </div>
             <div class="flex flex-col md:flex-row items-center gap-6">
                 <!-- Reset Zoom Button -->
                 <button onclick="if(globalChart) globalChart.resetZoom()"
                     class="bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase hover:bg-surface-container-highest transition-colors flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[14px]">zoom_out</span> Reset Zoom
+                    <span class="material-symbols-outlined text-[14px]">zoom_out</span>
+                    {% if lang == 'fr' %}Réinitialiser Zoom{% else %}Reset Zoom{% endif %}
                 </button>
 
                 <!-- Parameter Selector -->
                 <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
-                    <span class="text-[10px] font-bold text-primary uppercase ml-2">Parameter:</span>
+                    <span class="text-[10px] font-bold text-primary uppercase ml-2">{% if lang == 'fr' %}Métrique :{%
+                        else %}Parameter:{% endif %}</span>
                     <select id="paramSelect" onchange="updateGlobalChart()"
                         class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
                         <!-- Dynamic -->
@@ -51,7 +65,8 @@
                 <!-- Weather Legends / Toggles -->
                 <div
                     class="flex flex-wrap items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
-                    <span class="text-[10px] font-bold text-primary uppercase ml-2">Weather Context:</span>
+                    <span class="text-[10px] font-bold text-primary uppercase ml-2">{% if lang == 'fr' %}Contexte Météo
+                        :{% else %}Weather Context:{% endif %}</span>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <div class="bg-white px-2 py-1 rounded-lg border border-slate-200 w-[150px]">
                             <label class="flex items-center justify-between gap-2 cursor-pointer group">
@@ -59,7 +74,8 @@
                                     <input type="checkbox" id="overlayTemp" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-sky-600 border-outline-variant">
                                     <span
-                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Temperature</span>
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">{%
+                                        if lang == 'fr' %}Température{% else %}Temperature{% endif %}</span>
                                 </span>
                                 <span class="text-[10px] font-bold text-sky-700">°C</span>
                             </label>
@@ -71,7 +87,8 @@
                                     <input type="checkbox" id="overlayRain" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-emerald-500 border-outline-variant">
                                     <span
-                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Rain</span>
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">{%
+                                        if lang == 'fr' %}Pluie{% else %}Rain{% endif %}</span>
                                 </span>
                                 <span id="rainThresholdLabel" class="text-[10px] font-bold text-emerald-700">5 mm</span>
                             </label>
@@ -86,7 +103,8 @@
                                     <input type="checkbox" id="overlaySnow" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-cyan-400 border-outline-variant">
                                     <span
-                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Snow</span>
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">{%
+                                        if lang == 'fr' %}Neige{% else %}Snow{% endif %}</span>
                                 </span>
                                 <span id="snowThresholdLabel" class="text-[10px] font-bold text-cyan-700">2 cm</span>
                             </label>
@@ -101,7 +119,8 @@
                                     <input type="checkbox" id="overlayWind" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-sky-400 border-outline-variant">
                                     <span
-                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Wind</span>
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">{%
+                                        if lang == 'fr' %}Vent{% else %}Wind{% endif %}</span>
                                 </span>
                                 <span id="windThresholdLabel" class="text-[10px] font-bold text-sky-700">30 km/h</span>
                             </label>
@@ -116,7 +135,8 @@
                                     <input type="checkbox" id="overlayThroughput" onchange="updateGlobalChart()"
                                         class="w-3 h-3 rounded-full accent-amber-500 border-outline-variant">
                                     <span
-                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">Throughput</span>
+                                        class="text-[10px] font-bold text-on-surface-variant group-hover:text-primary uppercase transition-colors">{%
+                                        if lang == 'fr' %}Débit{% else %}Throughput{% endif %}</span>
                                 </span>
                                 <span class="text-[10px] font-bold text-amber-700">L/s</span>
                             </label>
@@ -131,9 +151,10 @@
 
         <div class="mt-6 bg-surface border border-slate-200 border-l-4 border-l-emerald-400 rounded-xl p-4">
             <div class="flex items-center justify-between gap-4 mb-3">
-                <h3 class="font-headline font-bold text-primary text-sm">Agricultural Event Highlights</h3>
-                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Highlight impacted
-                    months</span>
+                <h3 class="font-headline font-bold text-primary text-sm">{% if lang == 'fr' %}Événements Agricoles{%
+                    else %}Agricultural Event Highlights{% endif %}</h3>
+                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">{% if lang == 'fr'
+                    %}Surligner les mois impactés{% else %}Highlight impacted months{% endif %}</span>
             </div>
             <div id="farming-event-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <!-- Dynamic checkboxes -->
@@ -144,37 +165,45 @@
     <!-- Climate Context -->
     <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)]">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <h2 class="font-headline font-bold text-primary text-lg">Meteorological Sync (Open-Meteo)</h2>
+            <h2 class="font-headline font-bold text-primary text-lg">{% if lang == 'fr' %}Sync Météo (Open-Meteo){% else
+                %}Meteorological Sync (Open-Meteo){% endif %}</h2>
             <div class="flex items-center gap-4 bg-surface px-4 py-2 rounded-xl border border-outline-variant/30">
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/50 border border-emerald-600"></div>
-                    <span class="text-[10px] font-bold text-primary uppercase">Rain (mm)</span>
+                    <span class="text-[10px] font-bold text-primary uppercase">{% if lang == 'fr' %}Pluie (mm){% else
+                        %}Rain (mm){% endif %}</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-cyan-400/50 border border-cyan-500"></div>
-                    <span class="text-[10px] font-bold text-primary uppercase">Snow (cm)</span>
+                    <span class="text-[10px] font-bold text-primary uppercase">{% if lang == 'fr' %}Neige (cm){% else
+                        %}Snow (cm){% endif %}</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-sky-400/50 border border-sky-500"></div>
-                    <span class="text-[10px] font-bold text-primary uppercase">Wind Speed</span>
+                    <span class="text-[10px] font-bold text-primary uppercase">{% if lang == 'fr' %}Vitesse Vent{% else
+                        %}Wind Speed{% endif %}</span>
                 </div>
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-2">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Air Temperature (2m)</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Température de
+                    l'Air (2m){% else %}Air Temperature (2m){% endif %}</p>
                 <div class="chart-container" style="height:200px;"><canvas id="weatherTempChart"></canvas></div>
             </div>
             <div class="space-y-2">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Precipitation Events (Rain)</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Précipitations
+                    (Pluie){% else %}Precipitation Events (Rain){% endif %}</p>
                 <div class="chart-container" style="height:200px;"><canvas id="weatherPrecipChart"></canvas></div>
             </div>
             <div class="space-y-2">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Wind Speed Velocity</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Vitesse du
+                    Vent{% else %}Wind Speed Velocity{% endif %}</p>
                 <div class="chart-container" style="height:200px;"><canvas id="weatherWindChart"></canvas></div>
             </div>
             <div class="space-y-2">
-                <p class="text-[10px] font-bold text-on-surface-variant uppercase">Snowfall Accumulation</p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase">{% if lang == 'fr' %}Accumulation de
+                    Neige{% else %}Snowfall Accumulation{% endif %}</p>
                 <div class="chart-container" style="height:200px;"><canvas id="weatherSnowChart"></canvas></div>
             </div>
         </div>
@@ -184,6 +213,22 @@
 
 {% block scripts %}
 <script>
+    const currentLang = "{{ lang }}";
+    const translations = {
+        airTemp: currentLang === 'fr' ? 'Temp. Air (°C)' : 'Air Temp (°C)',
+        precip: currentLang === 'fr' ? 'Précip. (mm)' : 'Precip (mm)',
+        windSpeed: currentLang === 'fr' ? 'Vit. Vent (km/h)' : 'Wind Speed (km/h)',
+        snowfall: currentLang === 'fr' ? 'Neige (cm)' : 'Snowfall (cm)',
+        airTempContext: currentLang === 'fr' ? 'Analyse de la Température de l\'Air avec Contexte' : 'Air Temperature Analysis with Context',
+        throughput: currentLang === 'fr' ? 'Débit (L/s)' : 'Throughput (L/s)',
+        parameter: currentLang === 'fr' ? 'Paramètre' : 'Parameter',
+        loadingError: currentLang === 'fr' ? 'Échec du chargement des données d\'analyse' : 'Failed to load analysis data',
+        slurry: currentLang === 'fr' ? 'épandage de lisier' : 'slurry spreading',
+        fertilizer: currentLang === 'fr' ? 'engrais' : 'fertilizer',
+        pesticide: currentLang === 'fr' ? 'pesticide' : 'pesticide',
+        pesticides: currentLang === 'fr' ? 'pesticides' : 'pesticides'
+    };
+
     let state = { weather: null, sensors: null, farming: null, selectedFarmingEvents: [] };
     let globalChart = null;
 
@@ -308,7 +353,7 @@
     }).catch((err) => {
         const loading = document.getElementById('loading');
         if (loading) {
-            loading.innerHTML = `<p class="text-error text-sm font-bold">Failed to load analysis data: ${err.message}</p>`;
+            loading.innerHTML = `<p class="text-error text-sm font-bold">${translations.loadingError}: ${err.message}</p>`;
         }
     });
 
@@ -353,14 +398,25 @@
         const container = document.getElementById('farming-event-filters');
         container.innerHTML = '';
 
-        const allowedEventNames = ['slurry spreading', 'fertilizer', 'pesticide', 'pesticides'];
+        const allowedEventNames = [
+            translations.slurry,
+            translations.fertilizer,
+            translations.pesticide,
+            translations.pesticides
+        ];
         const normalize = (name) => String(name || '').trim().toLowerCase();
 
         const events = ((state.farming && state.farming.events) || [])
-            .filter(eventName => allowedEventNames.includes(normalize(eventName)));
+            .filter(eventName => {
+                const norm = normalize(eventName);
+                return allowedEventNames.some(allowed => norm.includes(allowed) || allowed.includes(norm));
+            });
 
         state.selectedFarmingEvents = state.selectedFarmingEvents
-            .filter(eventName => allowedEventNames.includes(normalize(eventName)));
+            .filter(eventName => {
+                const norm = normalize(eventName);
+                return allowedEventNames.some(allowed => norm.includes(allowed) || allowed.includes(norm));
+            });
 
         events.forEach(eventName => {
             const label = document.createElement('label');
@@ -430,22 +486,22 @@
 
         new Chart(document.getElementById('weatherTempChart'), {
             type: 'line',
-            data: { labels: tempCrop.labels, datasets: [{ label: 'Air Temp (°C)', data: tempCrop.values, borderColor: '#004370', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            data: { labels: tempCrop.labels, datasets: [{ label: translations.airTemp, data: tempCrop.values, borderColor: '#004370', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: '°C' } } } }
         });
         new Chart(document.getElementById('weatherPrecipChart'), {
             type: 'bar',
-            data: { labels: precipCrop.labels, datasets: [{ label: 'Precip (mm)', data: precipCrop.values, backgroundColor: 'rgba(16, 185, 129, 0.4)', borderColor: '#10b981', borderWidth: 1 }] },
+            data: { labels: precipCrop.labels, datasets: [{ label: translations.precip, data: precipCrop.values, backgroundColor: 'rgba(16, 185, 129, 0.4)', borderColor: '#10b981', borderWidth: 1 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'mm' } } } }
         });
         new Chart(document.getElementById('weatherWindChart'), {
             type: 'line',
-            data: { labels: windCrop.labels, datasets: [{ label: 'Wind Speed (km/h)', data: windCrop.values, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+            data: { labels: windCrop.labels, datasets: [{ label: translations.windSpeed, data: windCrop.values, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'km/h' } } } }
         });
         new Chart(document.getElementById('weatherSnowChart'), {
             type: 'bar',
-            data: { labels: snowCrop.labels, datasets: [{ label: 'Snowfall (cm)', data: snowCrop.values, backgroundColor: 'rgba(34, 211, 238, 0.4)', borderColor: '#22d3ee', borderWidth: 1 }] },
+            data: { labels: snowCrop.labels, datasets: [{ label: translations.snowfall, data: snowCrop.values, backgroundColor: 'rgba(34, 211, 238, 0.4)', borderColor: '#22d3ee', borderWidth: 1 }] },
             options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'cm' } } } }
         });
     }
@@ -524,7 +580,7 @@
             const tempByDate = mapByDate(tempContinuous);
             const tempAligned = labels.map(d => (tempByDate[d] != null ? tempByDate[d] : null));
             datasets.push({
-                label: 'Air Temperature (°C)',
+                label: translations.airTemp,
                 data: tempAligned,
                 borderColor: '#0ea5e9',
                 backgroundColor: 'rgba(14, 165, 233, 0.08)',
@@ -540,7 +596,7 @@
             const hByDate = mapByDate(hydroContinuous);
             const hAligned = labels.map(d => (hByDate[d] != null ? hByDate[d] : null));
             datasets.push({
-                label: 'Throughput (L/s)',
+                label: translations.throughput,
                 data: hAligned,
                 borderColor: '#f59e0b',
                 backgroundColor: 'rgba(245, 158, 11, 0.08)',
@@ -611,20 +667,20 @@
                 },
                 scales: {
                     ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `Sensor Value (${colUnit})` : 'Sensor Value', font: { size: 10, weight: 'bold' } } },
+                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `${translations.parameter} (${colUnit})` : translations.parameter, font: { size: 10, weight: 'bold' } } },
                     yTemp: {
                         position: 'right',
                         display: datasets.some(d => d.yAxisID === 'yTemp'),
                         grid: { display: false },
                         ticks: { font: { size: 9 }, color: '#717781' },
-                        title: { display: true, text: 'Temperature (°C)', font: { size: 9 } }
+                        title: { display: true, text: translations.airTemp, font: { size: 9 } }
                     },
                     yHydro: {
                         position: 'right',
                         display: datasets.some(d => d.yAxisID === 'yHydro'),
                         grid: { display: false },
                         ticks: { font: { size: 9 }, color: '#717781' },
-                        title: { display: true, text: 'Throughput (L/s)', font: { size: 9 } }
+                        title: { display: true, text: translations.throughput, font: { size: 9 } }
                     }
                 }
             }

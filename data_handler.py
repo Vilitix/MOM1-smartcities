@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-def load_and_clean_data(file_path="data.csv"):
+def load_and_clean_data(file_path="data/data.csv"):
     """
     Loads and cleans the sensor data from data.csv.
     Standardizes dates and handles missing values.

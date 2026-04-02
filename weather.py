@@ -19,7 +19,7 @@ def get_weather_data(lat=48.693033, lon=6.204775, days=365):
     ]
 
     # Set up the cache and retry client
-    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+    cache_session = requests_cache.CachedSession('data/.cache', expire_after=3600)
     retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
     openmeteo = openmeteo_requests.Client(session=retry_session)
 
@@ -83,7 +83,7 @@ def get_weather_forecast(lat=48.693033, lon=6.204775, forecast_days=15):
     ]
 
     # Set up the cache and retry client
-    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+    cache_session = requests_cache.CachedSession('data/.cache', expire_after=3600)
     retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
     openmeteo = openmeteo_requests.Client(session=retry_session)
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, Response, request
+from flask import Flask, render_template, jsonify, Response, request, session, redirect, url_for
 from weather import get_weather_data, get_weather_forecast
 from data_handler import load_and_clean_data, get_latest_sensor_metrics, get_resampled_sensor_data
 from farming_event import get_farming_data
@@ -36,23 +36,35 @@ if not LITE_MODE:
 
         #import model and scalers
         lstm_model = WaterQualityLSTM(input_size=9, hidden_size=128, num_layers=2, output_size=9)
-        lstm_model.load_state_dict(torch.load('lstm_model.pth', map_location=torch.device('cpu')))
+        lstm_model.load_state_dict(torch.load('models/lstm_model.pth', map_location=torch.device('cpu')))
         lstm_model.eval()
-        scaler_X = joblib.load('scaler_X.pkl')
-        scaler_y = joblib.load('scaler_y.pkl')
+        scaler_X = joblib.load('models/scaler_X.pkl')
+        scaler_y = joblib.load('models/scaler_y.pkl')
         MODEL_READY = True
     except Exception as e:
         print(f"AI Model load failed: {e}")
         MODEL_READY = False
 
 app = Flask(__name__)
+app.secret_key = "hydrolens_secret_key" # Needed for sessions
+
+@app.context_processor
+def inject_lang():
+    lang = session.get('lang', 'fr')
+    return dict(lang=lang)
+
+@app.route("/set_language/<lang>")
+def set_language(lang):
+    if lang in ['en', 'fr']:
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('dashboard'))
 
 @app.context_processor
 def inject_lite_mode():
     return dict(lite_mode=LITE_MODE)
 
 # --- Database Setup ---
-DB_FILE = "events.db"
+DB_FILE = "data/events.db"
 
 def init_db():
     with sqlite3.connect(DB_FILE) as conn:
@@ -89,7 +101,7 @@ _farming_cache = None # Cache for farming metadata
 def get_processed_sensor_data():
     """Load and return processed sensor data from data_handler."""
     global _df_sensor, _numeric_cols, _sensor_data_mtime
-    file_path = "data.csv"
+    file_path = "data/data.csv"
     
     # Use lock to prevent multiple threads from loading data at once
     with data_lock:
@@ -536,7 +548,7 @@ def api_sensor_data():
 def api_hydro_data():
     """Return hydrometric throughput (flow) data from export_hydro_series.csv."""
     start = time.time()
-    file_path = "export_hydro_series.csv"
+    file_path = "data/export_hydro_series.csv"
     if not os.path.exists(file_path):
         return jsonify({"error": "Hydro data file not found."}), 404
         

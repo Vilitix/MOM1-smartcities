@@ -56,7 +56,7 @@ def train_and_predict():
     df_weather.reset_index(inplace=True)
 
     print("Loading water quality dataset...")
-    df_water = pd.read_csv("data.csv")
+    df_water = pd.read_csv("data/data.csv")
     try:
         df_water['Datetime'] = pd.to_datetime(df_water['Date'], format='%d/%m-%y %H:%M:%S', exact=False)
     except:
@@ -90,8 +90,8 @@ def train_and_predict():
     y_scaled = scaler_y.fit_transform(y)
     
     # --- Save scalers for backend inference ---
-    joblib.dump(scaler_X, 'scaler_X.pkl')
-    joblib.dump(scaler_y, 'scaler_y.pkl')
+    joblib.dump(scaler_X, 'models/scaler_X.pkl')
+    joblib.dump(scaler_y, 'models/scaler_y.pkl')
     # ----------------------------------------
     
     SEQ_LENGTH = 45
@@ -133,14 +133,8 @@ def train_and_predict():
             
         if loss < best_loss:
             best_loss = loss
-            torch.save(model.state_dict(), 'lstm_model.pth') # save best model
-            print(f"Epoch {epoch+1}: Best model saved with loss {loss:.4f}")
-
-        if (epoch+1) % 20 == 0:
-            print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}")
-
     # --- Save the trained model ---
-    torch.save(model.state_dict(), 'lstm_model.pth')
+    torch.save(model.state_dict(), 'models/lstm_model.pth')
     print("Model training complete and saved.")
     # ------------------------------
 

@@ -2,85 +2,117 @@
 {% block title %}Report Event{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto py-8">
-    <div class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-outline-variant/20">
+    <div
+        class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_20px_40px_rgba(0,67,112,0.06)] border border-outline-variant/20">
         <div class="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
             <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-                <span class="material-symbols-outlined text-rose-600" style="font-variation-settings: 'FILL' 1;">report</span>
+                <span class="material-symbols-outlined text-rose-600"
+                    style="font-variation-settings: 'FILL' 1;">report</span>
             </div>
             <div>
-                <h1 class="font-headline text-2xl font-bold text-primary">Report an Environmental Event</h1>
-                <p class="text-on-surface-variant text-sm mt-1">Submit visual or suspected occurrences of pollution, leaks, or agricultural events.</p>
+                <h1 class="font-headline text-2xl font-bold text-primary">{% if lang == 'fr' %}Signaler un Événement
+                    Environnemental{% else %}Report an Environmental Event{% endif %}</h1>
+                <p class="text-on-surface-variant text-sm mt-1">{% if lang == 'fr' %}Soumettez des observations
+                    visuelles ou suspectées de pollution, de fuites ou d'événements agricoles.{% else %}Submit visual or
+                    suspected occurrences of pollution, leaks, or agricultural events.{% endif %}</p>
             </div>
         </div>
 
         <form action="/api/submit-report" method="POST" id="reportForm" class="space-y-6">
             <!-- Event Type -->
             <div>
-                <label for="eventType" class="block text-sm font-bold text-slate-700 mb-2">Event Type</label>
-                <select id="eventType" name="eventType" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800 font-medium" required>
-                    <option value="" disabled selected>Select an event type...</option>
-                    <option value="pesticides">Spreading of Pesticides / Fertilizers</option>
-                    <option value="leaks">Untreated Water Leak (Fuites d'eaux non nettoyées)</option>
-                    <option value="algae">Algae Bloom</option>
-                    <option value="suspicious_color">Suspicious Water Color/Odor</option>
-                    <option value="other">Other Environmental Issue</option>
+                <label for="eventType" class="block text-sm font-bold text-slate-700 mb-2">{% if lang == 'fr' %}Type
+                    d'Événement{% else %}Event Type{% endif %}</label>
+                <select id="eventType" name="eventType"
+                    class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800 font-medium"
+                    required>
+                    <option value="" disabled selected>{% if lang == 'fr' %}Sélectionnez un type d'événement...{% else
+                        %}Select an event type...{% endif %}</option>
+                    <option value="pesticides">{% if lang == 'fr' %}Épandage de Pesticides / Engrais{% else %}Spreading
+                        of Pesticides / Fertilizers{% endif %}</option>
+                    <option value="leaks">{% if lang == 'fr' %}Fuite d'eaux non traitées{% else %}Untreated Water Leak{%
+                        endif %}</option>
+                    <option value="algae">{% if lang == 'fr' %}Prolifération d'Algues{% else %}Algae Bloom{% endif %}
+                    </option>
+                    <option value="suspicious_color">{% if lang == 'fr' %}Couleur/Odeur d'Eau Suspecte{% else
+                        %}Suspicious Water Color/Odor{% endif %}</option>
+                    <option value="other">{% if lang == 'fr' %}Autre Problème Environnemental{% else %}Other
+                        Environmental Issue{% endif %}</option>
                 </select>
             </div>
 
             <!-- Location -->
             <div>
-                <label for="location" class="block text-sm font-bold text-slate-700 mb-2">Location / Coordinates</label>
-                <input type="text" id="location" name="location" placeholder="e.g. Near Station ECHO-01, or GPS coordinates" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800" required>
+                <label for="location" class="block text-sm font-bold text-slate-700 mb-2">{% if lang == 'fr' %}Lieu /
+                    Coordonnées{% else %}Location / Coordinates{% endif %}</label>
+                <input type="text" id="location" name="location"
+                    placeholder="{% if lang == 'fr' %}ex: Près de la Station ECHO-01, ou coordonnées GPS{% else %}e.g. Near Station ECHO-01, or GPS coordinates{% endif %}"
+                    class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800"
+                    required>
             </div>
 
             <!-- Date and Time -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="eventDate" class="block text-sm font-bold text-slate-700 mb-2">Date of Observation</label>
-                    <input type="date" id="eventDate" name="eventDate" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800" required>
+                    <label for="eventDate" class="block text-sm font-bold text-slate-700 mb-2">{% if lang == 'fr' %}Date
+                        de l'Observation{% else %}Date of Observation{% endif %}</label>
+                    <input type="date" id="eventDate" name="eventDate"
+                        class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800"
+                        required>
                 </div>
                 <div>
-                    <label for="eventTime" class="block text-sm font-bold text-slate-700 mb-2">Time of Observation</label>
-                    <input type="time" id="eventTime" name="eventTime" class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800">
+                    <label for="eventTime" class="block text-sm font-bold text-slate-700 mb-2">{% if lang == 'fr'
+                        %}Heure de l'Observation{% else %}Time of Observation{% endif %}</label>
+                    <input type="time" id="eventTime" name="eventTime"
+                        class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800">
                 </div>
             </div>
 
             <!-- Description -->
             <div>
-                <label for="description" class="block text-sm font-bold text-slate-700 mb-2">Additional Details</label>
-                <textarea id="description" name="description" rows="4" placeholder="Describe what you saw, extent of the issue, potential causes..." class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800 resize-none"></textarea>
+                <label for="description" class="block text-sm font-bold text-slate-700 mb-2">{% if lang == 'fr'
+                    %}Détails Supplémentaires{% else %}Additional Details{% endif %}</label>
+                <textarea id="description" name="description" rows="4"
+                    placeholder="{% if lang == 'fr' %}Décrivez ce que vous avez vu, l'étendue du problème, les causes potentielles...{% else %}Describe what you saw, extent of the issue, potential causes...{% endif %}"
+                    class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-800 resize-none"></textarea>
             </div>
 
             <!-- Severity Level -->
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-3">Estimated Severity</label>
+                <label class="block text-sm font-bold text-slate-700 mb-3">{% if lang == 'fr' %}Sévérité Estimée{% else
+                    %}Estimated Severity{% endif %}</label>
                 <div class="flex gap-4">
                     <label class="flex-1 cursor-pointer">
                         <input type="radio" name="severity" value="low" class="peer sr-only" required>
-                        <div class="px-4 py-3 text-center rounded-xl border border-slate-200 peer-checked:bg-amber-50 peer-checked:border-amber-400 peer-checked:text-amber-800 transition-all font-bold text-sm text-slate-500 hover:bg-slate-50">
-                            Low
+                        <div
+                            class="px-4 py-3 text-center rounded-xl border border-slate-200 peer-checked:bg-amber-50 peer-checked:border-amber-400 peer-checked:text-amber-800 transition-all font-bold text-sm text-slate-500 hover:bg-slate-50">
+                            {% if lang == 'fr' %}Faible{% else %}Low{% endif %}
                         </div>
                     </label>
                     <label class="flex-1 cursor-pointer">
                         <input type="radio" name="severity" value="medium" class="peer sr-only">
-                        <div class="px-4 py-3 text-center rounded-xl border border-slate-200 peer-checked:bg-orange-50 peer-checked:border-orange-500 peer-checked:text-orange-800 transition-all font-bold text-sm text-slate-500 hover:bg-slate-50">
-                            Medium
+                        <div
+                            class="px-4 py-3 text-center rounded-xl border border-slate-200 peer-checked:bg-orange-50 peer-checked:border-orange-500 peer-checked:text-orange-800 transition-all font-bold text-sm text-slate-500 hover:bg-slate-50">
+                            {% if lang == 'fr' %}Moyenne{% else %}Medium{% endif %}
                         </div>
                     </label>
                     <label class="flex-1 cursor-pointer">
                         <input type="radio" name="severity" value="high" class="peer sr-only">
-                        <div class="px-4 py-3 text-center rounded-xl border border-slate-200 peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-800 transition-all font-bold text-sm text-slate-500 hover:bg-slate-50">
-                            High / Critical
+                        <div
+                            class="px-4 py-3 text-center rounded-xl border border-slate-200 peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-800 transition-all font-bold text-sm text-slate-500 hover:bg-slate-50">
+                            {% if lang == 'fr' %}Élevée / Critique{% else %}High / Critical{% endif %}
                         </div>
                     </label>
                 </div>
             </div>
 
             <div class="pt-6 border-t border-slate-100 flex items-center justify-between">
-                <p id="statusMessage" class="text-sm font-bold text-emerald-600 hidden">Report submitted successfully.</p>
-                <button type="submit" class="ml-auto bg-primary hover:bg-sky-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                <p id="statusMessage" class="text-sm font-bold text-emerald-600 hidden">{% if lang == 'fr' %}Signalement
+                    soumis avec succès.{% else %}Report submitted successfully.{% endif %}</p>
+                <button type="submit"
+                    class="ml-auto bg-primary hover:bg-sky-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">send</span>
-                    Submit Report
+                    {% if lang == 'fr' %}Envoyer le Signalement{% else %}Submit Report{% endif %}
                 </button>
             </div>
         </form>
@@ -90,13 +122,20 @@
 
 {% block scripts %}
 <script>
-    document.getElementById('reportForm').addEventListener('submit', function(e) {
+    const currentLang = "{{ lang }}";
+    const translations = {
+        submitting: currentLang === 'fr' ? 'Envoi en cours...' : 'Submitting...',
+        success: currentLang === 'fr' ? 'Signalement soumis et ajouté au calendrier.' : 'Report submitted and added to calendar.',
+        error: currentLang === 'fr' ? 'Erreur lors de l\'envoi du signalement.' : 'Error submitting report.'
+    };
+
+    document.getElementById('reportForm').addEventListener('submit', function (e) {
         e.preventDefault();
         const btn = this.querySelector('button[type="submit"]');
         const status = document.getElementById('statusMessage');
         const originalText = btn.innerHTML;
-        
-        btn.innerHTML = '<div class="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white mr-2"></div> Submitting...';
+
+        btn.innerHTML = `<div class="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white mr-2"></div> ${translations.submitting}`;
         btn.disabled = true;
 
         const formData = new FormData(this);
@@ -107,30 +146,30 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .then(result => {
-            window.HydroLensCache.invalidate('/api/events');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            status.textContent = "Report submitted and added to calendar.";
-            status.classList.remove('hidden');
-            this.reset();
-            document.getElementById('eventDate').valueAsDate = new Date();
-            
-            setTimeout(() => {
-                status.classList.add('hidden');
-            }, 5000);
-        })
-        .catch(err => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            status.textContent = "Error submitting report.";
-            status.classList.remove('text-emerald-600');
-            status.classList.add('text-rose-600', 'hidden');
-            status.classList.remove('hidden');
-        });
+            .then(response => response.json())
+            .then(result => {
+                window.HydroLensCache.invalidate('/api/events');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                status.textContent = translations.success;
+                status.classList.remove('hidden');
+                this.reset();
+                document.getElementById('eventDate').valueAsDate = new Date();
+
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            })
+            .catch(err => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                status.textContent = translations.error;
+                status.classList.remove('text-emerald-600');
+                status.classList.add('text-rose-600', 'hidden');
+                status.classList.remove('hidden');
+            });
     });
-    
+
     // Set today's date automatically
     document.getElementById('eventDate').valueAsDate = new Date();
 </script>

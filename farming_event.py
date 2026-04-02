@@ -29,7 +29,7 @@ def get_event_metadata():
         "event_months": event_month_map
     }
 
-def get_farming_data(csv_path='data.csv'):
+def get_farming_data(csv_path='data/data.csv'):
     """Return farming-event indicators aligned with sensor rows.
 
     Parameters
@@ -85,7 +85,7 @@ def get_farming_data(csv_path='data.csv'):
     return out
 
 
-def build_csv(input_csv_path='data.csv', output_csv_path='farming_events.csv'):
+def build_csv(input_csv_path='data/data.csv', output_csv_path='data/farming_events.csv'):
     """Build and save the farming-events CSV from the source data file.
 
     Parameters
