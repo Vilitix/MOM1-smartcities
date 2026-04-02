@@ -495,7 +495,7 @@ def api_correlation():
 @app.route("/api/sensor-data")
 def api_sensor_data():
     """Return processed sensor data from data.csv."""
-    df, _ = get_processed_sensor_data()
+    df, numeric_cols = get_processed_sensor_data()
     if df.empty:
         return jsonify({"error": "No data found"}), 404
     
