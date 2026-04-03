@@ -52,14 +52,24 @@
                     {% if lang == 'fr' %}Réinitialiser Zoom{% else %}Reset Zoom{% endif %}
                 </button>
 
-                <!-- Parameter Selector -->
-                <div class="flex items-center gap-3 bg-surface p-2 rounded-xl border border-outline-variant/30">
-                    <span class="text-[10px] font-bold text-primary uppercase ml-2">{% if lang == 'fr' %}Métrique :{%
-                        else %}Parameter:{% endif %}</span>
-                    <select id="paramSelect" onchange="updateGlobalChart()"
-                        class="bg-white border-0 text-sm font-bold text-sky-900 rounded-lg focus:ring-2 focus:ring-primary/20 px-3 py-1 cursor-pointer">
-                        <!-- Dynamic -->
-                    </select>
+                <!-- Parameter Selector (Multi-Select) -->
+                <div class="flex flex-col gap-2 bg-surface p-3 rounded-xl border border-outline-variant/30 flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold text-primary uppercase ml-1">
+                            {% if lang == 'fr' %}Métriques à Comparer :{% else %}Metrics to Compare:{% endif %}
+                        </span>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="normalizeToggle" onchange="updateGlobalChart()"
+                                class="w-3 h-3 accent-primary">
+                            <span class="text-[9px] font-bold text-on-surface-variant uppercase">
+                                {% if lang == 'fr' %}Normaliser{% else %}Normalize{% endif %}
+                            </span>
+                        </label>
+                    </div>
+                    <div id="paramSelectContainer"
+                        class="flex flex-wrap gap-1.5 max-h-[100px] overflow-y-auto pr-2 custom-scrollbar">
+                        <!-- Dynamic Checkboxes -->
+                    </div>
                 </div>
 
                 <!-- Weather Legends / Toggles -->
@@ -333,14 +343,25 @@
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('analysis-content').classList.remove('hidden');
 
-        // Populate Select
-        const select = document.getElementById('paramSelect');
+        // Populate Multi-Select Container
+        const container = document.getElementById('paramSelectContainer');
         sensors.numeric_columns.forEach(col => {
-            const opt = document.createElement('option');
-            opt.value = col;
-            opt.textContent = col;
-            if (col === 'Chlorophylle-a SCALED') opt.selected = true;
-            select.appendChild(opt);
+            const label = document.createElement('label');
+            label.className = 'flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-medium text-on-surface-variant cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:bg-primary/5 has-[:checked]:border-primary/30 has-[:checked]:text-primary';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = col;
+            checkbox.className = 'hidden';
+            if (col === 'Chlorophylle-a SCALED' || col === 'NO3') checkbox.checked = true;
+            checkbox.addEventListener('change', updateGlobalChart);
+
+            const text = document.createElement('span');
+            text.textContent = col;
+
+            label.appendChild(checkbox);
+            label.appendChild(text);
+            container.appendChild(label);
         });
 
         renderFarmingEventFilters();
@@ -534,15 +555,54 @@
     }
 
     function updateGlobalChart() {
-        const colName = document.getElementById('paramSelect').value;
-        const colUnit = getUnitForParam(colName);
-        const rawData = (state.sensors && state.sensors.trends && state.sensors.trends.all_params) ? state.sensors.trends.all_params[colName] : [];
-        const rawLabels = (state.sensors && state.sensors.trends) ? state.sensors.trends.labels : [];
+        const checked = Array.from(document.querySelectorAll('#paramSelectContainer input:checked'));
+        const selectedCols = checked.map(el => el.value);
+        const normalizeOn = document.getElementById('normalizeToggle').checked;
 
-        const continuous = buildContinuousDailySeries(rawLabels, rawData);
-        const globalCrop = cropSeriesToFirstNonNull(continuous.labels, continuous.values);
-        const data = globalCrop.values;
-        const labels = globalCrop.labels;
+        if (selectedCols.length === 0) {
+            if (globalChart) globalChart.destroy();
+            return;
+        }
+
+        const palettes = ['#004370', '#e53e3e', '#38a169', '#d69e2e', '#805ad5', '#319795', '#d53f8c'];
+        const datasets = [];
+
+        // Base Labels (from first selected or fallback)
+        const rawLabels = (state.sensors && state.sensors.trends) ? state.sensors.trends.labels : [];
+        if (!rawLabels.length) return;
+
+        selectedCols.forEach((colName, idx) => {
+            const rawData = (state.sensors && state.sensors.trends && state.sensors.trends.all_params) ? state.sensors.trends.all_params[colName] : [];
+            const continuous = buildContinuousDailySeries(rawLabels, rawData);
+            const colUnit = getUnitForParam(colName);
+            const color = palettes[idx % palettes.length];
+
+            let data = continuous.values;
+            const labels = continuous.labels;
+
+            if (normalizeOn) {
+                const nonNull = data.filter(v => v != null);
+                const min = Math.min(...nonNull);
+                const max = Math.max(...nonNull);
+                data = data.map(v => (v == null ? null : (max === min ? 50 : ((v - min) / (max - min) * 100))));
+            }
+
+            datasets.push({
+                label: colUnit ? `${colName} (${colUnit})` : colName,
+                data: data,
+                borderColor: color,
+                backgroundColor: color + '15',
+                fill: selectedCols.length === 1,
+                tension: 0.4,
+                pointRadius: 0,
+                borderWidth: 2,
+                yAxisID: 'y',
+                unit: colUnit
+            });
+        });
+
+        // Use labels from first dataset
+        const finalLabels = buildContinuousDailySeries(rawLabels, []).labels;
         const ctx = document.getElementById('globalTrendChart').getContext('2d');
 
         const eventMonths = (state.farming && state.farming.event_months) || {};
@@ -552,18 +612,7 @@
 
         if (globalChart) globalChart.destroy();
 
-        const datasets = [{
-            label: colUnit ? `${colName} (${colUnit})` : colName,
-            data: data,
-            borderColor: '#004370',
-            backgroundColor: 'rgba(0, 67, 112, 0.08)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 2.5,
-            yAxisID: 'y'
-        }];
-
+        // Weather overlays
         const rainContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.precipitation) : { labels: [], values: [] };
         const snowContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.snowfall) : { labels: [], values: [] };
         const windContinuous = state.weather ? buildContinuousDailySeries(state.weather.daily.labels, state.weather.daily.wind_speed) : { labels: [], values: [] };
@@ -578,7 +627,7 @@
 
         if (document.getElementById('overlayTemp').checked && state.weather) {
             const tempByDate = mapByDate(tempContinuous);
-            const tempAligned = labels.map(d => (tempByDate[d] != null ? tempByDate[d] : null));
+            const tempAligned = finalLabels.map(d => (tempByDate[d] != null ? tempByDate[d] : null));
             datasets.push({
                 label: translations.airTemp,
                 data: tempAligned,
@@ -587,14 +636,14 @@
                 fill: false,
                 tension: 0.35,
                 pointRadius: 0,
-                borderWidth: 2,
+                borderWidth: 1.5,
                 yAxisID: 'yTemp'
             });
         }
 
         if (document.getElementById('overlayThroughput').checked && state.hydro) {
             const hByDate = mapByDate(hydroContinuous);
-            const hAligned = labels.map(d => (hByDate[d] != null ? hByDate[d] : null));
+            const hAligned = finalLabels.map(d => (hByDate[d] != null ? hByDate[d] : null));
             datasets.push({
                 label: translations.throughput,
                 data: hAligned,
@@ -603,7 +652,7 @@
                 fill: false,
                 tension: 0.35,
                 pointRadius: 0,
-                borderWidth: 2.2,
+                borderWidth: 1.5,
                 yAxisID: 'yHydro'
             });
         }
@@ -635,12 +684,16 @@
         globalChart = new Chart(ctx, {
             type: 'line',
             plugins: [monthHighlightPlugin, weatherEventLinePlugin],
-            data: { labels: labels, datasets: datasets },
+            data: { labels: finalLabels, datasets: datasets },
             options: {
                 ...commonOpts,
                 plugins: {
                     ...commonOpts.plugins,
-                    title: { display: true, text: colUnit ? `${colName} (${colUnit}) Analysis with Context` : `${colName} Analysis with Context`, font: { size: 14, weight: 'bold' } },
+                    title: {
+                        display: true,
+                        text: normalizeOn ? (currentLang === 'fr' ? 'Comparaison Relative (%)' : 'Relative Comparison (%)') : (currentLang === 'fr' ? 'Comparaison des Métriques' : 'Metrics Comparison'),
+                        font: { size: 14, weight: 'bold' }
+                    },
                     tooltip: {
                         ...commonOpts.plugins.tooltip,
                         callbacks: {
@@ -648,26 +701,29 @@
                                 if (ctx.parsed.y == null) return `${ctx.dataset.label}: N/A`;
                                 if (ctx.dataset.yAxisID === 'yTemp') return `${ctx.dataset.label}: ${ctx.parsed.y} °C`;
                                 if (ctx.dataset.yAxisID === 'yHydro') return `${ctx.dataset.label}: ${ctx.parsed.y} L/s`;
-                                if (ctx.dataset.yAxisID !== 'y') return `${ctx.dataset.label}: ${ctx.parsed.y}`;
-                                return colUnit ? `${ctx.dataset.label}: ${ctx.parsed.y} ${colUnit}` : `${ctx.dataset.label}: ${ctx.parsed.y}`;
+                                if (normalizeOn && ctx.dataset.yAxisID === 'y') return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`;
+                                return ctx.dataset.unit ? `${ctx.dataset.label}: ${ctx.parsed.y} ${ctx.dataset.unit}` : `${ctx.dataset.label}: ${ctx.parsed.y}`;
                             }
                         }
                     },
                     monthHighlightPlugin: { months: highlightMonths },
                     weatherEventLinePlugin: { events: weatherEvents },
                     zoom: {
-                        zoom: {
-                            drag: {
-                                enabled: true,
-                                backgroundColor: 'rgba(56, 189, 248, 0.3)'
-                            },
-                            mode: 'x'
-                        }
+                        zoom: { drag: { enabled: true, backgroundColor: 'rgba(56, 189, 248, 0.3)' }, mode: 'x' }
                     }
                 },
                 scales: {
                     ...commonOpts.scales,
-                    y: { ...commonOpts.scales.y, title: { display: true, text: colUnit ? `${translations.parameter} (${colUnit})` : translations.parameter, font: { size: 10, weight: 'bold' } } },
+                    y: {
+                        ...commonOpts.scales.y,
+                        title: {
+                            display: true,
+                            text: normalizeOn ? '%' : (selectedCols.length === 1 ? (getUnitForParam(selectedCols[0]) || translations.parameter) : translations.parameter),
+                            font: { size: 10, weight: 'bold' }
+                        },
+                        min: normalizeOn ? 0 : null,
+                        max: normalizeOn ? 100 : null
+                    },
                     yTemp: {
                         position: 'right',
                         display: datasets.some(d => d.yAxisID === 'yTemp'),
