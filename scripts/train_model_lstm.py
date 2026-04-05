@@ -63,7 +63,7 @@ def train_and_predict():
         df_water['Datetime'] = pd.to_datetime(df_water['Date'], format='mixed', dayfirst=True)
     
     df_water.set_index('Datetime', inplace=True)
-    water_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
+    water_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES', 'DBOeq', 'Phycocyanine scaled']
     df_water_aligned = df_water[water_cols].resample('8h').mean()
     df_water_aligned.reset_index(inplace=True)
     

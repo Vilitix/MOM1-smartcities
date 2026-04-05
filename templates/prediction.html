@@ -24,11 +24,19 @@
                 météorologiques et agricoles.{% else %}AI-driven forecasting utilizing LSTM networks to predict multiple
                 water parameters based on meteorological and agricultural events.{% endif %}</p>
         </div>
-        <div
-            class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
-            <span class="text-[10px] font-bold uppercase tracking-wider">{% if lang == 'fr' %}État du Modèle : Actif{%
-                else %}Model Status: Active{% endif %}</span>
+        <div class="flex items-center gap-3">
+            <button id="btn-mode-live" onclick="toggleMode('live')"
+                class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 transition-all hover:shadow-sm group">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
+                <span class="text-[10px] font-bold uppercase tracking-wider">{% if lang == 'fr' %}Prévision en Direct{%
+                    else %}Live Forecast{% endif %}</span>
+            </button>
+            <button id="btn-mode-valid" onclick="toggleMode('validation')"
+                class="flex items-center gap-2 bg-slate-50 text-slate-400 px-3 py-1.5 rounded-lg border border-slate-200 transition-all hover:shadow-sm group">
+                <span class="w-2 h-2 rounded-full bg-amber-500 pulse-indicator"></span>
+                <span class="text-[10px] font-bold uppercase tracking-wider">{% if lang == 'fr' %}Showcase : Mar 2026{%
+                    else %}Showcase: Mar 2026{% endif %}</span>
+            </button>
         </div>
     </header>
 
@@ -190,9 +198,11 @@
         value: currentLang === 'fr' ? 'Valeur' : 'Value',
         lastMonth: currentLang === 'fr' ? 'Le mois dernier' : 'Last Month',
         historical: currentLang === 'fr' ? 'Historique' : 'Historical',
+        actual: currentLang === 'fr' ? 'Valeur Réelle' : 'Real Value',
         lstmPredicted: currentLang === 'fr' ? 'Prédiction LSTM' : 'LSTM Predicted',
         runningLstm: currentLang === 'fr' ? 'Calcul LSTM en cours...' : 'Running LSTM...',
         forecastTitle: currentLang === 'fr' ? 'Prévision à %days% Jours : ' : '%days%-Day Forecast: ',
+        validTitle: currentLang === 'fr' ? 'Validation de Février (Showcase) : ' : 'February Validation (Showcase): ',
         backendError: currentLang === 'fr' ? 'Erreur Backend : ' : 'Backend Error: ',
         predictionFailed: currentLang === 'fr' ? 'Échec de la prédiction :' : 'Prediction failed:',
         connectionFailed: currentLang === 'fr' ? 'Échec de la connexion au modèle de prédiction.' : 'Failed to connect to prediction model.'
@@ -200,9 +210,10 @@
 
     let predictionChart = null;
     let globalData = { historical: {}, predicted: {}, targets: [] };
-    let currentActiveTab = 'Turbidité'; // Default tab
+    let validationData = null;
+    let isValidationMode = false;
+    let currentActiveTab = 'Turbidité';
 
-    // Initialize an empty chart
     function initChart() {
         const ctx = document.getElementById('predictionChart').getContext('2d');
         predictionChart = new Chart(ctx, {
@@ -223,159 +234,186 @@
             }
         });
 
-        // Run initial simulation to fetch real model data
         runSimulation();
     }
 
-    // Build the horizontal tabs dynamically based on model outputs
+    function toggleMode(mode) {
+        isValidationMode = (mode === 'validation');
+        const liveBtn = document.getElementById('btn-mode-live');
+        const validBtn = document.getElementById('btn-mode-valid');
+
+        if (isValidationMode) {
+            validBtn.classList.add('bg-amber-100', 'text-amber-800', 'border-amber-400');
+            validBtn.classList.remove('bg-slate-50', 'text-slate-400', 'border-slate-200');
+            liveBtn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+            liveBtn.classList.add('bg-slate-50', 'text-slate-400', 'border-slate-200');
+
+            if (!validationData) {
+                runValidation();
+            } else {
+                updateChartDisplay();
+            }
+        } else {
+            liveBtn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+            liveBtn.classList.remove('bg-slate-50', 'text-slate-400', 'border-slate-200');
+            validBtn.classList.remove('bg-amber-100', 'text-amber-800', 'border-amber-400');
+            validBtn.classList.add('bg-slate-50', 'text-slate-400', 'border-slate-200');
+            updateChartDisplay();
+        }
+    }
+
     function renderTabs() {
         const container = document.getElementById('parameter-tabs');
         container.innerHTML = '';
+        const data = isValidationMode ? validationData : globalData;
+        if (!data || !data.targets) return;
 
-        globalData.targets.forEach(target => {
+        data.targets.forEach(target => {
             const btn = document.createElement('button');
             const isActive = target === currentActiveTab;
-
-            btn.className = `px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${isActive ? 'bg-primary text-white shadow-md' : 'bg-surface-container-low text-slate-500 hover:bg-slate-200'}`;
+            btn.className = `px-4 py-2 text-xs font-bold rounded-lg transition-all ${isActive ? 'bg-primary text-white shadow-md' : 'bg-surface-container-low text-slate-500 hover:bg-slate-200'}`;
             btn.textContent = target;
-
             btn.onclick = () => {
                 currentActiveTab = target;
-                renderTabs(); // Re-render to update active styling
-                updateChartDisplay(); // Update chart data
+                renderTabs();
+                updateChartDisplay();
             };
             container.appendChild(btn);
         });
     }
 
-    // Update the chart datasets based on the currently selected tab
-
     function updateChartDisplay() {
-        if (!globalData.targets.length) return;
+        const data = isValidationMode ? validationData : globalData;
+        if (!data || !data.targets.length) return;
 
-        const hist = globalData.historical[currentActiveTab] || [];
-        const pred = globalData.predicted[currentActiveTab] || [];
-        const lastMonth = globalData.last_month ? globalData.last_month[currentActiveTab] : [];
-        // Use real labels from backend instead of generating new Date()
-        const labels = (globalData.historical_labels || []).concat(globalData.predicted_labels || []);
+        const hist = data.historical[currentActiveTab] || [];
+        const pred = data.predicted[currentActiveTab] || [];
+        const actual = data.actual ? data.actual[currentActiveTab] : null;
+        const lastMonth = data.last_month ? data.last_month[currentActiveTab] : [];
+
+        const labels = (data.historical_labels || []).concat(isValidationMode ? (data.validation_labels || []) : (data.predicted_labels || []));
 
         const paddedPredicted = Array(hist.length).fill(null).concat(pred);
         const paddedHistorical = hist.concat(Array(pred.length).fill(null));
 
-        predictionChart.data.labels = labels;
-        predictionChart.data.datasets = [
-            {
-                label: `${translations.lastMonth} ${currentActiveTab}`,
-                data: lastMonth,
-                borderColor: '#cbd5e1',
-                borderDash: [2, 2],
-                fill: false,
-                tension: 0.4,
-                borderWidth: 1.5,
-                pointRadius: 0
-            },
+        const datasets = [
             {
                 label: `${translations.historical} ${currentActiveTab}`,
                 data: paddedHistorical,
                 borderColor: '#004370',
                 backgroundColor: 'rgba(0, 67, 112, 0.1)',
-                fill: true,
-                tension: 0.4,
-                borderWidth: 2.5,
-                pointRadius: 0
-            },
-            {
-                label: `${translations.lstmPredicted} ${currentActiveTab}`,
-                data: paddedPredicted,
-                borderColor: '#f59e0b',
-                borderDash: [5, 5],
-                backgroundColor: 'rgba(245, 158, 11, 0.05)',
-                fill: true,
-                tension: 0.4,
-                borderWidth: 2.5,
-                pointRadius: 2,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#f59e0b'
+                fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 0
             }
         ];
-        let unit = 'Value';
-        if (currentActiveTab.includes('temperature')) unit = '°C';
-        else if (currentActiveTab.includes('precipitation')) unit = 'mm';
-        else if (currentActiveTab.includes('wind')) unit = 'm/s';
-        // Update Y-axis title
-        predictionChart.options.scales.y.title.text = currentActiveTab;
+
+        if (actual) {
+            const paddedActual = Array(hist.length).fill(null).concat(actual);
+            datasets.push({
+                label: `${translations.actual}`,
+                data: paddedActual,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: false, tension: 0.4, borderWidth: 3.5, pointRadius: 0
+            });
+        }
+
+        datasets.push({
+            label: `${translations.lstmPredicted}`,
+            data: paddedPredicted,
+            borderColor: '#f59e0b',
+            borderDash: [5, 5],
+            backgroundColor: 'rgba(245, 158, 11, 0.05)',
+            fill: false, tension: 0.4, borderWidth: 2.5, pointRadius: 2,
+            pointBackgroundColor: '#fff', pointBorderColor: '#f59e0b'
+        });
+
+        if (!isValidationMode && lastMonth.length) {
+            datasets.unshift({
+                label: `${translations.lastMonth}`,
+                data: lastMonth,
+                borderColor: '#cbd5e1', borderDash: [2, 2], fill: false, tension: 0.4, borderWidth: 1.5, pointRadius: 0
+            });
+        }
+
+        predictionChart.data.labels = labels;
+        predictionChart.data.datasets = datasets;
+
+        // Dynamic Y-Axis Unit
+        let unitText = currentActiveTab;
+        if (currentActiveTab.includes('temperature')) unitText += ' (°C)';
+        else if (currentActiveTab.includes('precipitation')) unitText += ' (mm)';
+        else if (currentActiveTab.includes('wind')) unitText += ' (m/s)';
+        else if (currentActiveTab === 'DBOeq') unitText += ' (mg/L O2)';
+        else if (currentActiveTab === 'Conductivité') unitText += ' (µS/cm)';
+
+        predictionChart.options.scales.y.title.text = unitText;
         predictionChart.update();
 
-        // Update dynamic text
-        const days = document.getElementById('daysSelect').value;
-        const forecastTitle = translations.forecastTitle.replace('%days%', days);
-        document.getElementById('forecast-title').textContent = `${forecastTitle}${currentActiveTab}`;
+        if (isValidationMode) {
+            document.getElementById('forecast-title').textContent = translations.validTitle + currentActiveTab;
+        } else {
+            const days = document.getElementById('daysSelect').value;
+            document.getElementById('forecast-title').textContent = translations.forecastTitle.replace('%days%', days) + currentActiveTab;
+        }
     }
 
-    // Fetch real LSTM predictions from backend
+    async function runValidation() {
+        const validBtn = document.getElementById('btn-mode-valid');
+        const icon = validBtn.querySelector('.pulse-indicator');
+        icon.classList.remove('bg-amber-500');
+        icon.classList.add('bg-slate-400', 'animate-spin');
+
+        try {
+            const response = await fetch('/api/validate');
+            const result = await response.json();
+            if (result.status === 'success') {
+                validationData = result;
+                updateChartDisplay();
+            } else {
+                alert(result.error);
+                toggleMode('live');
+            }
+        } catch (e) {
+            alert(translations.connectionFailed);
+            toggleMode('live');
+        } finally {
+            icon.classList.remove('animate-spin', 'bg-slate-400');
+            icon.classList.add('bg-amber-500');
+        }
+    }
+
     async function runSimulation() {
+        if (isValidationMode) return;
         const btn = document.querySelector('button[onclick="runSimulation()"]');
         const originalHtml = btn.innerHTML;
-
-        // const hasSnowmelt = document.getElementById('flagSnowmelt').checked;
-        // const hasFertilizer = document.getElementById('flagFertilizer').checked;
-
-
         btn.innerHTML = `<div class="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white mr-2"></div> ${translations.runningLstm}`;
         btn.disabled = true;
-        btn.classList.add('opacity-80', 'cursor-not-allowed');
 
-        const hasSnowmelt = false;
-        const hasFertilizer = false;
         const days = document.getElementById('daysSelect').value;
-
         try {
             const response = await fetch('/api/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    days: parseInt(days),
-                    snowmelt: hasSnowmelt,
-                    fertilizer: hasFertilizer
-                })
+                body: JSON.stringify({ days: parseInt(days) })
             });
-
             const result = await response.json();
-
             if (result.status === 'success') {
-                globalData = result; // Save to global object
-
-                // Ensure currentActiveTab is valid
-                if (!globalData.targets.includes(currentActiveTab)) {
-                    currentActiveTab = globalData.targets[0];
-                }
-
-                // document.getElementById('metric-rmse').innerHTML = `${result.rmse}<span class="text-sm font-medium text-slate-500 ml-1"></span>`;
-                // document.getElementById('metric-conf').innerHTML = `${result.confidence}<span class="text-sm font-medium text-slate-500 ml-1">%</span>`;
-
+                globalData = result;
+                if (!globalData.targets.includes(currentActiveTab)) currentActiveTab = globalData.targets[0];
                 renderTabs();
                 updateChartDisplay();
             } else {
                 alert(translations.backendError + result.error);
             }
         } catch (error) {
-            console.error(translations.predictionFailed, error);
             alert(translations.connectionFailed);
         } finally {
             btn.innerHTML = originalHtml;
             btn.disabled = false;
-            btn.classList.remove('opacity-80', 'cursor-not-allowed');
         }
     }
 
-    // Listen for dropdown changes to update titles immediately
-    document.getElementById('daysSelect').addEventListener('change', (e) => {
-        const days = e.target.value;
-        const forecastTitle = translations.forecastTitle.replace('%days%', days);
-        document.getElementById('forecast-title').textContent = `${forecastTitle}${currentActiveTab}`;
-        // document.getElementById('metric-window').innerHTML = `${days}<span class="text-sm font-medium text-slate-500 ml-1">Days</span>`;
-    });
-
+    document.getElementById('daysSelect').addEventListener('change', () => { if (!isValidationMode) updateChartDisplay(); });
     document.addEventListener('DOMContentLoaded', initChart);
 </script>
 {% endif %}

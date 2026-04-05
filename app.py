@@ -13,6 +13,9 @@ import sys
 import time
 import threading
 
+# Add scripts directory to path for model imports (e.g., train_model_lstm)
+sys.path.append(os.path.join(os.path.dirname(__file__), 'scripts'))
+
 # Create a global lock for data loading
 data_lock = threading.Lock()
 
@@ -35,7 +38,7 @@ if not LITE_MODE:
         from train_model_lstm import WaterQualityLSTM
 
         #import model and scalers
-        lstm_model = WaterQualityLSTM(input_size=9, hidden_size=128, num_layers=2, output_size=9)
+        lstm_model = WaterQualityLSTM(input_size=11, hidden_size=128, num_layers=2, output_size=11)
         lstm_model.load_state_dict(torch.load('models/lstm_model.pth', map_location=torch.device('cpu')))
         lstm_model.eval()
         scaler_X = joblib.load('models/scaler_X.pkl')
@@ -330,7 +333,7 @@ def api_predict():
     data = request.json
     days = int(data.get('days', 7))
     
-    water_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES']
+    water_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES', 'DBOeq', 'Phycocyanine scaled']
     target_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + water_cols
     feature_cols = target_cols
     
@@ -339,114 +342,197 @@ def api_predict():
     historical_data = {col: [] for col in target_cols}
 
     try:
-        # Use cached sensor data
-        df_sensor_cached, numeric_cols_cached = get_processed_sensor_data()
-        if df_sensor_cached.empty:
-            return jsonify({"error": "Sensor data cache is empty"}), 404
-            
-        # We need the water columns for prediction.
-        # Since _df_sensor already has its index as datetime and is filtered from 2025-08-01,
-        # we can use it directly.
-        df_sensor = df_sensor_cached.copy()
+        # 1. Fetch Forecast
+        df_forecast = get_weather_forecast(lat=LAT, lon=LON, forecast_days=days)
+        df_forecast_res = df_forecast.resample('8h').mean().head(steps)
 
-        # Weather integration
-        df_weather = get_cached_weather()
+        # 2. Prepare Sensor Data aligned to 8h
+        df_sensor_cached, _ = get_processed_sensor_data()
+        df_sensor = df_sensor_cached.copy()
         df_sensor_aligned = df_sensor[water_cols].resample('8h').mean()
-        df_sensor_aligned.index.name = 'Datetime' # Align index name for merge
-        df_sensor_aligned.reset_index(inplace=True)
         
+        # 3. Prepare Weather and Merge on Index
+        df_weather = get_cached_weather()
         df_weather.index = df_weather.index.tz_localize(None)
-        df_weather.index.name = 'Datetime'
-        df_weather.reset_index(inplace=True)
-        df_merged = pd.merge(df_sensor_aligned, df_weather, on='Datetime', how='inner')
+        
+        # Inner Join: Keeps only overlapping timestamps as a DatetimeIndex
+        df_merged = df_sensor_aligned.join(df_weather, how='inner')
 
         if df_merged.empty:
-            return jsonify({"error": "Data alignment failed (Check date overlap)"}), 400
+            return jsonify({"error": "Data alignment failed"}), 400
 
-        # Fill missing values
+        # 4. Safe Imputation while preserving the Index
         from sklearn.impute import SimpleImputer
-        imputer = SimpleImputer(strategy='mean')
-        df_merged[target_cols] = imputer.fit_transform(df_merged[target_cols])
+        for col in target_cols:
+            if col not in df_merged.columns: df_merged[col] = np.nan
         
-        # Prepare sequence (last 90 steps)
+        # FIX: Ensure no column is 100% NaN (avoids SimpleImputer dropping columns)
+        df_merged[target_cols] = df_merged[target_cols].fillna(0) if df_merged[target_cols].isna().all().any() else df_merged[target_cols]
+        # Or better: fill completely empty columns with a single 0
+        for col in target_cols:
+            if df_merged[col].isna().all():
+                df_merged[col] = 0.0
+
+        imputer = SimpleImputer(strategy='mean', fill_value=0)
+        imputed_data = imputer.fit_transform(df_merged[target_cols])
+        # REBUILD: Preserve the DatetimeIndex explicitly
+        df_merged = pd.DataFrame(imputed_data, columns=target_cols, index=df_merged.index)
+        
+        # 5. Prepare Sequence
         last_90 = df_merged.tail(90).copy()
         if len(last_90) < 90:
-            pad_df = pd.DataFrame([last_90.iloc[0]] * (90 - len(last_90)))
-            last_90 = pd.concat([pad_df, last_90], ignore_index=True)
+            pad_df = pd.DataFrame([last_90.iloc[0]] * (90 - len(last_90)), columns=target_cols)
+            # Handle padding carefully to maintain index (though mostly for safety)
+            last_90 = pd.concat([pad_df, last_90])
 
-        # --- Labels generation (Crucial for frontend) ---
+        # Labels from Index
         last_14 = last_90.tail(14)
-        # Use 'Datetime' column to create formatted labels
-        historical_labels = [dt.strftime("%b %d, %H:%M") for dt in last_14['Datetime']]
+        historical_labels = [dt.strftime("%b %d, %H:%M") for dt in last_14.index]
         
-        last_ts = last_14['Datetime'].iloc[-1]
+        last_ts = last_14.index[-1]
         predicted_labels = []
         for i in range(1, steps + 1):
             future_dt = last_ts + pd.Timedelta(hours=i * 8)
             predicted_labels.append(future_dt.strftime("%b %d, %H:%M"))
 
-        # Save historical data
-        for col in target_cols:
-            historical_data[col] = [round(float(val), 2) for val in last_14[col].values]
+        historical_data = {col: [round(float(v), 2) for v in last_14[col]] for col in target_cols}
 
+        # Last month comparison 
         try:
             total_steps = 14 + steps
             one_month_ago_start = last_ts - pd.Timedelta(days=30) - pd.Timedelta(hours=14 * 8)
-            
-            mask = (df_merged['Datetime'] >= one_month_ago_start)
-            df_last_month = df_merged.loc[mask].head(total_steps)
-            
-            last_month_data = {col: [] for col in target_cols}
+            df_last_month = df_merged.loc[df_merged.index >= one_month_ago_start].head(total_steps)
+            last_month_data = {col: [round(float(v), 2) if pd.notna(v) else None for v in df_last_month[col]] for col in target_cols}
             for col in target_cols:
-                vals = df_last_month[col].values.tolist()
-                last_month_data[col] = [round(float(v), 2) if pd.notna(v) else None for v in vals]
                 if len(last_month_data[col]) < total_steps:
                     last_month_data[col] += [None] * (total_steps - len(last_month_data[col]))
-                    
-        except Exception as e:
-            print(f"Last month data error: {e}")
+        except:
             last_month_data = {col: [None] * (14 + steps) for col in target_cols}
         
-        # Inference
+        # 6. Inference Loop
         X_real_scaled = scaler_X.transform(last_90[feature_cols].values)
         current_seq_tensor = torch.tensor(X_real_scaled, dtype=torch.float32).unsqueeze(0)
 
-        # app.py の api_predict 関数内
-
-        # 推論 (Inference) ループ
+        predicted_data = {col: [] for col in target_cols}
         lstm_model.eval()
         with torch.no_grad():
             for step in range(steps):
                 pred_scaled = lstm_model(current_seq_tensor)
-                new_step_values = pred_scaled.detach().cpu().numpy()[0]
+                vals_scaled = pred_scaled.detach().cpu().numpy()[0]
                 
-
-                pred_inv = scaler_y.inverse_transform(pred_scaled.cpu().numpy())[0]
+                if step < len(df_forecast_res):
+                    fc_row = df_forecast_res.iloc[[step]].copy()
+                    for col in water_cols: fc_row[col] = 0 
+                    fc_scaled = scaler_X.transform(fc_row[feature_cols].values)[0]
+                    vals_scaled[0:3] = fc_scaled[0:3] # Replace weather indices
+                
+                pred_inv = scaler_y.inverse_transform(vals_scaled.reshape(1, -1))[0]
                 for i, col in enumerate(target_cols):
-                    val = float(pred_inv[i])
-                    predicted_data[col].append(round(max(0, val), 2))
+                    predicted_data[col].append(round(max(0, float(pred_inv[i])), 2))
 
-                # current_seq_tensor 
-                new_step_tensor = torch.tensor(new_step_values, dtype=torch.float32).view(1, 1, -1)
+                new_step_tensor = torch.tensor(vals_scaled, dtype=torch.float32).view(1, 1, -1)
                 current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
 
-        print(f"[DEBUG] Prediction total cycle took {time.time() - start_total:.3f}s")
         return jsonify({
             "status": "success",
             "targets": target_cols,
             "historical": historical_data,
             "predicted": predicted_data,
             "last_month": last_month_data,
-            "historical_labels": historical_labels, # Matches frontend expectation
-            "predicted_labels": predicted_labels,   # Matches frontend expectation
-            "rmse": 0.14,
-            "confidence": 92
+            "historical_labels": historical_labels,
+            "predicted_labels": predicted_labels
         })
 
     except Exception as e:
         print(f"Prediction Error: {e}")
         return jsonify({"error": str(e)}), 500
+        
+@app.route("/api/validate", methods=['GET'])
+def api_validate():
+    if not MODEL_READY:
+        return jsonify({"error": "Model not initialized"}), 500
+
+    water_cols = ['Conductivité', 'NO3', 'Turbidité', 'O2 Saturation', 'pH Test', 'MES', 'DBOeq', 'Phycocyanine scaled']
+    target_cols = ['temperature_2m', 'precipitation', 'wind_speed_10m'] + water_cols
+    feature_cols = target_cols
     
+    try:
+        # Start of March
+        target_start = pd.Timestamp('2026-03-01')
+        target_end = pd.Timestamp('2026-03-27') # Data ends Mar 26
+        input_start = target_start - pd.Timedelta(days=30)
+
+        df_sensor_cached, _ = get_processed_sensor_data()
+        df_sensor_aligned = df_sensor_cached[water_cols].resample('8h').mean()
+        
+        df_weather = get_cached_weather()
+        df_weather.index = df_weather.index.tz_localize(None)
+        
+        df_merged = df_sensor_aligned.join(df_weather, how='inner')
+        
+        df_input_raw = df_merged.loc[(df_merged.index >= input_start) & (df_merged.index < target_start)].copy()
+        df_actual_raw = df_merged.loc[(df_merged.index >= target_start) & (df_merged.index < target_end)].copy()
+        
+        if len(df_input_raw) < 90:
+             return jsonify({"error": "Insufficient history before March"}), 400
+
+        from sklearn.impute import SimpleImputer
+        
+        # Ensure all columns exist and are NOT 100% NaN
+        for col in target_cols:
+            if col not in df_input_raw.columns: df_input_raw[col] = 0.0
+            if df_input_raw[col].isna().all(): df_input_raw[col] = 0.0
+            
+            if col not in df_actual_raw.columns: df_actual_raw[col] = 0.0
+            if df_actual_raw[col].isna().all(): df_actual_raw[col] = 0.0
+
+        imputer = SimpleImputer(strategy='mean', fill_value=0)
+        
+        # Impute and rebuild while keeping index
+        df_input = pd.DataFrame(imputer.fit_transform(df_input_raw[target_cols]), 
+                                columns=target_cols, index=df_input_raw.index)
+        df_actual = pd.DataFrame(imputer.transform(df_actual_raw[target_cols]), 
+                                 columns=target_cols, index=df_actual_raw.index)
+
+        # Inference initialization
+        last_90 = df_input.tail(90)
+        X_scaled = scaler_X.transform(last_90[feature_cols].values)
+        current_seq_tensor = torch.tensor(X_scaled, dtype=torch.float32).unsqueeze(0)
+        
+        steps = len(df_actual)
+        predicted_values = {col: [] for col in target_cols}
+        
+        lstm_model.eval()
+        with torch.no_grad():
+            for i in range(steps):
+                pred_scaled = lstm_model(current_seq_tensor)
+                vals_scaled = pred_scaled.detach().cpu().numpy()[0]
+                
+                # Use real weather from df_actual
+                real_weather_scaled = scaler_X.transform(df_actual.iloc[[i]][feature_cols].values)[0]
+                vals_scaled[0:3] = real_weather_scaled[0:3]
+                
+                pred_inv = scaler_y.inverse_transform(vals_scaled.reshape(1, -1))[0]
+                for j, col in enumerate(target_cols):
+                    predicted_values[col].append(round(max(0, float(pred_inv[j])), 2))
+                
+                new_step_tensor = torch.tensor(vals_scaled, dtype=torch.float32).view(1, 1, -1)
+                current_seq_tensor = torch.cat((current_seq_tensor[:, 1:, :], new_step_tensor), dim=1)
+
+        return jsonify({
+            "status": "success",
+            "targets": target_cols,
+            "historical": {col: [round(float(v), 2) for v in df_input.tail(3)[col]] for col in target_cols},
+            "actual": {col: [round(float(v), 2) for v in df_actual[col]] for col in target_cols},
+            "predicted": predicted_values,
+            "historical_labels": [dt.strftime("%b %d, %H:%M") for dt in df_input.tail(3).index],
+            "validation_labels": [dt.strftime("%b %d, %H:%M") for dt in df_actual.index]
+        })
+
+    except Exception as e:
+        print(f"Validation Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/export")
 def api_export():
     """Export all weather data as CSV."""
